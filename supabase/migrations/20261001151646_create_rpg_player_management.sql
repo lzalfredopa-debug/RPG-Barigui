@@ -162,14 +162,14 @@ CREATE POLICY "anon_delete_suggestions" ON suggestions FOR DELETE
 -- Insert initial 11 alcunhas
 INSERT INTO players (alcunha, status, player_name, player_identifier) VALUES
   ('Dragon', 'espera', NULL, NULL),
-  ('Beholder', 'espera', NULL, NULL),
-  ('Lich', 'espera', NULL, NULL),
+  ('Beholder', 'ativa', 'Kevin', 'Jog01'),
+  ('Lich', 'ativa', 'Tempesta', 'Jog02'),
   ('Flayer', 'espera', NULL, NULL),
   ('Tarrasque', 'espera', NULL, NULL),
   ('Demogorgon', 'espera', NULL, NULL),
   ('Owlbear', 'espera', NULL, NULL),
-  ('Kraken', 'espera', NULL, NULL),
-  ('Vampire', 'ativa', 'Alfredo', 'alfredo'),
+  ('Kraken', 'ativa', 'Renan', 'Jog03'),
+  ('Vampire', 'ativa', 'Alfredo', 'Mestre'),
   ('Cube', 'espera', NULL, NULL),
   ('Mimic', 'espera', NULL, NULL)
 ON CONFLICT (alcunha) DO NOTHING;

@@ -15,6 +15,64 @@ const STEPS = [
   { id: 5, label: 'Revisão' },
 ];
 
+
+
+type Lineage = { name: string; description: string };
+type Race = { name: string; lineages: Lineage[] };
+
+const RACES: Race[] = [
+  { name: 'Humanos', lineages: [
+    { name: 'Terranos', description: 'Constituição próxima à humana comum, com grande variedade de aparência. Representam a ancestralidade humana mais difundida.' },
+    { name: 'Altaneiros', description: 'Descendentes de povos das grandes altitudes, com facilidade para respirar em ar rarefeito e suportar o frio.' },
+    { name: 'Marítimos', description: 'Descendentes de povos dos arquipélagos, com adaptações à vida na água, como maior capacidade de prender a respiração.' },
+  ]},
+  { name: 'Elfos', lineages: [
+    { name: 'Silvestres', description: 'Herança ligada às florestas; olhos e cabelos podem apresentar tons de folhas, madeira e âmbar.' },
+    { name: 'Astrais', description: 'Herança ligada ao céu noturno; olhos luminosos e marcas semelhantes a constelações.' },
+    { name: 'Profundos', description: 'Adaptados ao subterrâneo; olhos sensíveis à luz e aparência em tons de pedra, cinza ou violeta.' },
+  ]},
+  { name: 'Anões', lineages: [
+    { name: 'Graníticos', description: 'Corpos compactos e ossatura densa, associados às antigas linhagens das montanhas.' },
+    { name: 'Ígneos', description: 'Herança de regiões vulcânicas; pele quente e cabelos em tons de cobre, carvão ou brasa.' },
+    { name: 'Cristalinos', description: 'Pequenas formações minerais surgem na pele ou nos cabelos, com sensibilidade às vibrações da pedra.' },
+  ]},
+  { name: 'Orcs', lineages: [
+    { name: 'Colossais', description: 'Maior estatura e musculatura, com presas e estrutura óssea acentuadas.' },
+    { name: 'Glaciais', description: 'Pelagem fina ou cabelos densos, pele em tons frios e adaptação às baixas temperaturas.' },
+    { name: 'Rubros', description: 'Pele em tons de ocre, cobre ou vermelho, com adaptação ao calor de regiões áridas.' },
+  ]},
+  { name: 'Pequeninos', lineages: [
+    { name: 'Campestres', description: 'Pés largos, geralmente cobertos de pelos, e constituição robusta para seu tamanho.' },
+    { name: 'Brumosos', description: 'Herança feérica sutil, com passos silenciosos e contornos que parecem se confundir com a névoa.' },
+    { name: 'Ribeirinhos', description: 'Dedos parcialmente palmados e facilidade para nadar e se movimentar em terrenos alagados.' },
+  ]},
+  { name: 'Goblins', lineages: [
+    { name: 'Cavernícolas', description: 'Olhos e orelhas grandes, adaptados à percepção em ambientes subterrâneos.' },
+    { name: 'Arborícolas', description: 'Membros alongados e dedos fortes, próprios para agarrar galhos e escalar.' },
+    { name: 'Ferruginosos', description: 'Pele de aspecto salpicado, em tons de ferrugem, e capacidade de perceber metais pelo cheiro.' },
+  ]},
+  { name: 'Tiferinos', lineages: [
+    { name: 'Infernais', description: 'Chifres marcantes, cauda e sinais de uma herança ligada ao fogo e a antigos pactos.' },
+    { name: 'Abissais', description: 'Traços assimétricos, chifres irregulares e manifestações de uma herança ligada ao caos e à transformação.' },
+    { name: 'Umbráticos', description: 'Cores escuras ou desbotadas, olhos contrastantes e sombras que parecem acompanhar seus movimentos com atraso.' },
+  ]},
+  { name: 'Povo Fúngico', lineages: [
+    { name: 'Micelares', description: 'Corpos fibrosos, semelhantes a raízes entrelaçadas, capazes de perceber sinais através de redes de fungos.' },
+    { name: 'Chapeleiros', description: 'Chapéus de cogumelo de diferentes formatos e cores; produzem pequenos conjuntos de esporos.' },
+    { name: 'Luminescentes', description: 'Partes do corpo emitem luz, usada para iluminar suavemente e transmitir sinais.' },
+  ]},
+  { name: 'Draconatos', lineages: [
+    { name: 'Metálicos', description: 'Escamas com brilho e aspecto de metal.' },
+    { name: 'Cromáticos', description: 'Escamas de cores intensas e bem definidas.' },
+    { name: 'Gemáticos', description: 'Escamas cristalinas ou facetadas, semelhantes a pedras preciosas.' },
+  ]},
+  { name: 'Povo Fera', lineages: [
+    { name: 'Felinos', description: 'Traços de gatos, linces, onças ou leões, com garras retráteis e equilíbrio apurado.' },
+    { name: 'Canídeos', description: 'Traços de lobos, cães ou raposas, com olfato desenvolvido e orelhas expressivas.' },
+    { name: 'Avianos', description: 'Penas, bicos e características de diferentes aves. O formato das asas e sua utilidade ainda serão definidos.' },
+  ]},
+];
+
 const GENDER_OPTIONS = [
   { id: 'ele', label: 'Ele / Dele' },
   { id: 'ela', label: 'Ela / Dela' },
@@ -29,8 +87,18 @@ export default function CharacterCreation({ onBack }: CharacterCreationProps) {
   const [nickname, setNickname] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
+  const [race, setRace] = useState('');
+  const [lineage, setLineage] = useState('');
 
-  const isFormValid = name.trim() !== '' && age.trim() !== '';
+  const selectedRace = RACES.find((item) => item.name === race);
+  const isFormValid = name.trim() !== '' && age.trim() !== '' && race !== '' && lineage !== '';
+
+  const selectRace = (raceName: string) => {
+    if (raceName !== race) {
+      setRace(raceName);
+      setLineage('');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-fantasy animate-fade-in flex flex-col">
@@ -192,6 +260,69 @@ export default function CharacterCreation({ onBack }: CharacterCreationProps) {
                 ))}
               </div>
             </div>
+
+            {/* Raça e Linhagem */}
+            <div className="divider-gold my-8" />
+            <section className="space-y-6">
+              <div>
+                <h3 className="font-display text-lg text-gold tracking-wide mb-2">Raça e Linhagem</h3>
+                <p className="text-parchment-dim/70 text-sm font-body">Escolha a ancestralidade do seu personagem.</p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="font-display text-sm font-500 text-gold-bright tracking-wide">
+                  Raça <span className="text-blood">*</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {RACES.map((item) => (
+                    <button
+                      key={item.name}
+                      type="button"
+                      onClick={() => selectRace(item.name)}
+                      className={`min-h-16 px-4 py-3 rounded-lg border font-display text-sm transition-all duration-200 ${
+                        race === item.name
+                          ? 'bg-gradient-gold text-stone border-gold-bright shadow-gold font-600'
+                          : 'bg-shadow/60 text-parchment-dim border-gold-dim hover:border-gold/60 hover:text-parchment'
+                      }`}
+                    >
+                      {item.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {selectedRace && (
+                <div className="space-y-3 animate-fade-in-up">
+                  <div className="font-display text-sm font-500 text-gold-bright tracking-wide">
+                    Linhagem <span className="text-blood">*</span>
+                  </div>
+                  <p className="text-parchment-dim/60 text-xs font-body">
+                    Escolha uma linhagem de {selectedRace.name}. As descrições são informativas e ainda não concedem bônus ou habilidades.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {selectedRace.lineages.map((item) => (
+                      <button
+                        key={item.name}
+                        type="button"
+                        onClick={() => setLineage(item.name)}
+                        className={`p-4 rounded-lg border text-left transition-all duration-200 ${
+                          lineage === item.name
+                            ? 'bg-gold/15 border-gold shadow-gold'
+                            : 'bg-shadow/60 border-gold-dim hover:border-gold/60'
+                        }`}
+                      >
+                        <span className={`block font-display text-sm mb-2 ${lineage === item.name ? 'text-gold-bright' : 'text-gold'}`}>
+                          {item.name}
+                        </span>
+                        <span className="block font-body text-xs leading-relaxed text-parchment-dim">
+                          {item.description}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
           </div>
         </div>
       </main>

@@ -165,7 +165,7 @@ INSERT INTO players (alcunha, status, player_name, player_identifier) VALUES
   ('Beholder', 'ativa', 'Kevin', 'Jog01'),
   ('Lich', 'ativa', 'Tempesta', 'Jog02'),
   ('Flayer', 'espera', NULL, NULL),
-  ('Tarrasque', 'espera', NULL, NULL),
+  ('Tarrasque', 'ativa', 'Eduardo', 'Jog04'),
   ('Demogorgon', 'espera', NULL, NULL),
   ('Owlbear', 'espera', NULL, NULL),
   ('Kraken', 'ativa', 'Renan', 'Jog03'),

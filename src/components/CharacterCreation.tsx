@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, ChevronRight, Check } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Check, Info } from 'lucide-react';
 import type { Player } from '@/lib/supabase';
 
 type CharacterCreationProps = {
@@ -10,68 +10,138 @@ type CharacterCreationProps = {
 const STEPS = [
   { id: 1, label: 'Identidade' },
   { id: 2, label: 'Atributos' },
-  { id: 3, label: 'Classe' },
-  { id: 4, label: 'Habilidades' },
-  { id: 5, label: 'Revisão' },
+  { id: 3, label: 'Habilidades' },
+  { id: 4, label: 'Revisão' },
 ];
 
 
 
-type Lineage = { name: string; description: string };
+type Lineage = { name: string; description: string; image: string };
 type Race = { name: string; lineages: Lineage[] };
 
 const RACES: Race[] = [
   { name: 'Humanos', lineages: [
-    { name: 'Terranos', description: 'Constituição próxima à humana comum, com grande variedade de aparência. Representam a ancestralidade humana mais difundida.' },
-    { name: 'Altaneiros', description: 'Descendentes de povos das grandes altitudes, com facilidade para respirar em ar rarefeito e suportar o frio.' },
-    { name: 'Marítimos', description: 'Descendentes de povos dos arquipélagos, com adaptações à vida na água, como maior capacidade de prender a respiração.' },
+    { name: 'Terranos', image: '/images/linhagens/humanos-terrano.png', description: 'Constituição próxima à humana comum, com grande variedade de aparência. Representam a ancestralidade humana mais difundida.' },
+    { name: 'Altaneiros', image: '/images/linhagens/humanos-altaneiro.png', description: 'Descendentes de povos das grandes altitudes, com facilidade para respirar em ar rarefeito e suportar o frio.' },
+    { name: 'Marítimos', image: '/images/linhagens/humanos-maritimo.png', description: 'Descendentes de povos dos arquipélagos, com adaptações à vida na água, como maior capacidade de prender a respiração.' },
   ]},
   { name: 'Elfos', lineages: [
-    { name: 'Silvestres', description: 'Herança ligada às florestas; olhos e cabelos podem apresentar tons de folhas, madeira e âmbar.' },
-    { name: 'Astrais', description: 'Herança ligada ao céu noturno; olhos luminosos e marcas semelhantes a constelações.' },
-    { name: 'Profundos', description: 'Adaptados ao subterrâneo; olhos sensíveis à luz e aparência em tons de pedra, cinza ou violeta.' },
+    { name: 'Silvestres', image: '/images/linhagens/elfos-silvestre.png', description: 'Herança ligada às florestas; olhos e cabelos podem apresentar tons de folhas, madeira e âmbar.' },
+    { name: 'Astrais', image: '/images/linhagens/elfos-astral.png', description: 'Herança ligada ao céu noturno; olhos luminosos e marcas semelhantes a constelações.' },
+    { name: 'Profundos', image: '/images/linhagens/elfos-profundo.png', description: 'Adaptados ao subterrâneo; olhos sensíveis à luz e aparência em tons de pedra, cinza ou violeta.' },
   ]},
   { name: 'Anões', lineages: [
-    { name: 'Graníticos', description: 'Corpos compactos e ossatura densa, associados às antigas linhagens das montanhas.' },
-    { name: 'Ígneos', description: 'Herança de regiões vulcânicas; pele quente e cabelos em tons de cobre, carvão ou brasa.' },
-    { name: 'Cristalinos', description: 'Pequenas formações minerais surgem na pele ou nos cabelos, com sensibilidade às vibrações da pedra.' },
+    { name: 'Graníticos', image: '/images/linhagens/anoes-granitico.png', description: 'Corpos compactos e ossatura densa, associados às antigas linhagens das montanhas.' },
+    { name: 'Ígneos', image: '/images/linhagens/anoes-igneo.png', description: 'Herança de regiões vulcânicas; pele quente e cabelos em tons de cobre, carvão ou brasa.' },
+    { name: 'Cristalinos', image: '/images/linhagens/anoes-cristalino.png', description: 'Pequenas formações minerais surgem na pele ou nos cabelos, com sensibilidade às vibrações da pedra.' },
   ]},
   { name: 'Orcs', lineages: [
-    { name: 'Colossais', description: 'Maior estatura e musculatura, com presas e estrutura óssea acentuadas.' },
-    { name: 'Glaciais', description: 'Pelagem fina ou cabelos densos, pele em tons frios e adaptação às baixas temperaturas.' },
-    { name: 'Rubros', description: 'Pele em tons de ocre, cobre ou vermelho, com adaptação ao calor de regiões áridas.' },
+    { name: 'Colossais', image: '/images/linhagens/orcs-colossal.png', description: 'Maior estatura e musculatura, com presas e estrutura óssea acentuadas.' },
+    { name: 'Glaciais', image: '/images/linhagens/orcs-glacial.png', description: 'Pelagem fina ou cabelos densos, pele em tons frios e adaptação às baixas temperaturas.' },
+    { name: 'Rubros', image: '/images/linhagens/orcs-rubro.png', description: 'Pele em tons de ocre, cobre ou vermelho, com adaptação ao calor de regiões áridas.' },
   ]},
   { name: 'Pequeninos', lineages: [
-    { name: 'Campestres', description: 'Pés largos, geralmente cobertos de pelos, e constituição robusta para seu tamanho.' },
-    { name: 'Brumosos', description: 'Herança feérica sutil, com passos silenciosos e contornos que parecem se confundir com a névoa.' },
-    { name: 'Ribeirinhos', description: 'Dedos parcialmente palmados e facilidade para nadar e se movimentar em terrenos alagados.' },
+    { name: 'Campestres', image: '/images/linhagens/pequeninos-campestre.png', description: 'Pés largos, geralmente cobertos de pelos, e constituição robusta para seu tamanho.' },
+    { name: 'Brumosos', image: '/images/linhagens/pequeninos-brumoso.png', description: 'Herança feérica sutil, com passos silenciosos e contornos que parecem se confundir com a névoa.' },
+    { name: 'Ribeirinhos', image: '/images/linhagens/pequeninos-ribeirinho.png', description: 'Dedos parcialmente palmados e facilidade para nadar e se movimentar em terrenos alagados.' },
   ]},
   { name: 'Goblins', lineages: [
-    { name: 'Cavernícolas', description: 'Olhos e orelhas grandes, adaptados à percepção em ambientes subterrâneos.' },
-    { name: 'Arborícolas', description: 'Membros alongados e dedos fortes, próprios para agarrar galhos e escalar.' },
-    { name: 'Ferruginosos', description: 'Pele de aspecto salpicado, em tons de ferrugem, e capacidade de perceber metais pelo cheiro.' },
+    { name: 'Cavernícolas', image: '/images/linhagens/goblins-cavernicola.png', description: 'Olhos e orelhas grandes, adaptados à percepção em ambientes subterrâneos.' },
+    { name: 'Arborícolas', image: '/images/linhagens/goblins-arboricola.png', description: 'Membros alongados e dedos fortes, próprios para agarrar galhos e escalar.' },
+    { name: 'Ferruginosos', image: '/images/linhagens/goblins-ferruginoso.png', description: 'Pele de aspecto salpicado, em tons de ferrugem, e capacidade de perceber metais pelo cheiro.' },
   ]},
   { name: 'Tiferinos', lineages: [
-    { name: 'Infernais', description: 'Chifres marcantes, cauda e sinais de uma herança ligada ao fogo e a antigos pactos.' },
-    { name: 'Abissais', description: 'Traços assimétricos, chifres irregulares e manifestações de uma herança ligada ao caos e à transformação.' },
-    { name: 'Umbráticos', description: 'Cores escuras ou desbotadas, olhos contrastantes e sombras que parecem acompanhar seus movimentos com atraso.' },
+    { name: 'Infernais', image: '/images/linhagens/tiferinos-infernal.png', description: 'Chifres marcantes, cauda e sinais de uma herança ligada ao fogo e a antigos pactos.' },
+    { name: 'Abissais', image: '/images/linhagens/tiferinos-abissal.png', description: 'Traços assimétricos, chifres irregulares e manifestações de uma herança ligada ao caos e à transformação.' },
+    { name: 'Umbráticos', image: '/images/linhagens/tiferinos-umbratico.png', description: 'Cores escuras ou desbotadas, olhos contrastantes e sombras que parecem acompanhar seus movimentos com atraso.' },
   ]},
   { name: 'Povo Fúngico', lineages: [
-    { name: 'Micelares', description: 'Corpos fibrosos, semelhantes a raízes entrelaçadas, capazes de perceber sinais através de redes de fungos.' },
-    { name: 'Chapeleiros', description: 'Chapéus de cogumelo de diferentes formatos e cores; produzem pequenos conjuntos de esporos.' },
-    { name: 'Luminescentes', description: 'Partes do corpo emitem luz, usada para iluminar suavemente e transmitir sinais.' },
+    { name: 'Micelares', image: '/images/linhagens/povo-fungico-micelar.png', description: 'Corpos fibrosos, semelhantes a raízes entrelaçadas, capazes de perceber sinais através de redes de fungos.' },
+    { name: 'Chapeleiros', image: '/images/linhagens/povo-fungico-chapeleiro.png', description: 'Chapéus de cogumelo de diferentes formatos e cores; produzem pequenos conjuntos de esporos.' },
+    { name: 'Luminescentes', image: '/images/linhagens/povo-fungico-luminescente.png', description: 'Partes do corpo emitem luz, usada para iluminar suavemente e transmitir sinais.' },
   ]},
   { name: 'Draconatos', lineages: [
-    { name: 'Metálicos', description: 'Escamas com brilho e aspecto de metal.' },
-    { name: 'Cromáticos', description: 'Escamas de cores intensas e bem definidas.' },
-    { name: 'Gemáticos', description: 'Escamas cristalinas ou facetadas, semelhantes a pedras preciosas.' },
+    { name: 'Metálicos', image: '/images/linhagens/draconatos-metalico.png', description: 'Escamas com brilho e aspecto de metal.' },
+    { name: 'Cromáticos', image: '/images/linhagens/draconatos-cromatico.png', description: 'Escamas de cores intensas e bem definidas.' },
+    { name: 'Gemáticos', image: '/images/linhagens/draconatos-gematico.png', description: 'Escamas cristalinas ou facetadas, semelhantes a pedras preciosas.' },
   ]},
   { name: 'Povo Fera', lineages: [
-    { name: 'Felinos', description: 'Traços de gatos, linces, onças ou leões, com garras retráteis e equilíbrio apurado.' },
-    { name: 'Canídeos', description: 'Traços de lobos, cães ou raposas, com olfato desenvolvido e orelhas expressivas.' },
-    { name: 'Avianos', description: 'Penas, bicos e características de diferentes aves. O formato das asas e sua utilidade ainda serão definidos.' },
+    { name: 'Felinos', image: '/images/linhagens/povo-fera-felino.png', description: 'Traços de gatos, linces, onças ou leões, com garras retráteis e equilíbrio apurado.' },
+    { name: 'Canídeos', image: '/images/linhagens/povo-fera-canideo.png', description: 'Traços de lobos, cães ou raposas, com olfato desenvolvido e orelhas expressivas.' },
+    { name: 'Avianos', image: '/images/linhagens/povo-fera-aviano.png', description: 'Penas, bicos e características de diferentes aves. O formato das asas e sua utilidade ainda serão definidos.' },
   ]},
 ];
+
+
+
+type AttributeDefinition = {
+  name: string;
+  description: string;
+  examples: string;
+};
+
+type AttributeGroup = {
+  name: string;
+  attributes: AttributeDefinition[];
+};
+
+const ATTRIBUTE_GROUPS: AttributeGroup[] = [
+  {
+    name: 'Físicos',
+    attributes: [
+      { name: 'Força', description: 'Potência e força muscular.', examples: 'Erguer, empurrar, quebrar e golpear.' },
+      { name: 'Vigor', description: 'Resistência e capacidade física.', examples: 'Suportar esforço, dor, venenos e cansaço.' },
+      { name: 'Agilidade', description: 'Rapidez e controle do corpo.', examples: 'Esquivar, saltar, equilibrar-se e mover-se.' },
+      { name: 'Destreza', description: 'Precisão e coordenação manual.', examples: 'Mirar, manipular objetos e executar movimentos delicados.' },
+    ],
+  },
+  {
+    name: 'Mentais',
+    attributes: [
+      { name: 'Inteligência', description: 'Conhecimento e capacidade de aprender.', examples: 'Estudo, memória e conhecimento técnico.' },
+      { name: 'Raciocínio', description: 'Lógica e capacidade de solucionar problemas.', examples: 'Deduzir, calcular, investigar e improvisar soluções.' },
+      { name: 'Sabedoria', description: 'Julgamento e compreensão adquirida.', examples: 'Bom senso, experiência e interpretação de situações.' },
+      { name: 'Percepção', description: 'Atenção e capacidade de notar o ambiente.', examples: 'Observar, ouvir, procurar e detectar mudanças.' },
+    ],
+  },
+  {
+    name: 'Sociais',
+    attributes: [
+      { name: 'Carisma', description: 'Capacidade de cativar e conquistar.', examples: 'Persuadir, entreter e inspirar simpatia.' },
+      { name: 'Presença', description: 'Impacto e força da personalidade.', examples: 'Intimidar, liderar, impor-se e chamar atenção.' },
+      { name: 'Manipulação', description: 'Capacidade de influenciar de forma indireta.', examples: 'Blefar, enganar, dissimular e conduzir alguém.' },
+      { name: 'Empatia', description: 'Capacidade de compreender outras pessoas.', examples: 'Perceber emoções, intenções e criar conexão.' },
+    ],
+  },
+];
+
+const SKILL_GROUPS = [
+  {
+    name: 'Marcial',
+    skills: ['Tática', 'Cavalaria', 'Esgrima', 'Luta', 'Vigilância', 'Proteção', 'Defesa', 'Armaduras', 'Escaramuça', 'Tiro', 'Emboscada', 'Atletismo'],
+  },
+  {
+    name: 'Campo & Ofício',
+    skills: ['Rastreamento', 'Condução', 'Furtividade', 'Arrombamento', 'Prestidigitação', 'Metalurgia', 'Construção', 'Mecânica', 'Alquimia', 'Sobrevivência', 'Exploração', 'Navegação'],
+  },
+  {
+    name: 'Sociedade, Cultura & Expressão',
+    skills: ['Escrita', 'Enganação', 'Trapaça', 'Jornadas', 'Poética', 'Interpretação', 'Música', 'Artes Visuais', 'Etiqueta', 'Mediação', 'Oratória', 'Negociação'],
+  },
+  {
+    name: 'Conhecimento & Doutrina',
+    skills: ['Comércio', 'Finanças', 'Administração', 'Estratégia', 'Disciplina Marcial', 'Elementalismo', 'Arcanismo', 'Ritualismo', 'Manipulação Arcana', 'Teologia', 'Medicina', 'Espiritualismo'],
+  },
+] as const;
+
+const ATTRIBUTE_INITIAL_POINTS = 1;
+const ATTRIBUTE_BONUS_POINTS = 4;
+const APPRENTICE_ATTRIBUTE_MAX = 2;
+const SKILL_INITIAL_POINTS = 8;
+const APPRENTICE_SKILL_MAX = 2;
+
+const allAttributeNames = ATTRIBUTE_GROUPS.flatMap((group) => group.attributes.map((attribute) => attribute.name));
+const allSkillNames = SKILL_GROUPS.flatMap((group) => [...group.skills]);
 
 const GENDER_OPTIONS = [
   { id: 'ele', label: 'Ele / Dele' },
@@ -81,7 +151,7 @@ const GENDER_OPTIONS = [
 ];
 
 export default function CharacterCreation({ onBack }: CharacterCreationProps) {
-  const currentStep = 1;
+  const [currentStep, setCurrentStep] = useState(1);
 
   const [name, setName] = useState('');
   const [nickname, setNickname] = useState('');
@@ -89,9 +159,51 @@ export default function CharacterCreation({ onBack }: CharacterCreationProps) {
   const [gender, setGender] = useState('');
   const [race, setRace] = useState('');
   const [lineage, setLineage] = useState('');
+  const [attributes, setAttributes] = useState<Record<string, number>>(() =>
+    Object.fromEntries(allAttributeNames.map((attribute) => [attribute, ATTRIBUTE_INITIAL_POINTS]))
+  );
+  const [skills, setSkills] = useState<Record<string, number>>(() =>
+    Object.fromEntries(allSkillNames.map((skill) => [skill, 0]))
+  );
 
   const selectedRace = RACES.find((item) => item.name === race);
   const isFormValid = name.trim() !== '' && age.trim() !== '' && race !== '' && lineage !== '';
+  const attributePointsSpent = Object.values(attributes).reduce((total, value) => total + (value - ATTRIBUTE_INITIAL_POINTS), 0);
+  const attributePointsRemaining = ATTRIBUTE_BONUS_POINTS - attributePointsSpent;
+  const skillPointsSpent = Object.values(skills).reduce((total, rank) => total + (rank * (rank + 1)) / 2, 0);
+  const skillPointsRemaining = SKILL_INITIAL_POINTS - skillPointsSpent;
+
+  const setAttributeRank = (attribute: string, rank: number) => {
+    if (rank < ATTRIBUTE_INITIAL_POINTS || rank > APPRENTICE_ATTRIBUTE_MAX) return;
+    const currentRank = attributes[attribute] ?? ATTRIBUTE_INITIAL_POINTS;
+    const delta = rank - currentRank;
+    if (delta > attributePointsRemaining) return;
+    setAttributes((current) => ({ ...current, [attribute]: rank }));
+  };
+
+  const setSkillRank = (skill: string, rank: number) => {
+    if (rank < 0 || rank > APPRENTICE_SKILL_MAX) return;
+    const currentRank = skills[skill] ?? 0;
+    const currentCost = (currentRank * (currentRank + 1)) / 2;
+    const newCost = (rank * (rank + 1)) / 2;
+    const delta = newCost - currentCost;
+    if (delta > skillPointsRemaining) return;
+    setSkills((current) => ({ ...current, [skill]: rank }));
+  };
+
+  const canContinue =
+    (currentStep === 1 && isFormValid) ||
+    (currentStep === 2 && attributePointsRemaining === 0) ||
+    (currentStep === 3 && skillPointsRemaining === 0);
+
+  const goBack = () => {
+    if (currentStep === 1) onBack();
+    else setCurrentStep((step) => Math.max(1, step - 1));
+  };
+
+  const goForward = () => {
+    if (currentStep < STEPS.length && canContinue) setCurrentStep((step) => step + 1);
+  };
 
   const selectRace = (raceName: string) => {
     if (raceName !== race) {
@@ -160,6 +272,8 @@ export default function CharacterCreation({ onBack }: CharacterCreationProps) {
       {/* Body */}
       <main className="max-w-3xl mx-auto w-full px-4 sm:px-6 flex-1 py-4">
         <div className="bg-gradient-card border border-gold-dim rounded-xl p-6 sm:p-10 shadow-gold animate-fade-in-up">
+          {currentStep === 1 && (
+            <>
           <h2 className="font-display text-xl sm:text-2xl text-gold-bright text-shadow-gold mb-2">
             Etapa 1 — Identidade
           </h2>
@@ -311,6 +425,12 @@ export default function CharacterCreation({ onBack }: CharacterCreationProps) {
                             : 'bg-shadow/60 border-gold-dim hover:border-gold/60'
                         }`}
                       >
+                        <img
+                          src={item.image}
+                          alt={`Ilustração da linhagem ${item.name}`}
+                          className="block w-full h-auto rounded-md mb-4 border border-gold-dim/60"
+                          loading="lazy"
+                        />
                         <span className={`block font-display text-sm mb-2 ${lineage === item.name ? 'text-gold-bright' : 'text-gold'}`}>
                           {item.name}
                         </span>
@@ -324,6 +444,103 @@ export default function CharacterCreation({ onBack }: CharacterCreationProps) {
               )}
             </section>
           </div>
+
+            </>
+          )}
+
+          {currentStep === 2 && (
+            <>
+              <h2 className="font-display text-xl sm:text-2xl text-gold-bright text-shadow-gold mb-2">Etapa 2 — Atributos</h2>
+              <p className="text-parchment-dim font-body text-sm sm:text-base mb-4">Defina os pontos fortes do seu personagem.</p>
+              <div className="flex items-center justify-between gap-4 bg-shadow/50 border border-gold-dim rounded-lg px-4 py-3 mb-8">
+                <span className="font-body text-sm text-parchment-dim">Aprendiz · máximo de 2 pontos por atributo</span>
+                <span className="font-display text-gold-bright">Pontos disponíveis: {attributePointsRemaining}</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {ATTRIBUTE_GROUPS.map((group) => (
+                  <section key={group.name} className="bg-shadow/40 border border-gold-dim rounded-xl p-4">
+                    <h3 className="font-display text-lg text-gold mb-4">{group.name}</h3>
+                    <div className="space-y-5">
+                      {group.attributes.map((attribute) => {
+                        const rank = attributes[attribute.name] ?? 1;
+                        return (
+                          <div key={attribute.name}>
+                            <div className="flex items-center gap-1.5 mb-2 relative group/tooltip w-fit">
+                              <span className="font-display text-sm text-parchment">{attribute.name}</span>
+                              <Info className="w-3.5 h-3.5 text-gold-dim cursor-help" />
+                              <div className="pointer-events-none absolute left-0 bottom-full mb-2 z-30 w-64 opacity-0 group-hover/tooltip:opacity-100 focus-within:opacity-100 transition-opacity bg-stone border border-gold rounded-lg p-3 shadow-gold text-left">
+                                <strong className="block font-display text-gold-bright text-sm mb-1">{attribute.name}</strong>
+                                <span className="block font-body text-xs text-parchment mb-1">{attribute.description}</span>
+                                <span className="block font-body text-xs text-parchment-dim">{attribute.examples}</span>
+                              </div>
+                            </div>
+                            <div className="flex gap-2" aria-label={`${attribute.name}: ${rank} de 5 pontos`}>
+                              {[1,2,3,4,5].map((point) => {
+                                const enabled = point <= APPRENTICE_ATTRIBUTE_MAX;
+                                const filled = point <= rank;
+                                return (
+                                  <button key={point} type="button" disabled={!enabled} onClick={() => enabled && setAttributeRank(attribute.name, point === rank && point > 1 ? point - 1 : point)} className={`w-7 h-7 rounded-full border-2 transition-all ${filled ? 'bg-gold border-gold-bright shadow-gold' : enabled ? 'bg-shadow border-gold-dim hover:border-gold' : 'bg-shadow/30 border-gold-dim/25 opacity-35 cursor-not-allowed'}`} title={enabled ? `${point} ponto${point > 1 ? 's' : ''}` : 'Disponível em estágios futuros'} />
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))}
+              </div>
+              {attributePointsRemaining === 0 && <p className="mt-6 text-center font-body text-sm text-gold-bright">Todos os Pontos de Atributo foram distribuídos.</p>}
+            </>
+          )}
+
+          {currentStep === 3 && (
+            <>
+              <h2 className="font-display text-xl sm:text-2xl text-gold-bright text-shadow-gold mb-2">Etapa 3 — Habilidades</h2>
+              <p className="text-parchment-dim font-body text-sm sm:text-base mb-4">Distribua livremente seus Pontos de Habilidade.</p>
+              <div className="bg-shadow/50 border border-gold-dim rounded-lg px-4 py-3 mb-8 space-y-1">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="font-body text-sm text-parchment-dim">Aprendiz · máximo de 2 pontos por habilidade</span>
+                  <span className="font-display text-gold-bright">Pontos disponíveis: {skillPointsRemaining}</span>
+                </div>
+                <p className="font-body text-xs text-parchment-dim/70">Custo progressivo: 1º ponto custa 1 · 2º ponto custa +2.</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                {SKILL_GROUPS.map((group) => (
+                  <section key={group.name} className="bg-shadow/40 border border-gold-dim rounded-xl p-4">
+                    <h3 className="font-display text-base text-gold mb-4 min-h-10">{group.name}</h3>
+                    <div className="space-y-4">
+                      {group.skills.map((skill) => {
+                        const rank = skills[skill] ?? 0;
+                        return (
+                          <div key={skill}>
+                            <div className="font-body text-sm text-parchment mb-1.5">{skill}</div>
+                            <div className="flex gap-1.5" aria-label={`${skill}: ${rank} de 5 pontos`}>
+                              {[1,2,3,4,5].map((point) => {
+                                const enabled = point <= APPRENTICE_SKILL_MAX;
+                                const filled = point <= rank;
+                                return (
+                                  <button key={point} type="button" disabled={!enabled} onClick={() => enabled && setSkillRank(skill, point === rank ? point - 1 : point)} className={`w-5 h-5 rounded-full border transition-all ${filled ? 'bg-gold border-gold-bright shadow-gold' : enabled ? 'bg-shadow border-gold-dim hover:border-gold' : 'bg-shadow/30 border-gold-dim/25 opacity-35 cursor-not-allowed'}`} title={enabled ? `${point} ponto${point > 1 ? 's' : ''}` : 'Disponível em estágios futuros'} />
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))}
+              </div>
+              {skillPointsRemaining === 0 && <p className="mt-6 text-center font-body text-sm text-gold-bright">Todos os Pontos de Habilidade foram distribuídos.</p>}
+            </>
+          )}
+
+          {currentStep === 4 && (
+            <>
+              <h2 className="font-display text-xl sm:text-2xl text-gold-bright text-shadow-gold mb-2">Etapa 4 — Revisão</h2>
+              <p className="text-parchment-dim font-body text-sm sm:text-base">A revisão final será implementada na próxima etapa. Seus Atributos e Habilidades já permanecem selecionados ao voltar entre as etapas.</p>
+            </>
+          )}
         </div>
       </main>
 
@@ -331,7 +548,7 @@ export default function CharacterCreation({ onBack }: CharacterCreationProps) {
       <footer className="sticky bottom-0 bg-shadow/80 backdrop-blur-md border-t border-gold-dim">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <button
-            onClick={onBack}
+            onClick={goBack}
             className="flex items-center gap-2 text-parchment-dim hover:text-gold-bright transition-colors duration-200 text-sm font-body px-4 py-2.5 rounded-lg border border-gold-dim hover:border-gold/50 bg-gradient-card"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -339,7 +556,8 @@ export default function CharacterCreation({ onBack }: CharacterCreationProps) {
           </button>
 
           <button
-            disabled={!isFormValid}
+            onClick={goForward}
+            disabled={!canContinue}
             className="flex items-center gap-2 text-stone font-display text-sm font-600 tracking-wide px-5 py-2.5 rounded-lg bg-gradient-gold shadow-gold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 active:brightness-95"
           >
             Continuar

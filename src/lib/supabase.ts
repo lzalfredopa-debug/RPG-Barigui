@@ -34,3 +34,20 @@ export type Suggestion = {
   content: string;
   created_at: string;
 };
+
+
+export type Character = {
+  id: string;
+  player_id: string;
+  name: string;
+  nickname: string | null;
+  age: number;
+  gender: string | null;
+  race: string;
+  lineage: string;
+  level: number;
+  class_name: string;
+  attributes: Record<string, number>;
+  skills: Record<string, number>;
+  created_at: string;
+};

@@ -10,8 +10,9 @@ import {
   Loader2,
   Save,
   X,
+  Lock,
 } from 'lucide-react';
-import { supabase, type Player, type PersonalNote, type MasterMessage } from '@/lib/supabase';
+import { supabase, type Player, type PersonalNote, type MasterMessage, type Character } from '@/lib/supabase';
 
 type PlayerPageProps = {
   player: Player;
@@ -20,6 +21,10 @@ type PlayerPageProps = {
 };
 
 export default function PlayerPage({ player, onLogout, onCreateCharacter }: PlayerPageProps) {
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [charactersLoading, setCharactersLoading] = useState(true);
+  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+
   const [notes, setNotes] = useState<PersonalNote[]>([]);
   const [notesContent, setNotesContent] = useState('');
   const [notesLoading, setNotesLoading] = useState(false);
@@ -31,6 +36,17 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter }: Play
   const [suggestionText, setSuggestionText] = useState('');
   const [suggestionSending, setSuggestionSending] = useState(false);
   const [suggestionSent, setSuggestionSent] = useState(false);
+
+  const loadCharacters = useCallback(async () => {
+    setCharactersLoading(true);
+    const { data } = await supabase
+      .from('characters')
+      .select('*')
+      .eq('player_id', player.id)
+      .order('created_at', { ascending: true });
+    setCharacters((data || []) as Character[]);
+    setCharactersLoading(false);
+  }, [player.id]);
 
   const loadNotes = useCallback(async () => {
     setNotesLoading(true);
@@ -56,9 +72,10 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter }: Play
   }, [player.id]);
 
   useEffect(() => {
+    loadCharacters();
     loadNotes();
     loadMasterMessages();
-  }, [loadNotes, loadMasterMessages]);
+  }, [loadCharacters, loadNotes, loadMasterMessages]);
 
   const handleSaveNotes = async () => {
     if (notesSaving) return;
@@ -148,13 +165,28 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter }: Play
           </div>
 
           <div className="bg-gradient-card border border-gold-dim rounded-xl p-6 sm:p-8 shadow-gold">
-            <p className="text-parchment-dim text-center py-8 font-body">
-              Você ainda não possui personagens.
-            </p>
-            {/* Prepared area for future character cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 hidden">
-              {/* Character cards will go here */}
-            </div>
+            {charactersLoading ? (
+              <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 text-gold animate-spin" /></div>
+            ) : characters.length === 0 ? (
+              <p className="text-parchment-dim text-center py-8 font-body">Você ainda não possui personagens.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {characters.map((character) => (
+                  <button key={character.id} type="button" onClick={() => setSelectedCharacter(character)} className="text-left bg-shadow/50 border border-gold-dim rounded-xl p-5 hover:border-gold transition-all">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-display text-lg text-gold-bright">{character.name}</h3>
+                        {character.nickname && <p className="font-body text-xs text-parchment-dim mt-1">“{character.nickname}”</p>}
+                      </div>
+                      <span className="text-xs font-display text-gold border border-gold-dim rounded-full px-2 py-1">Nv. {character.level}</span>
+                    </div>
+                    <p className="font-body text-sm text-parchment-dim mt-4">{character.race} · {character.lineage}</p>
+                    <p className="font-body text-sm text-gold mt-1">{character.class_name}</p>
+                    <p className="font-body text-xs text-parchment-dim/60 mt-4">Abrir ficha</p>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="mt-5 flex justify-center">
@@ -348,6 +380,57 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter }: Play
           Sair
         </button>
       </footer>
+
+      {selectedCharacter && (
+        <div className="fixed inset-0 z-50 bg-shadow/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-stone border border-gold rounded-xl p-6 shadow-gold">
+            <div className="flex items-start justify-between gap-4 mb-6">
+              <div>
+                <h2 className="font-display text-2xl text-gold-bright">{selectedCharacter.name}</h2>
+                <p className="font-body text-sm text-parchment-dim mt-1">
+                  Nível {selectedCharacter.level} · {selectedCharacter.class_name} · {selectedCharacter.race} · {selectedCharacter.lineage}
+                </p>
+              </div>
+              <button type="button" onClick={() => setSelectedCharacter(null)} className="text-parchment-dim hover:text-parchment p-2"><X className="w-5 h-5" /></button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <section className="bg-shadow/40 border border-gold-dim rounded-lg p-4">
+                <h3 className="font-display text-gold mb-3">Identidade</h3>
+                <div className="space-y-2 font-body text-sm text-parchment-dim">
+                  <p>Apelido: <span className="text-parchment">{selectedCharacter.nickname || '—'}</span></p>
+                  <p>Idade: <span className="text-parchment">{selectedCharacter.age}</span></p>
+                </div>
+              </section>
+              <section className="bg-shadow/40 border border-gold-dim rounded-lg p-4">
+                <h3 className="font-display text-gold mb-3">Atributos</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(selectedCharacter.attributes || {}).map(([key, value]) => (
+                    <div key={key} className="flex justify-between font-body text-sm border-b border-gold-dim/20 pb-1">
+                      <span className="text-parchment-dim">{key}</span><span className="text-gold-bright">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+              <section className="md:col-span-2 bg-shadow/40 border border-gold-dim rounded-lg p-4">
+                <h3 className="font-display text-gold mb-3">Habilidades</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {Object.entries(selectedCharacter.skills || {}).filter(([, value]) => value > 0).map(([key, value]) => (
+                    <div key={key} className="flex justify-between font-body text-sm border-b border-gold-dim/20 pb-1">
+                      <span className="text-parchment-dim">{key}</span><span className="text-gold-bright">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+
+            <div className="mt-5 flex items-center gap-2 text-xs font-body text-parchment-dim/70">
+              <Lock className="w-4 h-4 text-gold" />
+              Ficha de criação bloqueada para edição e exclusão pelo jogador.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

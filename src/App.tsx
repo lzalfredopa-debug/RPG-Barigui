@@ -19,6 +19,7 @@ export default function App() {
       <CharacterCreation
         player={currentPlayer}
         onBack={() => setView('player')}
+        onCreated={() => setView('player')}
       />
     );
   }

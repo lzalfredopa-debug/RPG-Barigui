@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { ArrowLeft, ChevronRight, Check, Info } from 'lucide-react';
-import type { Player } from '@/lib/supabase';
+import { ArrowLeft, ChevronRight, Check, Info, Loader2, Lock } from 'lucide-react';
+import { supabase, type Player } from '@/lib/supabase';
 
 type CharacterCreationProps = {
   player: Player;
   onBack: () => void;
+  onCreated: () => void;
 };
 
 const STEPS = [
@@ -118,19 +119,19 @@ const ATTRIBUTE_GROUPS: AttributeGroup[] = [
 const SKILL_GROUPS = [
   {
     name: 'Marcial',
-    skills: ['Tática', 'Cavalaria', 'Esgrima', 'Luta', 'Vigilância', 'Proteção', 'Defesa', 'Armaduras', 'Escaramuça', 'Tiro', 'Emboscada', 'Atletismo'],
+    skills: [{ name: 'Tática', description: 'Capacidade de analisar e coordenar ações durante conflitos.', examples: 'Posicionamento, formações, coordenar aliados e explorar terreno.' }, { name: 'Cavalaria', description: 'Habilidade para montar e controlar animais, inclusive em situações de conflito.', examples: 'Cavalgar, controlar montaria, manobrar e combater montado.' }, { name: 'Esgrima', description: 'Técnica no uso preciso de armas brancas empunhadas.', examples: 'Espadas, sabres, floretes e aparar golpes.' }, { name: 'Luta', description: 'Capacidade de combater utilizando o próprio corpo.', examples: 'Socos, chutes, agarrões e imobilizações.' }, { name: 'Vigilância', description: 'Capacidade de manter atenção ativa diante de possíveis ameaças.', examples: 'Montar guarda, perceber aproximações e notar emboscadas.' }, { name: 'Proteção', description: 'Capacidade de defender outras pessoas contra perigos e ataques.', examples: 'Interceptar ataques, cobrir aliado, escoltar e proteger posição.' }, { name: 'Defesa', description: 'Técnica para evitar ou neutralizar ataques direcionados a si.', examples: 'Bloquear, aparar e assumir postura defensiva.' }, { name: 'Armaduras', description: 'Conhecimento e prática no uso de equipamentos de proteção.', examples: 'Vestir corretamente, movimentar-se com armadura e reconhecer proteções.' }, { name: 'Escaramuça', description: 'Capacidade de lutar com mobilidade e constante reposicionamento.', examples: 'Atacar e recuar, flanquear e realizar combate móvel.' }, { name: 'Tiro', description: 'Técnica para atingir alvos utilizando armas de ataque à distância.', examples: 'Arco, besta, armas de projétil e mirar.' }, { name: 'Emboscada', description: 'Capacidade de preparar e executar ataques aproveitando surpresa e posição.', examples: 'Preparar tocaia, escolher posição e atacar de surpresa.' }, { name: 'Atletismo', description: 'Capacidade física aplicada a atividades que exigem esforço e coordenação.', examples: 'Correr, escalar, nadar e saltar.' }],
   },
   {
     name: 'Campo & Ofício',
-    skills: ['Rastreamento', 'Condução', 'Furtividade', 'Arrombamento', 'Prestidigitação', 'Metalurgia', 'Construção', 'Mecânica', 'Alquimia', 'Sobrevivência', 'Exploração', 'Navegação'],
+    skills: [{ name: 'Rastreamento', description: 'Capacidade de identificar e seguir sinais deixados pela passagem de seres ou veículos.', examples: 'Pegadas, rastros, direção e sinais de passagem.' }, { name: 'Condução', description: 'Capacidade de controlar veículos, carroças e outros meios de transporte.', examples: 'Carroças, carruagens, trenós e manobras.' }, { name: 'Furtividade', description: 'Capacidade de agir e se deslocar evitando ser percebido.', examples: 'Esconder-se, mover-se silenciosamente e infiltrar-se.' }, { name: 'Arrombamento', description: 'Conhecimento de fechaduras e mecanismos utilizados para restringir acesso.', examples: 'Abrir fechaduras, identificar mecanismos e contornar trancas.' }, { name: 'Prestidigitação', description: 'Habilidade manual para realizar movimentos rápidos, precisos ou discretos.', examples: 'Esconder objetos, truques de mãos e pequenos furtos.' }, { name: 'Metalurgia', description: 'Conhecimento sobre metais e técnicas utilizadas para trabalhá-los.', examples: 'Forjar, reparar, avaliar metais e fabricar peças.' }, { name: 'Construção', description: 'Conhecimento prático para criar e reparar estruturas e objetos.', examples: 'Carpintaria, estruturas, reparos e avaliar construções.' }, { name: 'Mecânica', description: 'Conhecimento sobre mecanismos, engrenagens e dispositivos físicos.', examples: 'Reparar mecanismos, montar dispositivos e identificar falhas.' }, { name: 'Alquimia', description: 'Conhecimento sobre substâncias, suas propriedades e suas combinações.', examples: 'Preparar compostos, identificar substâncias e reagentes.' }, { name: 'Sobrevivência', description: 'Capacidade de obter recursos e permanecer seguro em ambientes naturais.', examples: 'Conseguir alimento, abrigo, água e reconhecer perigos naturais.' }, { name: 'Exploração', description: 'Capacidade de investigar e atravessar lugares desconhecidos.', examples: 'Explorar ruínas, cavernas, mapear áreas e encontrar passagens.' }, { name: 'Navegação', description: 'Capacidade de determinar posição, direção e trajetos.', examples: 'Mapas, bússola, estrelas e planejar rotas.' }],
   },
   {
     name: 'Sociedade, Cultura & Expressão',
-    skills: ['Escrita', 'Enganação', 'Trapaça', 'Jornadas', 'Poética', 'Interpretação', 'Música', 'Artes Visuais', 'Etiqueta', 'Mediação', 'Oratória', 'Negociação'],
+    skills: [{ name: 'Escrita', description: 'Capacidade de comunicar ideias e informações por meio de textos.', examples: 'Cartas, relatos, documentos e registros.' }, { name: 'Enganação', description: 'Capacidade de fazer outras pessoas acreditarem em informações falsas ou incompletas.', examples: 'Mentir, inventar histórias e disfarçar intenções.' }, { name: 'Trapaça', description: 'Capacidade de manipular regras, situações ou procedimentos em benefício próprio.', examples: 'Fraudar jogos, aplicar golpes e explorar brechas.' }, { name: 'Jornadas', description: 'Conhecimento adquirido por viagens, povos e experiências em diferentes lugares.', examples: 'Costumes regionais, rotas conhecidas e histórias de viagem.' }, { name: 'Poética', description: 'Capacidade de criar e transmitir ideias através da linguagem artística e narrativa.', examples: 'Poemas, histórias, versos e composição narrativa.' }, { name: 'Interpretação', description: 'Capacidade de representar personagens, emoções ou identidades.', examples: 'Atuação, imitação e disfarce comportamental.' }, { name: 'Música', description: 'Conhecimento e prática de expressão musical.', examples: 'Cantar, tocar instrumentos, compor e reconhecer melodias.' }, { name: 'Artes Visuais', description: 'Capacidade de criar e compreender obras expressas visualmente.', examples: 'Pintura, desenho, escultura e ilustração.' }, { name: 'Etiqueta', description: 'Conhecimento das normas sociais e comportamentos esperados em diferentes ambientes.', examples: 'Cerimônias, protocolos, costumes e formalidades.' }, { name: 'Mediação', description: 'Capacidade de facilitar entendimento entre pessoas ou grupos em desacordo.', examples: 'Conciliar disputas, encontrar acordos e reduzir conflitos.' }, { name: 'Oratória', description: 'Capacidade de transmitir ideias de forma clara e convincente diante de outras pessoas.', examples: 'Discursos, debates, apresentações e falar para multidões.' }, { name: 'Negociação', description: 'Capacidade de alcançar acordos através da troca de propostas e concessões.', examples: 'Barganhar, negociar contratos, preços e condições.' }],
   },
   {
     name: 'Conhecimento & Doutrina',
-    skills: ['Comércio', 'Finanças', 'Administração', 'Estratégia', 'Disciplina Marcial', 'Elementalismo', 'Arcanismo', 'Ritualismo', 'Manipulação Arcana', 'Teologia', 'Medicina', 'Espiritualismo'],
+    skills: [{ name: 'Comércio', description: 'Conhecimento sobre compra, venda e circulação de bens e serviços.', examples: 'Avaliar mercadorias, reconhecer mercados, preços e rotas comerciais.' }, { name: 'Finanças', description: 'Conhecimento sobre dinheiro, patrimônio, crédito e operações financeiras.', examples: 'Calcular juros, avaliar dívidas e administrar recursos.' }, { name: 'Administração', description: 'Capacidade de organizar recursos, pessoas e atividades para alcançar um objetivo.', examples: 'Planejamento, logística, gestão de equipes e organização.' }, { name: 'Estratégia', description: 'Capacidade de elaborar planos de longo prazo considerando recursos, objetivos e adversários.', examples: 'Campanhas, planejamento militar e antecipar consequências.' }, { name: 'Disciplina Marcial', description: 'Conhecimento de tradições, princípios e práticas formais relacionadas ao combate.', examples: 'Doutrinas militares, treinamento e códigos marciais.' }, { name: 'Elementalismo', description: 'Conhecimento sobre forças e manifestações associadas aos elementos.', examples: 'Fogo, água, terra, ar e fenômenos elementais.' }, { name: 'Arcanismo', description: 'Conhecimento teórico sobre magia e fenômenos arcanos.', examples: 'Reconhecer magia, símbolos arcanos e teorias mágicas.' }, { name: 'Ritualismo', description: 'Conhecimento sobre preparação, estrutura e execução de rituais.', examples: 'Círculos, componentes, cerimônias mágicas e identificar rituais.' }, { name: 'Manipulação Arcana', description: 'Conhecimento prático sobre como controlar e modificar manifestações mágicas.', examples: 'Conduzir energia, alterar efeitos e estabilizar fenômenos arcanos.' }, { name: 'Teologia', description: 'Conhecimento sobre divindades, religiões, crenças e suas tradições.', examples: 'Cultos, textos sagrados, símbolos religiosos e dogmas.' }, { name: 'Medicina', description: 'Conhecimento sobre o corpo, ferimentos, doenças e formas de tratamento.', examples: 'Diagnosticar, tratar ferimentos, anatomia e primeiros socorros.' }, { name: 'Espiritualismo', description: 'Conhecimento sobre espíritos e fenômenos relacionados ao mundo espiritual.', examples: 'Reconhecer manifestações, tradições espirituais, entidades e contato espiritual.' }],
   },
 ] as const;
 
@@ -141,7 +142,7 @@ const SKILL_INITIAL_POINTS = 8;
 const APPRENTICE_SKILL_MAX = 2;
 
 const allAttributeNames = ATTRIBUTE_GROUPS.flatMap((group) => group.attributes.map((attribute) => attribute.name));
-const allSkillNames = SKILL_GROUPS.flatMap((group) => [...group.skills]);
+const allSkillNames = SKILL_GROUPS.flatMap((group) => group.skills.map((skill) => skill.name));
 
 const GENDER_OPTIONS = [
   { id: 'ele', label: 'Ele / Dele' },
@@ -150,7 +151,7 @@ const GENDER_OPTIONS = [
   { id: 'neutro', label: 'Não faz diferença' },
 ];
 
-export default function CharacterCreation({ onBack }: CharacterCreationProps) {
+export default function CharacterCreation({ player, onBack, onCreated }: CharacterCreationProps) {
   const [currentStep, setCurrentStep] = useState(1);
 
   const [name, setName] = useState('');
@@ -165,6 +166,9 @@ export default function CharacterCreation({ onBack }: CharacterCreationProps) {
   const [skills, setSkills] = useState<Record<string, number>>(() =>
     Object.fromEntries(allSkillNames.map((skill) => [skill, 0]))
   );
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   const selectedRace = RACES.find((item) => item.name === race);
   const isFormValid = name.trim() !== '' && age.trim() !== '' && race !== '' && lineage !== '';
@@ -191,6 +195,41 @@ export default function CharacterCreation({ onBack }: CharacterCreationProps) {
     setSkills((current) => ({ ...current, [skill]: rank }));
   };
 
+  const genderLabel = GENDER_OPTIONS.find((option) => option.id === gender)?.label || 'Não informado';
+  const selectedLineage = selectedRace?.lineages.find((item) => item.name === lineage);
+  const selectedSkills = Object.entries(skills).filter(([, rank]) => rank > 0);
+
+  const handleFinalize = async () => {
+    if (saving) return;
+    setSaving(true);
+    setSaveError('');
+
+    try {
+      const { error } = await supabase.from('characters').insert({
+        player_id: player.id,
+        name: name.trim(),
+        nickname: nickname.trim() || null,
+        age: Number(age),
+        gender: gender || null,
+        race,
+        lineage,
+        level: 1,
+        class_name: 'Aprendiz',
+        attributes,
+        skills,
+      });
+
+      if (error) throw error;
+      setConfirmOpen(false);
+      onCreated();
+    } catch (error) {
+      console.error(error);
+      setSaveError('Não foi possível salvar o personagem. Nada foi apagado: revise sua conexão e tente novamente.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const canContinue =
     (currentStep === 1 && isFormValid) ||
     (currentStep === 2 && attributePointsRemaining === 0) ||
@@ -202,7 +241,12 @@ export default function CharacterCreation({ onBack }: CharacterCreationProps) {
   };
 
   const goForward = () => {
-    if (currentStep < STEPS.length && canContinue) setCurrentStep((step) => step + 1);
+    if (!canContinue) return;
+    if (currentStep < STEPS.length) {
+      setCurrentStep((step) => step + 1);
+      return;
+    }
+    setConfirmOpen(true);
   };
 
   const selectRace = (raceName: string) => {
@@ -511,16 +555,26 @@ export default function CharacterCreation({ onBack }: CharacterCreationProps) {
                     <h3 className="font-display text-base text-gold mb-4 min-h-10">{group.name}</h3>
                     <div className="space-y-4">
                       {group.skills.map((skill) => {
-                        const rank = skills[skill] ?? 0;
+                        const rank = skills[skill.name] ?? 0;
                         return (
-                          <div key={skill}>
-                            <div className="font-body text-sm text-parchment mb-1.5">{skill}</div>
-                            <div className="flex gap-1.5" aria-label={`${skill}: ${rank} de 5 pontos`}>
+                          <div key={skill.name}>
+                            <div className="relative group/skill-tooltip inline-flex items-center gap-1.5 font-body text-sm text-parchment mb-1.5">
+                              <span>{skill.name}</span>
+                              <button type="button" className="focus:outline-none" aria-label={`Informações sobre ${skill.name}`}>
+                                <Info className="w-3.5 h-3.5 text-gold-dim cursor-help" />
+                              </button>
+                              <div className="pointer-events-none absolute left-0 bottom-full mb-2 z-30 w-64 opacity-0 group-hover/skill-tooltip:opacity-100 focus-within:opacity-100 transition-opacity bg-stone border border-gold rounded-lg p-3 shadow-gold text-left">
+                                <strong className="block font-display text-gold-bright text-sm mb-1">{skill.name}</strong>
+                                <span className="block font-body text-xs text-parchment mb-1">{skill.description}</span>
+                                <span className="block font-body text-xs text-parchment-dim">{skill.examples}</span>
+                              </div>
+                            </div>
+                            <div className="flex gap-1.5" aria-label={`${skill.name}: ${rank} de 5 pontos`}>
                               {[1,2,3,4,5].map((point) => {
                                 const enabled = point <= APPRENTICE_SKILL_MAX;
                                 const filled = point <= rank;
                                 return (
-                                  <button key={point} type="button" disabled={!enabled} onClick={() => enabled && setSkillRank(skill, point === rank ? point - 1 : point)} className={`w-5 h-5 rounded-full border transition-all ${filled ? 'bg-gold border-gold-bright shadow-gold' : enabled ? 'bg-shadow border-gold-dim hover:border-gold' : 'bg-shadow/30 border-gold-dim/25 opacity-35 cursor-not-allowed'}`} title={enabled ? `${point} ponto${point > 1 ? 's' : ''}` : 'Disponível em estágios futuros'} />
+                                  <button key={point} type="button" disabled={!enabled} onClick={() => enabled && setSkillRank(skill.name, point === rank ? point - 1 : point)} className={`w-5 h-5 rounded-full border transition-all ${filled ? 'bg-gold border-gold-bright shadow-gold' : enabled ? 'bg-shadow border-gold-dim hover:border-gold' : 'bg-shadow/30 border-gold-dim/25 opacity-35 cursor-not-allowed'}`} title={enabled ? `${point} ponto${point > 1 ? 's' : ''}` : 'Disponível em estágios futuros'} />
                                 );
                               })}
                             </div>
@@ -538,7 +592,67 @@ export default function CharacterCreation({ onBack }: CharacterCreationProps) {
           {currentStep === 4 && (
             <>
               <h2 className="font-display text-xl sm:text-2xl text-gold-bright text-shadow-gold mb-2">Etapa 4 — Revisão</h2>
-              <p className="text-parchment-dim font-body text-sm sm:text-base">A revisão final será implementada na próxima etapa. Seus Atributos e Habilidades já permanecem selecionados ao voltar entre as etapas.</p>
+              <p className="text-parchment-dim font-body text-sm sm:text-base mb-6">
+                Confira tudo antes de finalizar. Depois da confirmação, o jogador não poderá editar nem excluir este personagem.
+              </p>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <section className="bg-shadow/40 border border-gold-dim rounded-xl p-5">
+                  <h3 className="font-display text-lg text-gold-bright mb-4">Identidade</h3>
+                  <div className="space-y-2 font-body text-sm">
+                    <p><span className="text-parchment-dim">Nome:</span> <span className="text-parchment">{name}</span></p>
+                    <p><span className="text-parchment-dim">Apelido:</span> <span className="text-parchment">{nickname || '—'}</span></p>
+                    <p><span className="text-parchment-dim">Idade:</span> <span className="text-parchment">{age}</span></p>
+                    <p><span className="text-parchment-dim">Gênero e pronomes:</span> <span className="text-parchment">{genderLabel}</span></p>
+                    <p><span className="text-parchment-dim">Nível:</span> <span className="text-parchment">1</span></p>
+                    <p><span className="text-parchment-dim">Classe:</span> <span className="text-gold-bright">Aprendiz</span></p>
+                  </div>
+                </section>
+
+                <section className="bg-shadow/40 border border-gold-dim rounded-xl p-5">
+                  <h3 className="font-display text-lg text-gold-bright mb-4">Raça e Linhagem</h3>
+                  {selectedLineage && (
+                    <img src={selectedLineage.image} alt={`Linhagem ${lineage}`} className="w-full max-h-56 object-contain rounded-lg border border-gold-dim mb-4" />
+                  )}
+                  <p className="font-body text-sm text-parchment"><span className="text-parchment-dim">Raça:</span> {race}</p>
+                  <p className="font-body text-sm text-parchment mt-2"><span className="text-parchment-dim">Linhagem:</span> {lineage}</p>
+                </section>
+
+                <section className="bg-shadow/40 border border-gold-dim rounded-xl p-5">
+                  <h3 className="font-display text-lg text-gold-bright mb-4">Atributos</h3>
+                  <div className="grid grid-cols-2 gap-x-5 gap-y-2">
+                    {ATTRIBUTE_GROUPS.flatMap((group) => group.attributes).map((attribute) => (
+                      <div key={attribute.name} className="flex justify-between gap-3 font-body text-sm border-b border-gold-dim/20 pb-1">
+                        <span className="text-parchment-dim">{attribute.name}</span>
+                        <span className="text-gold-bright">{attributes[attribute.name]}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="bg-shadow/40 border border-gold-dim rounded-xl p-5">
+                  <h3 className="font-display text-lg text-gold-bright mb-4">Habilidades escolhidas</h3>
+                  {selectedSkills.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2">
+                      {selectedSkills.map(([skill, rank]) => (
+                        <div key={skill} className="flex justify-between gap-3 font-body text-sm border-b border-gold-dim/20 pb-1">
+                          <span className="text-parchment-dim">{skill}</span>
+                          <span className="text-gold-bright">{rank}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="font-body text-sm text-parchment-dim">Nenhuma habilidade recebeu pontos.</p>
+                  )}
+                </section>
+              </div>
+
+              <div className="mt-6 flex items-start gap-3 bg-blood/10 border border-blood/40 rounded-lg p-4">
+                <Lock className="w-5 h-5 text-gold shrink-0 mt-0.5" />
+                <p className="font-body text-sm text-parchment-dim">
+                  Ao finalizar, esta ficha será salva como permanente para o jogador. A evolução futura será feita pelos sistemas de progressão, não pela edição da criação.
+                </p>
+              </div>
             </>
           )}
         </div>
@@ -560,11 +674,36 @@ export default function CharacterCreation({ onBack }: CharacterCreationProps) {
             disabled={!canContinue}
             className="flex items-center gap-2 text-stone font-display text-sm font-600 tracking-wide px-5 py-2.5 rounded-lg bg-gradient-gold shadow-gold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 active:brightness-95"
           >
-            Continuar
-            <ChevronRight className="w-4 h-4" />
+            {currentStep === 4 ? 'Finalizar personagem' : 'Continuar'}
+            {currentStep === 4 ? <Check className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
         </div>
       </footer>
+
+      {confirmOpen && (
+        <div className="fixed inset-0 z-50 bg-shadow/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-stone border border-gold rounded-xl p-6 shadow-gold">
+            <div className="flex items-center gap-3 mb-4">
+              <Lock className="w-6 h-6 text-gold-bright" />
+              <h3 className="font-display text-xl text-gold-bright">Finalizar personagem?</h3>
+            </div>
+            <p className="font-body text-sm text-parchment-dim leading-relaxed">
+              Revise sua ficha antes de continuar. Após a criação, as informações do personagem não poderão ser alteradas ou excluídas pelo jogador.
+            </p>
+            {saveError && (
+              <p className="mt-4 font-body text-sm text-blood bg-blood/10 border border-blood/40 rounded-lg p-3">{saveError}</p>
+            )}
+            <div className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+              <button type="button" disabled={saving} onClick={() => { setConfirmOpen(false); setSaveError(''); }} className="px-4 py-2.5 rounded-lg border border-gold-dim text-parchment-dim font-body text-sm hover:border-gold hover:text-parchment disabled:opacity-50">
+                Voltar à revisão
+              </button>
+              <button type="button" disabled={saving} onClick={handleFinalize} className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-gold text-stone font-display text-sm shadow-gold hover:brightness-110 disabled:opacity-50">
+                {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</> : <><Check className="w-4 h-4" /> Confirmar criação</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

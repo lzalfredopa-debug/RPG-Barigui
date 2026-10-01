@@ -133,6 +133,203 @@ const SKILL_GROUPS = [
     skills: ['Comércio', 'Finanças', 'Administração', 'Estratégia', 'Disciplina Marcial', 'Elementalismo', 'Arcanismo', 'Ritualismo', 'Manipulação Arcana', 'Teologia', 'Medicina', 'Espiritualismo'],
   },
 ] as const;
+const SKILL_DESCRIPTIONS: Record<string, { description: string; examples: string }> = {
+  'Tática': {
+    description: 'Capacidade de analisar e coordenar ações durante conflitos.',
+    examples: 'Posicionamento, formações, coordenar aliados e explorar terreno.',
+  },
+  'Cavalaria': {
+    description: 'Habilidade para montar e controlar animais, inclusive em situações de conflito.',
+    examples: 'Cavalgar, controlar montaria, manobrar e combater montado.',
+  },
+  'Esgrima': {
+    description: 'Técnica no uso preciso de armas brancas empunhadas.',
+    examples: 'Espadas, sabres, floretes e aparar golpes.',
+  },
+  'Luta': {
+    description: 'Capacidade de combater utilizando o próprio corpo.',
+    examples: 'Socos, chutes, agarrões e imobilizações.',
+  },
+  'Vigilância': {
+    description: 'Capacidade de manter atenção ativa diante de possíveis ameaças.',
+    examples: 'Montar guarda, perceber aproximações e notar emboscadas.',
+  },
+  'Proteção': {
+    description: 'Capacidade de defender outras pessoas contra perigos e ataques.',
+    examples: 'Interceptar ataques, cobrir aliado, escoltar e proteger posição.',
+  },
+  'Defesa': {
+    description: 'Técnica para evitar ou neutralizar ataques direcionados a si.',
+    examples: 'Bloquear, aparar e assumir postura defensiva.',
+  },
+  'Armaduras': {
+    description: 'Conhecimento e prática no uso de equipamentos de proteção.',
+    examples: 'Vestir corretamente, movimentar-se com armadura e reconhecer proteções.',
+  },
+  'Escaramuça': {
+    description: 'Capacidade de lutar com mobilidade e constante reposicionamento.',
+    examples: 'Atacar e recuar, flanquear e realizar combate móvel.',
+  },
+  'Tiro': {
+    description: 'Técnica para atingir alvos utilizando armas de ataque à distância.',
+    examples: 'Arco, besta, armas de projétil e mirar.',
+  },
+  'Emboscada': {
+    description: 'Capacidade de preparar e executar ataques aproveitando surpresa e posição.',
+    examples: 'Preparar tocaia, escolher posição e atacar de surpresa.',
+  },
+  'Atletismo': {
+    description: 'Capacidade física aplicada a atividades que exigem esforço e coordenação.',
+    examples: 'Correr, escalar, nadar e saltar.',
+  },
+
+  'Rastreamento': {
+    description: 'Capacidade de identificar e seguir sinais deixados pela passagem de seres ou veículos.',
+    examples: 'Pegadas, rastros, direção e sinais de passagem.',
+  },
+  'Condução': {
+    description: 'Capacidade de controlar veículos, carroças e outros meios de transporte.',
+    examples: 'Carroças, carruagens, trenós e manobras.',
+  },
+  'Furtividade': {
+    description: 'Capacidade de agir e se deslocar evitando ser percebido.',
+    examples: 'Esconder-se, mover-se silenciosamente e infiltrar-se.',
+  },
+  'Arrombamento': {
+    description: 'Conhecimento de fechaduras e mecanismos utilizados para restringir acesso.',
+    examples: 'Abrir fechaduras, identificar mecanismos e contornar trancas.',
+  },
+  'Prestidigitação': {
+    description: 'Habilidade manual para realizar movimentos rápidos, precisos ou discretos.',
+    examples: 'Esconder objetos, truques de mãos e pequenos furtos.',
+  },
+  'Metalurgia': {
+    description: 'Conhecimento sobre metais e técnicas utilizadas para trabalhá-los.',
+    examples: 'Forjar, reparar, avaliar metais e fabricar peças.',
+  },
+  'Construção': {
+    description: 'Conhecimento prático para criar e reparar estruturas e objetos.',
+    examples: 'Carpintaria, estruturas, reparos e avaliar construções.',
+  },
+  'Mecânica': {
+    description: 'Conhecimento sobre mecanismos, engrenagens e dispositivos físicos.',
+    examples: 'Reparar mecanismos, montar dispositivos e identificar falhas.',
+  },
+  'Alquimia': {
+    description: 'Conhecimento sobre substâncias, suas propriedades e suas combinações.',
+    examples: 'Preparar compostos, identificar substâncias e reagentes.',
+  },
+  'Sobrevivência': {
+    description: 'Capacidade de obter recursos e permanecer seguro em ambientes naturais.',
+    examples: 'Conseguir alimento, abrigo, água e reconhecer perigos naturais.',
+  },
+  'Exploração': {
+    description: 'Capacidade de investigar e atravessar lugares desconhecidos.',
+    examples: 'Explorar ruínas, cavernas, mapear áreas e encontrar passagens.',
+  },
+  'Navegação': {
+    description: 'Capacidade de determinar posição, direção e trajetos.',
+    examples: 'Mapas, bússola, estrelas e planejar rotas.',
+  },
+
+  'Escrita': {
+    description: 'Capacidade de comunicar ideias e informações por meio de textos.',
+    examples: 'Cartas, relatos, documentos e registros.',
+  },
+  'Enganação': {
+    description: 'Capacidade de fazer outras pessoas acreditarem em informações falsas ou incompletas.',
+    examples: 'Mentir, inventar histórias e disfarçar intenções.',
+  },
+  'Trapaça': {
+    description: 'Capacidade de manipular regras, situações ou procedimentos em benefício próprio.',
+    examples: 'Fraudar jogos, aplicar golpes e explorar brechas.',
+  },
+  'Jornadas': {
+    description: 'Conhecimento adquirido por viagens, povos e experiências em diferentes lugares.',
+    examples: 'Costumes regionais, rotas conhecidas e histórias de viagem.',
+  },
+  'Poética': {
+    description: 'Capacidade de criar e transmitir ideias através da linguagem artística e narrativa.',
+    examples: 'Poemas, histórias, versos e composição narrativa.',
+  },
+  'Interpretação': {
+    description: 'Capacidade de representar personagens, emoções ou identidades.',
+    examples: 'Atuação, imitação e disfarce comportamental.',
+  },
+  'Música': {
+    description: 'Conhecimento e prática de expressão musical.',
+    examples: 'Cantar, tocar instrumentos, compor e reconhecer melodias.',
+  },
+  'Artes Visuais': {
+    description: 'Capacidade de criar e compreender obras expressas visualmente.',
+    examples: 'Pintura, desenho, escultura e ilustração.',
+  },
+  'Etiqueta': {
+    description: 'Conhecimento das normas sociais e comportamentos esperados em diferentes ambientes.',
+    examples: 'Cerimônias, protocolos, costumes e formalidades.',
+  },
+  'Mediação': {
+    description: 'Capacidade de facilitar entendimento entre pessoas ou grupos em desacordo.',
+    examples: 'Conciliar disputas, encontrar acordos e reduzir conflitos.',
+  },
+  'Oratória': {
+    description: 'Capacidade de transmitir ideias de forma clara e convincente diante de outras pessoas.',
+    examples: 'Discursos, debates, apresentações e falar para multidões.',
+  },
+  'Negociação': {
+    description: 'Capacidade de alcançar acordos através da troca de propostas e concessões.',
+    examples: 'Barganhar, negociar contratos, preços e condições.',
+  },
+
+  'Comércio': {
+    description: 'Conhecimento sobre compra, venda e circulação de bens e serviços.',
+    examples: 'Avaliar mercadorias, reconhecer mercados, preços e rotas comerciais.',
+  },
+  'Finanças': {
+    description: 'Conhecimento sobre dinheiro, patrimônio, crédito e operações financeiras.',
+    examples: 'Calcular juros, avaliar dívidas e administrar recursos.',
+  },
+  'Administração': {
+    description: 'Capacidade de organizar recursos, pessoas e atividades para alcançar um objetivo.',
+    examples: 'Planejamento, logística, gestão de equipes e organização.',
+  },
+  'Estratégia': {
+    description: 'Capacidade de elaborar planos de longo prazo considerando recursos, objetivos e adversários.',
+    examples: 'Campanhas, planejamento militar e antecipar consequências.',
+  },
+  'Disciplina Marcial': {
+    description: 'Conhecimento de tradições, princípios e práticas formais relacionadas ao combate.',
+    examples: 'Doutrinas militares, treinamento e códigos marciais.',
+  },
+  'Elementalismo': {
+    description: 'Conhecimento sobre forças e manifestações associadas aos elementos.',
+    examples: 'Fogo, água, terra, ar e fenômenos elementais.',
+  },
+  'Arcanismo': {
+    description: 'Conhecimento teórico sobre magia e fenômenos arcanos.',
+    examples: 'Reconhecer magia, símbolos arcanos e teorias mágicas.',
+  },
+  'Ritualismo': {
+    description: 'Conhecimento sobre preparação, estrutura e execução de rituais.',
+    examples: 'Círculos, componentes, cerimônias mágicas e identificar rituais.',
+  },
+  'Manipulação Arcana': {
+    description: 'Conhecimento prático sobre como controlar e modificar manifestações mágicas.',
+    examples: 'Conduzir energia, alterar efeitos e estabilizar fenômenos arcanos.',
+  },
+  'Teologia': {
+    description: 'Conhecimento sobre divindades, religiões, crenças e suas tradições.',
+    examples: 'Cultos, textos sagrados, símbolos religiosos e dogmas.',
+  },
+  'Medicina': {
+    description: 'Conhecimento sobre o corpo, ferimentos, doenças e formas de tratamento.',
+    examples: 'Diagnosticar, tratar ferimentos, anatomia e primeiros socorros.',
+  },
+  'Espiritualismo': {
+    description: 'Conhecimento sobre espíritos e fenômenos relacionados ao mundo espiritual.',
+    examples: 'Reconhecer manifestações, tradições espirituais, entidades e contato espiritual.',
+  },
+};
 
 const ATTRIBUTE_INITIAL_POINTS = 1;
 const ATTRIBUTE_BONUS_POINTS = 4;

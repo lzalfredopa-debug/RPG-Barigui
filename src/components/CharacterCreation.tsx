@@ -17,59 +17,59 @@ const STEPS = [
 
 
 
-type Lineage = { name: string; description: string };
+type Lineage = { name: string; description: string; image: string };
 type Race = { name: string; lineages: Lineage[] };
 
 const RACES: Race[] = [
   { name: 'Humanos', lineages: [
-    { name: 'Terranos', description: 'Constituição próxima à humana comum, com grande variedade de aparência. Representam a ancestralidade humana mais difundida.' },
-    { name: 'Altaneiros', description: 'Descendentes de povos das grandes altitudes, com facilidade para respirar em ar rarefeito e suportar o frio.' },
-    { name: 'Marítimos', description: 'Descendentes de povos dos arquipélagos, com adaptações à vida na água, como maior capacidade de prender a respiração.' },
+    { name: 'Terranos', image: '/images/linhagens/humanos-terrano.png', description: 'Constituição próxima à humana comum, com grande variedade de aparência. Representam a ancestralidade humana mais difundida.' },
+    { name: 'Altaneiros', image: '/images/linhagens/humanos-altaneiro.png', description: 'Descendentes de povos das grandes altitudes, com facilidade para respirar em ar rarefeito e suportar o frio.' },
+    { name: 'Marítimos', image: '/images/linhagens/humanos-maritimo.png', description: 'Descendentes de povos dos arquipélagos, com adaptações à vida na água, como maior capacidade de prender a respiração.' },
   ]},
   { name: 'Elfos', lineages: [
-    { name: 'Silvestres', description: 'Herança ligada às florestas; olhos e cabelos podem apresentar tons de folhas, madeira e âmbar.' },
-    { name: 'Astrais', description: 'Herança ligada ao céu noturno; olhos luminosos e marcas semelhantes a constelações.' },
-    { name: 'Profundos', description: 'Adaptados ao subterrâneo; olhos sensíveis à luz e aparência em tons de pedra, cinza ou violeta.' },
+    { name: 'Silvestres', image: '/images/linhagens/elfos-silvestre.png', description: 'Herança ligada às florestas; olhos e cabelos podem apresentar tons de folhas, madeira e âmbar.' },
+    { name: 'Astrais', image: '/images/linhagens/elfos-astral.png', description: 'Herança ligada ao céu noturno; olhos luminosos e marcas semelhantes a constelações.' },
+    { name: 'Profundos', image: '/images/linhagens/elfos-profundo.png', description: 'Adaptados ao subterrâneo; olhos sensíveis à luz e aparência em tons de pedra, cinza ou violeta.' },
   ]},
   { name: 'Anões', lineages: [
-    { name: 'Graníticos', description: 'Corpos compactos e ossatura densa, associados às antigas linhagens das montanhas.' },
-    { name: 'Ígneos', description: 'Herança de regiões vulcânicas; pele quente e cabelos em tons de cobre, carvão ou brasa.' },
-    { name: 'Cristalinos', description: 'Pequenas formações minerais surgem na pele ou nos cabelos, com sensibilidade às vibrações da pedra.' },
+    { name: 'Graníticos', image: '/images/linhagens/anoes-granitico.png', description: 'Corpos compactos e ossatura densa, associados às antigas linhagens das montanhas.' },
+    { name: 'Ígneos', image: '/images/linhagens/anoes-igneo.png', description: 'Herança de regiões vulcânicas; pele quente e cabelos em tons de cobre, carvão ou brasa.' },
+    { name: 'Cristalinos', image: '/images/linhagens/anoes-cristalino.png', description: 'Pequenas formações minerais surgem na pele ou nos cabelos, com sensibilidade às vibrações da pedra.' },
   ]},
   { name: 'Orcs', lineages: [
-    { name: 'Colossais', description: 'Maior estatura e musculatura, com presas e estrutura óssea acentuadas.' },
-    { name: 'Glaciais', description: 'Pelagem fina ou cabelos densos, pele em tons frios e adaptação às baixas temperaturas.' },
-    { name: 'Rubros', description: 'Pele em tons de ocre, cobre ou vermelho, com adaptação ao calor de regiões áridas.' },
+    { name: 'Colossais', image: '/images/linhagens/orcs-colossal.png', description: 'Maior estatura e musculatura, com presas e estrutura óssea acentuadas.' },
+    { name: 'Glaciais', image: '/images/linhagens/orcs-glacial.png', description: 'Pelagem fina ou cabelos densos, pele em tons frios e adaptação às baixas temperaturas.' },
+    { name: 'Rubros', image: '/images/linhagens/orcs-rubro.png', description: 'Pele em tons de ocre, cobre ou vermelho, com adaptação ao calor de regiões áridas.' },
   ]},
   { name: 'Pequeninos', lineages: [
-    { name: 'Campestres', description: 'Pés largos, geralmente cobertos de pelos, e constituição robusta para seu tamanho.' },
-    { name: 'Brumosos', description: 'Herança feérica sutil, com passos silenciosos e contornos que parecem se confundir com a névoa.' },
-    { name: 'Ribeirinhos', description: 'Dedos parcialmente palmados e facilidade para nadar e se movimentar em terrenos alagados.' },
+    { name: 'Campestres', image: '/images/linhagens/pequeninos-campestre.png', description: 'Pés largos, geralmente cobertos de pelos, e constituição robusta para seu tamanho.' },
+    { name: 'Brumosos', image: '/images/linhagens/pequeninos-brumoso.png', description: 'Herança feérica sutil, com passos silenciosos e contornos que parecem se confundir com a névoa.' },
+    { name: 'Ribeirinhos', image: '/images/linhagens/pequeninos-ribeirinho.png', description: 'Dedos parcialmente palmados e facilidade para nadar e se movimentar em terrenos alagados.' },
   ]},
   { name: 'Goblins', lineages: [
-    { name: 'Cavernícolas', description: 'Olhos e orelhas grandes, adaptados à percepção em ambientes subterrâneos.' },
-    { name: 'Arborícolas', description: 'Membros alongados e dedos fortes, próprios para agarrar galhos e escalar.' },
-    { name: 'Ferruginosos', description: 'Pele de aspecto salpicado, em tons de ferrugem, e capacidade de perceber metais pelo cheiro.' },
+    { name: 'Cavernícolas', image: '/images/linhagens/goblins-cavernicola.png', description: 'Olhos e orelhas grandes, adaptados à percepção em ambientes subterrâneos.' },
+    { name: 'Arborícolas', image: '/images/linhagens/goblins-arboricola.png', description: 'Membros alongados e dedos fortes, próprios para agarrar galhos e escalar.' },
+    { name: 'Ferruginosos', image: '/images/linhagens/goblins-ferruginoso.png', description: 'Pele de aspecto salpicado, em tons de ferrugem, e capacidade de perceber metais pelo cheiro.' },
   ]},
   { name: 'Tiferinos', lineages: [
-    { name: 'Infernais', description: 'Chifres marcantes, cauda e sinais de uma herança ligada ao fogo e a antigos pactos.' },
-    { name: 'Abissais', description: 'Traços assimétricos, chifres irregulares e manifestações de uma herança ligada ao caos e à transformação.' },
-    { name: 'Umbráticos', description: 'Cores escuras ou desbotadas, olhos contrastantes e sombras que parecem acompanhar seus movimentos com atraso.' },
+    { name: 'Infernais', image: '/images/linhagens/tiferinos-infernal.png', description: 'Chifres marcantes, cauda e sinais de uma herança ligada ao fogo e a antigos pactos.' },
+    { name: 'Abissais', image: '/images/linhagens/tiferinos-abissal.png', description: 'Traços assimétricos, chifres irregulares e manifestações de uma herança ligada ao caos e à transformação.' },
+    { name: 'Umbráticos', image: '/images/linhagens/tiferinos-umbratico.png', description: 'Cores escuras ou desbotadas, olhos contrastantes e sombras que parecem acompanhar seus movimentos com atraso.' },
   ]},
   { name: 'Povo Fúngico', lineages: [
-    { name: 'Micelares', description: 'Corpos fibrosos, semelhantes a raízes entrelaçadas, capazes de perceber sinais através de redes de fungos.' },
-    { name: 'Chapeleiros', description: 'Chapéus de cogumelo de diferentes formatos e cores; produzem pequenos conjuntos de esporos.' },
-    { name: 'Luminescentes', description: 'Partes do corpo emitem luz, usada para iluminar suavemente e transmitir sinais.' },
+    { name: 'Micelares', image: '/images/linhagens/povo-fungico-micelar.png', description: 'Corpos fibrosos, semelhantes a raízes entrelaçadas, capazes de perceber sinais através de redes de fungos.' },
+    { name: 'Chapeleiros', image: '/images/linhagens/povo-fungico-chapeleiro.png', description: 'Chapéus de cogumelo de diferentes formatos e cores; produzem pequenos conjuntos de esporos.' },
+    { name: 'Luminescentes', image: '/images/linhagens/povo-fungico-luminescente.png', description: 'Partes do corpo emitem luz, usada para iluminar suavemente e transmitir sinais.' },
   ]},
   { name: 'Draconatos', lineages: [
-    { name: 'Metálicos', description: 'Escamas com brilho e aspecto de metal.' },
-    { name: 'Cromáticos', description: 'Escamas de cores intensas e bem definidas.' },
-    { name: 'Gemáticos', description: 'Escamas cristalinas ou facetadas, semelhantes a pedras preciosas.' },
+    { name: 'Metálicos', image: '/images/linhagens/draconatos-metalico.png', description: 'Escamas com brilho e aspecto de metal.' },
+    { name: 'Cromáticos', image: '/images/linhagens/draconatos-cromatico.png', description: 'Escamas de cores intensas e bem definidas.' },
+    { name: 'Gemáticos', image: '/images/linhagens/draconatos-gematico.png', description: 'Escamas cristalinas ou facetadas, semelhantes a pedras preciosas.' },
   ]},
   { name: 'Povo Fera', lineages: [
-    { name: 'Felinos', description: 'Traços de gatos, linces, onças ou leões, com garras retráteis e equilíbrio apurado.' },
-    { name: 'Canídeos', description: 'Traços de lobos, cães ou raposas, com olfato desenvolvido e orelhas expressivas.' },
-    { name: 'Avianos', description: 'Penas, bicos e características de diferentes aves. O formato das asas e sua utilidade ainda serão definidos.' },
+    { name: 'Felinos', image: '/images/linhagens/povo-fera-felino.png', description: 'Traços de gatos, linces, onças ou leões, com garras retráteis e equilíbrio apurado.' },
+    { name: 'Canídeos', image: '/images/linhagens/povo-fera-canideo.png', description: 'Traços de lobos, cães ou raposas, com olfato desenvolvido e orelhas expressivas.' },
+    { name: 'Avianos', image: '/images/linhagens/povo-fera-aviano.png', description: 'Penas, bicos e características de diferentes aves. O formato das asas e sua utilidade ainda serão definidos.' },
   ]},
 ];
 
@@ -311,6 +311,12 @@ export default function CharacterCreation({ onBack }: CharacterCreationProps) {
                             : 'bg-shadow/60 border-gold-dim hover:border-gold/60'
                         }`}
                       >
+                        <img
+                          src={item.image}
+                          alt={`Ilustração da linhagem ${item.name}`}
+                          className="block w-full h-auto rounded-md mb-4 border border-gold-dim/60"
+                          loading="lazy"
+                        />
                         <span className={`block font-display text-sm mb-2 ${lineage === item.name ? 'text-gold-bright' : 'text-gold'}`}>
                           {item.name}
                         </span>

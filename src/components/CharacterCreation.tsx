@@ -427,10 +427,11 @@ export default function CharacterCreation({ player, onBack, onCreated }: Charact
     }
   };
 
-  const canContinue =
+ const canContinue =
     (currentStep === 1 && isFormValid) ||
     (currentStep === 2 && attributePointsRemaining === 0) ||
-    (currentStep === 3 && skillPointsRemaining === 0);
+    (currentStep === 3 && skillPointsRemaining === 0) ||
+    currentStep === 4;
 
   const goBack = () => {
     if (currentStep === 1) onBack();

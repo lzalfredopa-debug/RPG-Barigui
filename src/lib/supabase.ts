@@ -34,6 +34,7 @@ export type Suggestion = {
   player_id: string;
   content: string;
   created_at: string;
+  status?: 'nova' | 'lida' | 'resolvida';
 };
 
 

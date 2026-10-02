@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import LoginScreen from '@/components/LoginScreen';
 import PlayerPage from '@/components/PlayerPage';
+import MasterPage from '@/components/MasterPage';
 import CharacterCreation from '@/components/CharacterCreation';
 import { type Player } from '@/lib/supabase';
 
@@ -12,6 +13,10 @@ export default function App() {
 
   if (!currentPlayer) {
     return <LoginScreen onLogin={(player) => { setCurrentPlayer(player); setView('player'); }} />;
+  }
+
+  if (currentPlayer.player_identifier === 'Mestre' && view === 'player') {
+    return <MasterPage player={currentPlayer} onLogout={() => { setCurrentPlayer(null); setView('login'); }} />;
   }
 
   if (view === 'character-creation') {

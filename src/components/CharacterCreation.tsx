@@ -416,8 +416,8 @@ export default function CharacterCreation({ player, onBack, onCreated }: Charact
     try {
       const { error } = await supabase.from('characters').insert({
         player_id: player.id,
-        name: name.trim(),
-        nickname: nickname.trim() || null,
+        name: name.trim().normalize('NFC'),
+        nickname: nickname.trim().normalize('NFC') || null,
         age: Number(age),
         gender: gender || null,
         race,

@@ -11,6 +11,7 @@ export type Player = {
   status: 'ativa' | 'espera';
   player_name: string | null;
   player_identifier: string | null;
+  character_creation_allowed?: boolean;
 };
 
 export type PersonalNote = {
@@ -74,6 +75,10 @@ export type Character = {
   // Recursos atuais
   current_hp: number | null;
   current_mp: number | null;
+
+  // Estado e apresentação
+  status: 'vivo' | 'morto' | 'desaparecido';
+  thumbnail_url: string | null;
 
   created_at: string;
 };

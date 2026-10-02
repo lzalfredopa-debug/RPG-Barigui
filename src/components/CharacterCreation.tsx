@@ -437,6 +437,7 @@ export default function CharacterCreation({ player, onBack, onCreated }: Charact
         level: 1,
         class_name: null,
         specialization: null,
+        status: 'vivo',
         current_hp: 15 + ((attributes['Vigor'] ?? 1) * 5),
         current_mp: (() => {
           const mental = Math.max(...['Inteligência', 'Raciocínio', 'Sabedoria', 'Percepção'].map((key) => attributes[key] ?? 0));
@@ -448,6 +449,9 @@ export default function CharacterCreation({ player, onBack, onCreated }: Charact
       });
 
       if (error) throw error;
+      if (player.character_creation_allowed) {
+        await supabase.from('players').update({ character_creation_allowed: false }).eq('id', player.id);
+      }
       setConfirmOpen(false);
       onCreated();
     } catch (error) {

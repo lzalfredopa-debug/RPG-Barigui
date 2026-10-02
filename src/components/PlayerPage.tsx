@@ -1,436 +1,100 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  LogOut,
-  Scroll,
-  MessageSquare,
-  Lightbulb,
-  Plus,
-  User,
-  Send,
-  Loader2,
-  Save,
-  X,
-  Lock,
-} from 'lucide-react';
+import { LogOut, Scroll, MessageSquare, Lightbulb, Plus, User, Send, Loader2, Save, X, Lock, Info, Heart, Shield, Gauge, Sword, Backpack, BookOpen, Users, Target, Trash2 } from 'lucide-react';
 import { supabase, type Player, type PersonalNote, type MasterMessage, type Character } from '@/lib/supabase';
+import { ATTRIBUTE_GROUPS, SKILL_GROUPS } from '@/components/CharacterCreation';
 
-type PlayerPageProps = {
-  player: Player;
-  onLogout: () => void;
-  onCreateCharacter: () => void;
+type PlayerPageProps = { player: Player; onLogout: () => void; onCreateCharacter: () => void; };
+type Tab = 'ficha' | 'habilidades' | 'combate' | 'inventario' | 'historia' | 'jornada' | 'diario';
+type DiaryEntry = { id:string; character_id:string; title:string; content:string; session_reference:string|null; created_at:string; updated_at:string };
+type Item = { id:string; name:string; type:string; quantity:number; equipped:boolean; description:string|null; properties:Record<string, unknown> };
+type Condition = { id:string; condition:string; intensity:number|null; notes:string|null; duration:string|null };
+type Effect = { id:string; name:string; description:string|null; duration:string|null; modifiers:Record<string, unknown> };
+type Contact = { id:string; name:string; relationship:string|null; notes:string|null };
+type Faction = { id:string; faction_name:string; relationship:string|null; notes:string|null };
+type Reputation = { id:string; group_or_place:string; reputation:string|null; notes:string|null };
+type Objective = { id:string; objective:string; notes:string|null; status:string };
+type Event = { id:string; title:string; description:string|null; session_reference:string|null };
+
+const stageForLevel = (level:number) => level <= 4 ? 'Aprendiz' : level <= 8 ? 'Competente' : level <= 12 ? 'Experiente' : level <= 16 ? 'Especialista' : 'Mestre';
+const v = (c:Character, key:string) => c.attributes?.[key] ?? 0;
+const s = (c:Character, key:string) => c.skills?.[key] ?? 0;
+const maxHp = (c:Character) => 15 + v(c,'Vigor') * 5 + (c.level - 1) * 2;
+const maxMp = (c:Character) => {
+  const mental = Math.max(...['Inteligência','Raciocínio','Sabedoria','Percepção'].map(k=>v(c,k)));
+  const mystical = Math.max(...['Elementalismo','Arcanismo','Ritualismo','Manipulação Arcana','Teologia','Espiritualismo'].map(k=>s(c,k)));
+  return mystical > 0 ? 5 + mental * 2 + mystical * 2 + c.level : 0;
 };
+const movement = (c:Character) => 6 + Math.max(1, Math.floor((v(c,'Agilidade') + s(c,'Atletismo')) / 2));
+const genderLabel = (g:string|null) => ({ele:'Ele / Dele',ela:'Ela / Dela',elu:'Elu / Delu',neutro:'Não faz diferença'}[g || ''] || g || '—');
+
+function Tip({children}:{children:React.ReactNode}) {
+  return <span className="relative inline-flex group ml-1 align-middle"><Info className="w-3.5 h-3.5 text-gold/70 cursor-help"/><span className="pointer-events-none absolute z-[80] left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 max-w-[80vw] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity bg-stone border border-gold-dim rounded-lg p-3 shadow-gold text-xs text-parchment-dim font-body leading-relaxed">{children}</span></span>;
+}
+function Dots({value,max=5}:{value:number;max?:number}) { return <span className="inline-flex gap-1">{Array.from({length:max},(_,i)=><span key={i} className={`w-2.5 h-2.5 rounded-full border ${i<value?'bg-gold border-gold':'border-gold-dim bg-shadow'}`}/>)}</span>; }
+function Empty({children='Nenhum registro.'}:{children?:React.ReactNode}) { return <p className="text-parchment-dim/60 text-sm font-body py-3">{children}</p>; }
 
 export default function PlayerPage({ player, onLogout, onCreateCharacter }: PlayerPageProps) {
-  const [characters, setCharacters] = useState<Character[]>([]);
-  const [charactersLoading, setCharactersLoading] = useState(true);
-  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+  const [characters,setCharacters]=useState<Character[]>([]); const [charactersLoading,setCharactersLoading]=useState(true); const [selectedCharacter,setSelectedCharacter]=useState<Character|null>(null); const [tab,setTab]=useState<Tab>('ficha');
+  const [notes,setNotes]=useState<PersonalNote[]>([]); const [notesContent,setNotesContent]=useState(''); const [notesLoading,setNotesLoading]=useState(false); const [notesSaving,setNotesSaving]=useState(false); const [notesSaved,setNotesSaved]=useState(false);
+  const [masterMessages,setMasterMessages]=useState<MasterMessage[]>([]); const [suggestionOpen,setSuggestionOpen]=useState(false); const [suggestionText,setSuggestionText]=useState(''); const [suggestionSending,setSuggestionSending]=useState(false); const [suggestionSent,setSuggestionSent]=useState(false);
+  const [items,setItems]=useState<Item[]>([]); const [conditions,setConditions]=useState<Condition[]>([]); const [effects,setEffects]=useState<Effect[]>([]); const [contacts,setContacts]=useState<Contact[]>([]); const [factions,setFactions]=useState<Faction[]>([]); const [reputations,setReputations]=useState<Reputation[]>([]); const [objectives,setObjectives]=useState<Objective[]>([]); const [events,setEvents]=useState<Event[]>([]); const [diary,setDiary]=useState<DiaryEntry[]>([]); const [diaryTitle,setDiaryTitle]=useState(''); const [diaryContent,setDiaryContent]=useState(''); const [diarySession,setDiarySession]=useState(''); const [diarySaving,setDiarySaving]=useState(false);
 
-  const [notes, setNotes] = useState<PersonalNote[]>([]);
-  const [notesContent, setNotesContent] = useState('');
-  const [notesLoading, setNotesLoading] = useState(false);
-  const [notesSaving, setNotesSaving] = useState(false);
-  const [notesSaved, setNotesSaved] = useState(false);
+  const loadCharacters=useCallback(async()=>{setCharactersLoading(true);const {data}=await supabase.from('characters').select('*').eq('player_id',player.id).order('created_at',{ascending:true});setCharacters((data||[]) as Character[]);setCharactersLoading(false)},[player.id]);
+  const loadNotes=useCallback(async()=>{setNotesLoading(true);const {data}=await supabase.from('personal_notes').select('*').eq('player_id',player.id).order('updated_at',{ascending:false});setNotes(data||[]);if(data?.length)setNotesContent(data[0].content);setNotesLoading(false)},[player.id]);
+  const loadMasterMessages=useCallback(async()=>{const {data}=await supabase.from('master_messages').select('*').eq('player_id',player.id).order('created_at',{ascending:false});setMasterMessages(data||[])},[player.id]);
+  useEffect(()=>{loadCharacters();loadNotes();loadMasterMessages()},[loadCharacters,loadNotes,loadMasterMessages]);
 
-  const [masterMessages, setMasterMessages] = useState<MasterMessage[]>([]);
-  const [suggestionOpen, setSuggestionOpen] = useState(false);
-  const [suggestionText, setSuggestionText] = useState('');
-  const [suggestionSending, setSuggestionSending] = useState(false);
-  const [suggestionSent, setSuggestionSent] = useState(false);
+  const loadCharacterRelations=useCallback(async(id:string)=>{
+    const tables=['character_items','character_conditions','character_effects','character_contacts','character_factions','character_reputations','character_objectives','character_events','character_diary'] as const;
+    const results=await Promise.all(tables.map(t=>supabase.from(t).select('*').eq('character_id',id).order('created_at',{ascending:true})));
+    setItems((results[0].data||[]) as Item[]);setConditions((results[1].data||[]) as Condition[]);setEffects((results[2].data||[]) as Effect[]);setContacts((results[3].data||[]) as Contact[]);setFactions((results[4].data||[]) as Faction[]);setReputations((results[5].data||[]) as Reputation[]);setObjectives((results[6].data||[]) as Objective[]);setEvents((results[7].data||[]) as Event[]);setDiary((results[8].data||[]) as DiaryEntry[]);
+  },[]);
+  useEffect(()=>{if(selectedCharacter)loadCharacterRelations(selectedCharacter.id)},[selectedCharacter,loadCharacterRelations]);
 
-  const loadCharacters = useCallback(async () => {
-    setCharactersLoading(true);
-    const { data } = await supabase
-      .from('characters')
-      .select('*')
-      .eq('player_id', player.id)
-      .order('created_at', { ascending: true });
-    setCharacters((data || []) as Character[]);
-    setCharactersLoading(false);
-  }, [player.id]);
+  const handleSaveNotes=async()=>{if(notesSaving)return;setNotesSaving(true);setNotesSaved(false);try{if(notes.length){const {error}=await supabase.from('personal_notes').update({content:notesContent,updated_at:new Date().toISOString()}).eq('id',notes[0].id);if(error)throw error}else{const {data,error}=await supabase.from('personal_notes').insert({player_id:player.id,content:notesContent}).select().single();if(error)throw error;setNotes([data])}setNotesSaved(true);setTimeout(()=>setNotesSaved(false),2000)}finally{setNotesSaving(false)}};
+  const handleSendSuggestion=async()=>{if(!suggestionText.trim()||suggestionSending)return;setSuggestionSending(true);try{await supabase.from('suggestions').insert({player_id:player.id,content:suggestionText.trim()});setSuggestionText('');setSuggestionSent(true);setTimeout(()=>{setSuggestionSent(false);setSuggestionOpen(false)},2000)}finally{setSuggestionSending(false)}};
+  const addDiary=async()=>{if(!selectedCharacter||!diaryTitle.trim()||!diaryContent.trim()||diarySaving)return;setDiarySaving(true);const {error}=await supabase.from('character_diary').insert({character_id:selectedCharacter.id,title:diaryTitle.trim(),content:diaryContent.trim(),session_reference:diarySession.trim()||null});if(!error){setDiaryTitle('');setDiaryContent('');setDiarySession('');await loadCharacterRelations(selectedCharacter.id)}setDiarySaving(false)};
+  const deleteDiary=async(id:string)=>{if(!selectedCharacter)return;await supabase.from('character_diary').delete().eq('id',id).eq('character_id',selectedCharacter.id);await loadCharacterRelations(selectedCharacter.id)};
 
-  const loadNotes = useCallback(async () => {
-    setNotesLoading(true);
-    const { data } = await supabase
-      .from('personal_notes')
-      .select('*')
-      .eq('player_id', player.id)
-      .order('updated_at', { ascending: false });
-    setNotes(data || []);
-    if (data && data.length > 0) {
-      setNotesContent(data[0].content);
-    }
-    setNotesLoading(false);
-  }, [player.id]);
+  const openCharacter=(c:Character)=>{setSelectedCharacter(c);setTab('ficha')};
+  const closeCharacter=()=>setSelectedCharacter(null);
+  const tabs:[Tab,string][]=[['ficha','Ficha'],['habilidades','Habilidades'],['combate','Combate'],['inventario','Inventário'],['historia','História'],['jornada','Jornada'],['diario','Diário']];
 
-  const loadMasterMessages = useCallback(async () => {
-    const { data } = await supabase
-      .from('master_messages')
-      .select('*')
-      .eq('player_id', player.id)
-      .order('created_at', { ascending: false });
-    setMasterMessages(data || []);
-  }, [player.id]);
+  const calcCards = selectedCharacter ? [
+    ['PV',`${selectedCharacter.current_hp ?? maxHp(selectedCharacter)} / ${maxHp(selectedCharacter)}`,<>PV Máximo = 15 + (Vigor × 5) + ((Nível − 1) × 2).<br/>15 + ({v(selectedCharacter,'Vigor')} × 5) + (({selectedCharacter.level} − 1) × 2) = <b>{maxHp(selectedCharacter)}</b>.</>],
+    ['PM',`${selectedCharacter.current_mp ?? maxMp(selectedCharacter)} / ${maxMp(selectedCharacter)}`,<>Se houver Habilidade Mística: 5 + (Maior Mental × 2) + (Maior Mística × 2) + Nível. Sem habilidade mística, PM Máximo = 0.</>],
+    ['Evasão',String(v(selectedCharacter,'Agilidade')+s(selectedCharacter,'Defesa')),<>Agilidade + Defesa = {v(selectedCharacter,'Agilidade')} + {s(selectedCharacter,'Defesa')} = <b>{v(selectedCharacter,'Agilidade')+s(selectedCharacter,'Defesa')}</b>.</>],
+    ['Bloqueio',String(v(selectedCharacter,'Força')+s(selectedCharacter,'Defesa')),<>Força + Defesa = {v(selectedCharacter,'Força')} + {s(selectedCharacter,'Defesa')} = <b>{v(selectedCharacter,'Força')+s(selectedCharacter,'Defesa')}</b>.</>],
+    ['Def. Passiva',String(s(selectedCharacter,'Defesa')+1),<>Defesa + 1 = {s(selectedCharacter,'Defesa')} + 1 = <b>{s(selectedCharacter,'Defesa')+1}</b>. Usada após gastar a Reação Defensiva.</>],
+    ['Iniciativa',String(v(selectedCharacter,'Percepção')+s(selectedCharacter,'Vigilância')),<>Percepção + Vigilância = {v(selectedCharacter,'Percepção')} + {s(selectedCharacter,'Vigilância')} = <b>{v(selectedCharacter,'Percepção')+s(selectedCharacter,'Vigilância')}</b>.</>],
+    ['Deslocamento',`${movement(selectedCharacter)} m`,<>6 + máx.(1, piso((Agilidade + Atletismo) ÷ 2)) = <b>{movement(selectedCharacter)} m</b>.</>],
+    ['Defesas','1 / turno',<>Por padrão, cada personagem possui 1 Reação Defensiva por turno. Classes, equipamentos e efeitos poderão modificar isso.</>],
+  ] : [];
 
-  useEffect(() => {
-    loadCharacters();
-    loadNotes();
-    loadMasterMessages();
-  }, [loadCharacters, loadNotes, loadMasterMessages]);
+  return <div className="min-h-screen bg-gradient-fantasy animate-fade-in">
+    <header className="sticky top-0 z-20 bg-shadow/80 backdrop-blur-md border-b border-gold-dim"><div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-gradient-card border border-gold-dim flex items-center justify-center"><User className="w-5 h-5 text-gold"/></div><h1 className="font-display text-lg sm:text-xl text-gold-bright">Bem-vindo, {player.player_name||player.alcunha}</h1></div><button onClick={onLogout} className="flex items-center gap-2 text-parchment-dim hover:text-blood text-sm"><LogOut className="w-4 h-4"/>Sair</button></div></header>
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <section><div className="flex items-center gap-3 mb-4"><Scroll className="w-5 h-5 text-gold"/><h2 className="font-display text-xl text-gold-bright">Meus Personagens</h2></div><div className="bg-gradient-card border border-gold-dim rounded-xl p-6 sm:p-8 shadow-gold">{charactersLoading?<div className="flex justify-center py-8"><Loader2 className="w-6 h-6 text-gold animate-spin"/></div>:characters.length===0?<Empty>Você ainda não possui personagens.</Empty>:<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{characters.map(c=><button key={c.id} onClick={()=>openCharacter(c)} className="text-left bg-shadow/50 border border-gold-dim rounded-xl p-5 hover:border-gold"><div className="flex justify-between"><div><h3 className="font-display text-lg text-gold-bright">{c.name}</h3>{c.nickname&&<p className="text-xs text-parchment-dim mt-1">“{c.nickname}”</p>}</div><span className="text-xs text-gold border border-gold-dim rounded-full px-2 py-1 h-fit">Nv. {c.level}</span></div><p className="text-sm text-parchment-dim mt-4">{c.race} · {c.lineage}</p><p className="text-sm text-gold mt-1">{stageForLevel(c.level)} · {c.class_name||'Sem classe'}</p><p className="text-xs text-parchment-dim/60 mt-4">Abrir ficha</p></button>)}</div>}</div><div className="mt-5 flex justify-center"><button onClick={onCreateCharacter} className="flex items-center gap-2 bg-gradient-gold text-stone font-display text-sm px-6 py-3 rounded-lg shadow-gold"><Plus className="w-4 h-4"/>Criar novo personagem</button></div></section>
+      <div className="divider-gold"/>
+      <section><div className="flex items-center gap-3 mb-4"><Scroll className="w-5 h-5 text-gold"/><h2 className="font-display text-xl text-gold-bright">Anotações Pessoais</h2></div><div className="bg-gradient-card border border-gold-dim rounded-xl p-4 sm:p-6 shadow-gold">{notesLoading?<Loader2 className="w-6 h-6 text-gold animate-spin mx-auto"/>:<><textarea value={notesContent} onChange={e=>setNotesContent(e.target.value)} placeholder="Escreva seus lembretes aqui..." rows={5} className="w-full bg-shadow/60 border border-gold-dim rounded-lg px-4 py-3 text-parchment text-sm resize-y"/><div className="flex justify-between mt-3"><span className="text-xs text-parchment-dim/50">{notesContent.length} caracteres</span><button onClick={handleSaveNotes} disabled={notesSaving} className="flex items-center gap-2 text-sm text-gold">{notesSaving?<Loader2 className="w-4 h-4 animate-spin"/>:<Save className="w-4 h-4"/>}{notesSaved?'Salvo!':'Salvar'}</button></div></>}</div></section>
+      <div className="divider-gold"/>
+      <section><div className="flex items-center gap-3 mb-4"><MessageSquare className="w-5 h-5 text-gold"/><h2 className="font-display text-xl text-gold-bright">Recados do Mestre</h2></div><div className="bg-gradient-card border border-gold-dim rounded-xl p-6 shadow-gold">{masterMessages.length===0?<Empty>Nenhum recado no momento.</Empty>:<div className="space-y-3">{masterMessages.map(m=><div key={m.id} className="bg-shadow/40 border border-gold-dim rounded-lg p-4"><p className="text-parchment text-sm whitespace-pre-wrap">{m.content}</p></div>)}</div>}</div></section>
+      <div className="divider-gold"/>
+      <section>{!suggestionOpen?<button onClick={()=>setSuggestionOpen(true)} className="flex items-center gap-2 text-parchment-dim/60 hover:text-gold text-sm"><Lightbulb className="w-4 h-4"/>Enviar sugestão</button>:<div className="bg-gradient-card border border-gold-dim rounded-xl p-5"><div className="flex justify-between mb-3"><h3 className="font-display text-gold-bright">Enviar Sugestão</h3><button onClick={()=>setSuggestionOpen(false)}><X className="w-4 h-4"/></button></div>{suggestionSent?<p className="text-gold text-sm">Sugestão enviada com sucesso.</p>:<><textarea value={suggestionText} onChange={e=>setSuggestionText(e.target.value)} rows={4} className="w-full bg-shadow/60 border border-gold-dim rounded-lg px-4 py-3 text-parchment"/><div className="flex justify-end mt-3"><button onClick={handleSendSuggestion} disabled={suggestionSending||!suggestionText.trim()} className="flex gap-2 bg-gradient-gold text-stone px-4 py-2 rounded-lg"><Send className="w-4 h-4"/>Enviar</button></div></>}</div>}</section>
+    </main>
 
-  const handleSaveNotes = async () => {
-    if (notesSaving) return;
-    setNotesSaving(true);
-    setNotesSaved(false);
-
-    try {
-      if (notes.length > 0) {
-        const { error } = await supabase
-          .from('personal_notes')
-          .update({ content: notesContent, updated_at: new Date().toISOString() })
-          .eq('id', notes[0].id);
-        if (error) throw error;
-      } else {
-        const { data, error } = await supabase
-          .from('personal_notes')
-          .insert({ player_id: player.id, content: notesContent })
-          .select()
-          .single();
-        if (error) throw error;
-        setNotes([data]);
-      }
-      setNotesSaved(true);
-      setTimeout(() => setNotesSaved(false), 2000);
-    } catch {
-      // silently fail — non-critical
-    } finally {
-      setNotesSaving(false);
-    }
-  };
-
-  const handleSendSuggestion = async () => {
-    if (!suggestionText.trim() || suggestionSending) return;
-    setSuggestionSending(true);
-    try {
-      await supabase.from('suggestions').insert({
-        player_id: player.id,
-        content: suggestionText.trim(),
-      });
-      setSuggestionText('');
-      setSuggestionSent(true);
-      setTimeout(() => {
-        setSuggestionSent(false);
-        setSuggestionOpen(false);
-      }, 2000);
-    } catch {
-      // silently fail
-    } finally {
-      setSuggestionSending(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-fantasy animate-fade-in">
-      {/* Header */}
-      <header className="sticky top-0 z-20 bg-shadow/80 backdrop-blur-md border-b border-gold-dim">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-card border border-gold-dim flex items-center justify-center">
-              <User className="w-5 h-5 text-gold" strokeWidth={1.5} />
-            </div>
-            <div>
-              <h1 className="font-display text-lg sm:text-xl text-gold-bright text-shadow-dark leading-tight">
-                Bem-vindo, {player.player_name || player.alcunha}
-              </h1>
-            </div>
-          </div>
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-2 text-parchment-dim hover:text-blood transition-colors duration-200 text-sm font-body px-3 py-2 rounded-lg hover:bg-blood/10"
-          >
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline">Sair</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Main content */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-        {/* My Characters */}
-        <section className="animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
-          <div className="flex items-center gap-3 mb-4">
-            <Scroll className="w-5 h-5 text-gold" strokeWidth={1.5} />
-            <h2 className="font-display text-xl text-gold-bright tracking-wide">
-              Meus Personagens
-            </h2>
-          </div>
-
-          <div className="bg-gradient-card border border-gold-dim rounded-xl p-6 sm:p-8 shadow-gold">
-            {charactersLoading ? (
-              <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 text-gold animate-spin" /></div>
-            ) : characters.length === 0 ? (
-              <p className="text-parchment-dim text-center py-8 font-body">Você ainda não possui personagens.</p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {characters.map((character) => (
-                  <button key={character.id} type="button" onClick={() => setSelectedCharacter(character)} className="text-left bg-shadow/50 border border-gold-dim rounded-xl p-5 hover:border-gold transition-all">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-display text-lg text-gold-bright">{character.name}</h3>
-                        {character.nickname && <p className="font-body text-xs text-parchment-dim mt-1">“{character.nickname}”</p>}
-                      </div>
-                      <span className="text-xs font-display text-gold border border-gold-dim rounded-full px-2 py-1">Nv. {character.level}</span>
-                    </div>
-                    <p className="font-body text-sm text-parchment-dim mt-4">{character.race} · {character.lineage}</p>
-                    <p className="font-body text-sm text-gold mt-1">{character.class_name}</p>
-                    <p className="font-body text-xs text-parchment-dim/60 mt-4">Abrir ficha</p>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="mt-5 flex justify-center">
-            <button
-              onClick={onCreateCharacter}
-              className="group flex items-center gap-2 bg-gradient-gold text-stone font-display text-sm font-600 tracking-wide px-6 py-3 rounded-lg shadow-gold hover:brightness-110 active:brightness-95 transition-all duration-200"
-            >
-              <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-200" />
-              Criar novo personagem
-            </button>
-          </div>
-        </section>
-
-        <div className="divider-gold" />
-
-        {/* Personal Notes */}
-        <section className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <div className="flex items-center gap-3 mb-4">
-            <Scroll className="w-5 h-5 text-gold" strokeWidth={1.5} />
-            <h2 className="font-display text-xl text-gold-bright tracking-wide">
-              Anotações Pessoais
-            </h2>
-          </div>
-
-          <div className="bg-gradient-card border border-gold-dim rounded-xl p-4 sm:p-6 shadow-gold">
-            {notesLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 text-gold animate-spin" />
-              </div>
-            ) : (
-              <>
-                <textarea
-                  value={notesContent}
-                  onChange={(e) => setNotesContent(e.target.value)}
-                  placeholder="Escreva seus lembretes aqui..."
-                  rows={5}
-                  className="w-full bg-shadow/60 border border-gold-dim rounded-lg px-4 py-3 text-parchment font-body text-sm placeholder:text-parchment-dim/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all duration-200 shadow-inset-dark resize-y min-h-[120px]"
-                />
-                <div className="flex items-center justify-between mt-3">
-                  <span className="text-xs text-parchment-dim/50">
-                    {notesContent.length} caracteres
-                  </span>
-                  <button
-                    onClick={handleSaveNotes}
-                    disabled={notesSaving}
-                    className="flex items-center gap-2 text-sm font-body text-gold hover:text-gold-bright transition-colors duration-200 disabled:opacity-50"
-                  >
-                    {notesSaving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Salvando...
-                      </>
-                    ) : notesSaved ? (
-                      <>
-                        <Save className="w-4 h-4" />
-                        Salvo!
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4" />
-                        Salvar
-                      </>
-                    )}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </section>
-
-        <div className="divider-gold" />
-
-        {/* Master Messages */}
-        <section className="animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-          <div className="flex items-center gap-3 mb-4">
-            <MessageSquare className="w-5 h-5 text-gold" strokeWidth={1.5} />
-            <h2 className="font-display text-xl text-gold-bright tracking-wide">
-              Recados do Mestre
-            </h2>
-          </div>
-
-          <div className="bg-gradient-card border border-gold-dim rounded-xl p-6 shadow-gold">
-            {masterMessages.length === 0 ? (
-              <p className="text-parchment-dim text-center py-8 font-body">
-                Nenhum recado no momento.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {masterMessages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className="bg-shadow/40 border border-gold-dim rounded-lg p-4 animate-fade-in"
-                  >
-                    <p className="text-parchment font-body text-sm whitespace-pre-wrap">
-                      {msg.content}
-                    </p>
-                    <p className="text-parchment-dim/50 text-xs mt-2">
-                      {new Date(msg.created_at).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-
-        <div className="divider-gold" />
-
-        {/* Send Suggestion */}
-        <section className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          {!suggestionOpen ? (
-            <button
-              onClick={() => setSuggestionOpen(true)}
-              className="flex items-center gap-2 text-parchment-dim/60 hover:text-gold transition-colors duration-200 text-sm font-body"
-            >
-              <Lightbulb className="w-4 h-4" />
-              Enviar sugestão
-            </button>
-          ) : (
-            <div className="bg-gradient-card border border-gold-dim rounded-xl p-4 sm:p-6 shadow-gold animate-scale-in">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4 text-gold" />
-                  <h3 className="font-display text-base text-gold-bright tracking-wide">
-                    Enviar Sugestão
-                  </h3>
-                </div>
-                <button
-                  onClick={() => {
-                    setSuggestionOpen(false);
-                    setSuggestionText('');
-                  }}
-                  className="text-parchment-dim/60 hover:text-blood transition-colors duration-200"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {suggestionSent ? (
-                <div className="text-center py-6 animate-fade-in">
-                  <p className="text-gold font-body text-sm">
-                    Sugestão enviada com sucesso. Obrigado!
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <textarea
-                    value={suggestionText}
-                    onChange={(e) => setSuggestionText(e.target.value)}
-                    placeholder="Escreva seu feedback ou sugestão..."
-                    rows={4}
-                    className="w-full bg-shadow/60 border border-gold-dim rounded-lg px-4 py-3 text-parchment font-body text-sm placeholder:text-parchment-dim/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all duration-200 shadow-inset-dark resize-y"
-                  />
-                  <div className="flex justify-end mt-3">
-                    <button
-                      onClick={handleSendSuggestion}
-                      disabled={!suggestionText.trim() || suggestionSending}
-                      className="flex items-center gap-2 bg-gradient-gold text-stone font-display text-sm font-600 px-4 py-2 rounded-lg shadow-gold hover:brightness-110 active:brightness-95 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      {suggestionSending ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Enviando...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-4 h-4" />
-                          Enviar
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-        <button
-          onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 text-parchment-dim hover:text-blood transition-colors duration-200 text-sm font-body py-3 rounded-lg border border-gold-dim hover:border-blood/50 bg-gradient-card"
-        >
-          <LogOut className="w-4 h-4" />
-          Sair
-        </button>
-      </footer>
-
-      {selectedCharacter && (
-        <div className="fixed inset-0 z-50 bg-shadow/85 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-stone border border-gold rounded-xl p-6 shadow-gold">
-            <div className="flex items-start justify-between gap-4 mb-6">
-              <div>
-                <h2 className="font-display text-2xl text-gold-bright">{selectedCharacter.name}</h2>
-                <p className="font-body text-sm text-parchment-dim mt-1">
-                  Nível {selectedCharacter.level} · {selectedCharacter.class_name} · {selectedCharacter.race} · {selectedCharacter.lineage}
-                </p>
-              </div>
-              <button type="button" onClick={() => setSelectedCharacter(null)} className="text-parchment-dim hover:text-parchment p-2"><X className="w-5 h-5" /></button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <section className="bg-shadow/40 border border-gold-dim rounded-lg p-4">
-                <h3 className="font-display text-gold mb-3">Identidade</h3>
-                <div className="space-y-2 font-body text-sm text-parchment-dim">
-                  <p>Apelido: <span className="text-parchment">{selectedCharacter.nickname || '—'}</span></p>
-                  <p>Idade: <span className="text-parchment">{selectedCharacter.age}</span></p>
-                </div>
-              </section>
-              <section className="bg-shadow/40 border border-gold-dim rounded-lg p-4">
-                <h3 className="font-display text-gold mb-3">Atributos</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(selectedCharacter.attributes || {}).map(([key, value]) => (
-                    <div key={key} className="flex justify-between font-body text-sm border-b border-gold-dim/20 pb-1">
-                      <span className="text-parchment-dim">{key}</span><span className="text-gold-bright">{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-              <section className="md:col-span-2 bg-shadow/40 border border-gold-dim rounded-lg p-4">
-                <h3 className="font-display text-gold mb-3">Habilidades</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {Object.entries(selectedCharacter.skills || {}).filter(([, value]) => value > 0).map(([key, value]) => (
-                    <div key={key} className="flex justify-between font-body text-sm border-b border-gold-dim/20 pb-1">
-                      <span className="text-parchment-dim">{key}</span><span className="text-gold-bright">{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </div>
-
-            <div className="mt-5 flex items-center gap-2 text-xs font-body text-parchment-dim/70">
-              <Lock className="w-4 h-4 text-gold" />
-              Ficha de criação bloqueada para edição e exclusão pelo jogador.
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    {selectedCharacter&&<div className="fixed inset-0 z-50 bg-shadow/90 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4"><div className="w-full max-w-6xl h-[95vh] overflow-hidden bg-stone border border-gold rounded-xl shadow-gold flex flex-col">
+      <div className="p-4 sm:p-6 border-b border-gold-dim flex justify-between gap-4"><div><h2 className="font-display text-2xl text-gold-bright">{selectedCharacter.name}</h2><p className="text-sm text-parchment-dim mt-1">Nível {selectedCharacter.level} · {stageForLevel(selectedCharacter.level)} · {selectedCharacter.class_name||'Sem classe'} · {selectedCharacter.specialization||'Sem especialização'}</p><p className="text-xs text-parchment-dim/70 mt-1">{selectedCharacter.race} · {selectedCharacter.lineage}</p></div><button onClick={closeCharacter} className="p-2"><X className="w-5 h-5"/></button></div>
+      <div className="flex overflow-x-auto border-b border-gold-dim bg-shadow/40 px-2">{tabs.map(([id,label])=><button key={id} onClick={()=>setTab(id)} className={`px-4 py-3 whitespace-nowrap text-sm font-display border-b-2 ${tab===id?'text-gold-bright border-gold':'text-parchment-dim border-transparent'}`}>{label}</button>)}</div>
+      <div className="overflow-y-auto p-4 sm:p-6 flex-1">
+        {tab==='ficha'&&<div className="space-y-6"><div className="grid grid-cols-2 sm:grid-cols-4 gap-3">{calcCards.slice(0,2).map(([label,value,tip])=><div key={label as string} className="bg-shadow/50 border border-gold-dim rounded-lg p-4"><div className="text-xs text-parchment-dim">{label as string}<Tip>{tip}</Tip></div><div className="font-display text-xl text-gold-bright mt-1">{value as string}</div></div>)}</div><section><h3 className="font-display text-lg text-gold mb-4">Atributos</h3><div className="grid grid-cols-1 md:grid-cols-3 gap-4">{ATTRIBUTE_GROUPS.map(g=><div key={g.name} className="bg-shadow/40 border border-gold-dim rounded-lg p-4"><h4 className="font-display text-gold-bright mb-3">{g.name}</h4><div className="space-y-3">{g.attributes.map(a=><div key={a.name}><div className="flex justify-between items-center"><span className="text-sm text-parchment-dim">{a.name}<Tip><b>{a.description}</b><br/>{a.examples}</Tip></span><Dots value={v(selectedCharacter,a.name)}/></div></div>)}</div></div>)}</div></section><div className="text-xs text-parchment-dim/70 flex gap-2"><Lock className="w-4 h-4 text-gold"/>Ficha bloqueada para edição livre. A evolução será feita pelos sistemas de progressão.</div></div>}
+        {tab==='habilidades'&&<div><h3 className="font-display text-lg text-gold mb-2">Todas as Habilidades</h3><p className="text-sm text-parchment-dim mb-5">Habilidades com valor 0 continuam visíveis para consulta e planejamento.</p><div className="grid grid-cols-1 lg:grid-cols-2 gap-4">{SKILL_GROUPS.map(g=><section key={g.name} className="bg-shadow/40 border border-gold-dim rounded-lg p-4"><h4 className="font-display text-gold-bright mb-4">{g.name}</h4><div className="space-y-3">{g.skills.map(sk=><div key={sk.name} className="flex justify-between items-center gap-3"><span className="text-sm text-parchment-dim">{sk.name}<Tip><b>{sk.description}</b><br/>{sk.examples}</Tip></span><Dots value={s(selectedCharacter,sk.name)}/></div>)}</div></section>)}</div></div>}
+        {tab==='combate'&&<div className="space-y-6"><div className="grid grid-cols-2 sm:grid-cols-4 gap-3">{calcCards.map(([label,value,tip])=><div key={label as string} className="bg-shadow/50 border border-gold-dim rounded-lg p-4"><div className="text-xs text-parchment-dim">{label as string}<Tip>{tip}</Tip></div><div className="font-display text-xl text-gold-bright mt-1">{value as string}</div></div>)}</div><section><h3 className="font-display text-gold mb-3 flex gap-2"><Shield className="w-5 h-5"/>Condições & Efeitos</h3>{conditions.length===0&&effects.length===0?<Empty>Nenhuma condição ou efeito ativo.</Empty>:<div className="grid sm:grid-cols-2 gap-3">{conditions.map(c=><div key={c.id} className="bg-shadow/40 border border-gold-dim rounded-lg p-3"><b className="text-gold-bright">{c.condition}{c.intensity?` ${c.intensity}`:''}</b><p className="text-xs text-parchment-dim">{c.notes||''} {c.duration?`· ${c.duration}`:''}</p></div>)}{effects.map(e=><div key={e.id} className="bg-shadow/40 border border-gold-dim rounded-lg p-3"><b className="text-gold-bright">{e.name}</b><p className="text-xs text-parchment-dim">{e.description||''} {e.duration?`· ${e.duration}`:''}</p></div>)}</div>}</section><section><h3 className="font-display text-gold mb-3 flex gap-2"><Sword className="w-5 h-5"/>Ataques & Equipados</h3>{items.filter(i=>i.equipped).length===0?<Empty>Nenhum equipamento ativo.</Empty>:<div className="space-y-2">{items.filter(i=>i.equipped).map(i=><div key={i.id} className="bg-shadow/40 border border-gold-dim rounded-lg p-3"><b className="text-gold-bright">{i.name}</b><span className="text-xs text-parchment-dim ml-2">{i.type}</span><p className="text-xs text-parchment-dim mt-1">{i.description||''}</p></div>)}</div>}</section></div>}
+        {tab==='inventario'&&<div><h3 className="font-display text-lg text-gold mb-4 flex gap-2"><Backpack className="w-5 h-5"/>Equipamentos & Inventário</h3>{items.length===0?<Empty>Nenhum item registrado.</Empty>:<div className="grid sm:grid-cols-2 gap-3">{items.map(i=><div key={i.id} className="bg-shadow/40 border border-gold-dim rounded-lg p-4"><div className="flex justify-between"><b className="text-gold-bright">{i.name}</b><span className="text-xs text-parchment-dim">×{i.quantity}</span></div><p className="text-xs text-gold mt-1">{i.type}{i.equipped?' · Equipado':''}</p><p className="text-sm text-parchment-dim mt-2">{i.description||'—'}</p></div>)}</div>}</div>}
+        {tab==='historia'&&<div className="grid md:grid-cols-2 gap-4"><section className="bg-shadow/40 border border-gold-dim rounded-lg p-4"><h3 className="font-display text-gold mb-3">Identidade</h3>{[['Apelido',selectedCharacter.nickname],['Idade',String(selectedCharacter.age)],['Gênero/Pronomes',genderLabel(selectedCharacter.gender)],['Altura',selectedCharacter.height],['Peso',selectedCharacter.weight],['Origem',selectedCharacter.origin],['Ocupação anterior',selectedCharacter.previous_occupation],['Aparência',selectedCharacter.appearance],['Marcas distintivas',selectedCharacter.distinctive_marks]].map(([l,x])=><p key={l} className="text-sm mb-2"><span className="text-parchment-dim">{l}: </span><span className="text-parchment whitespace-pre-wrap">{x||'—'}</span></p>)}</section><section className="bg-shadow/40 border border-gold-dim rounded-lg p-4"><h3 className="font-display text-gold mb-3">Personalidade & História</h3>{[['Personalidade',selectedCharacter.personality],['Ideais / Convicções',selectedCharacter.ideals],['Motivação',selectedCharacter.motivation],['Vínculo importante',selectedCharacter.important_bond],['História breve',selectedCharacter.brief_history],['Características adicionais',selectedCharacter.additional_characteristics]].map(([l,x])=><div key={l} className="mb-4"><div className="text-xs text-gold">{l}</div><p className="text-sm text-parchment-dim whitespace-pre-wrap mt-1">{x||'—'}</p></div>)}</section></div>}
+        {tab==='jornada'&&<div className="grid md:grid-cols-2 gap-4">{[[Users,'Aliados & Contatos',contacts.map(x=>({t:x.name,d:[x.relationship,x.notes].filter(Boolean).join(' · ')}))],[Users,'Facções',factions.map(x=>({t:x.faction_name,d:[x.relationship,x.notes].filter(Boolean).join(' · ')}))],[Gauge,'Reputações',reputations.map(x=>({t:x.group_or_place,d:[x.reputation,x.notes].filter(Boolean).join(' · ')}))],[Target,'Objetivos Atuais',objectives.map(x=>({t:x.objective,d:[x.status,x.notes].filter(Boolean).join(' · ')}))],[BookOpen,'Acontecimentos Importantes',events.map(x=>({t:x.title,d:[x.session_reference,x.description].filter(Boolean).join(' · ')}))]].map(([Icon,title,rows])=>{const I=Icon as typeof Users; const r=rows as {t:string;d:string}[];return <section key={title as string} className="bg-shadow/40 border border-gold-dim rounded-lg p-4"><h3 className="font-display text-gold mb-3 flex gap-2"><I className="w-4 h-4"/>{title as string}</h3>{r.length===0?<Empty/>:<div className="space-y-3">{r.map((x,i)=><div key={i}><b className="text-sm text-gold-bright">{x.t}</b><p className="text-xs text-parchment-dim">{x.d||'—'}</p></div>)}</div>}</section>})}</div>}
+        {tab==='diario'&&<div className="grid lg:grid-cols-[1fr_1.4fr] gap-5"><section className="bg-shadow/40 border border-gold-dim rounded-lg p-4 h-fit"><h3 className="font-display text-gold mb-4">Nova entrada</h3><input value={diaryTitle} onChange={e=>setDiaryTitle(e.target.value)} placeholder="Título" className="w-full mb-3 bg-shadow/60 border border-gold-dim rounded-lg px-3 py-2 text-parchment"/><input value={diarySession} onChange={e=>setDiarySession(e.target.value)} placeholder="Data / Sessão (opcional)" className="w-full mb-3 bg-shadow/60 border border-gold-dim rounded-lg px-3 py-2 text-parchment"/><textarea value={diaryContent} onChange={e=>setDiaryContent(e.target.value)} rows={7} placeholder="Escreva a entrada do diário..." className="w-full bg-shadow/60 border border-gold-dim rounded-lg px-3 py-2 text-parchment resize-y"/><button onClick={addDiary} disabled={diarySaving||!diaryTitle.trim()||!diaryContent.trim()} className="mt-3 bg-gradient-gold text-stone px-4 py-2 rounded-lg disabled:opacity-40">{diarySaving?'Salvando...':'Adicionar ao diário'}</button></section><section><h3 className="font-display text-gold mb-4">Diário do personagem</h3>{diary.length===0?<Empty>Nenhuma entrada ainda.</Empty>:<div className="space-y-3">{[...diary].reverse().map(d=><article key={d.id} className="bg-shadow/40 border border-gold-dim rounded-lg p-4"><div className="flex justify-between gap-3"><div><h4 className="font-display text-gold-bright">{d.title}</h4>{d.session_reference&&<p className="text-xs text-gold mt-1">{d.session_reference}</p>}</div><button onClick={()=>deleteDiary(d.id)} className="text-parchment-dim hover:text-blood" title="Excluir entrada"><Trash2 className="w-4 h-4"/></button></div><p className="text-sm text-parchment-dim whitespace-pre-wrap mt-3">{d.content}</p></article>)}</div>}</section></div>}
+      </div>
+    </div></div>}
+  </div>;
 }

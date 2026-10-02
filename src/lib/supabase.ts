@@ -39,15 +39,41 @@ export type Suggestion = {
 export type Character = {
   id: string;
   player_id: string;
+
+  // Identidade
   name: string;
   nickname: string | null;
   age: number;
   gender: string | null;
   race: string;
   lineage: string;
+  height: string | null;
+  weight: string | null;
+  appearance: string | null;
+  distinctive_marks: string | null;
+  origin: string | null;
+  previous_occupation: string | null;
+
+  // Personalidade & História
+  personality: string | null;
+  ideals: string | null;
+  motivation: string | null;
+  important_bond: string | null;
+  brief_history: string | null;
+  additional_characteristics: string | null;
+
+  // Progressão
   level: number;
-  class_name: string;
+  class_name: string | null;
+  specialization: string | null;
+
+  // Atributos e Habilidades
   attributes: Record<string, number>;
   skills: Record<string, number>;
+
+  // Recursos atuais
+  current_hp: number | null;
+  current_mp: number | null;
+
   created_at: string;
 };

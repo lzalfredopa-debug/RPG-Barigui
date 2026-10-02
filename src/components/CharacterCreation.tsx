@@ -86,7 +86,7 @@ type AttributeGroup = {
   attributes: AttributeDefinition[];
 };
 
-const ATTRIBUTE_GROUPS: AttributeGroup[] = [
+export const ATTRIBUTE_GROUPS: AttributeGroup[] = [
   {
     name: 'Físicos',
     attributes: [
@@ -116,7 +116,7 @@ const ATTRIBUTE_GROUPS: AttributeGroup[] = [
   },
 ];
 
-const SKILL_GROUPS = [
+export const SKILL_GROUPS = [
   {
     name: 'Marcial',
     skills: [{ name: 'Tática', description: 'Capacidade de analisar e coordenar ações durante conflitos.', examples: 'Posicionamento, formações, coordenar aliados e explorar terreno.' }, { name: 'Cavalaria', description: 'Habilidade para montar e controlar animais, inclusive em situações de conflito.', examples: 'Cavalgar, controlar montaria, manobrar e combater montado.' }, { name: 'Esgrima', description: 'Técnica no uso preciso de armas brancas empunhadas.', examples: 'Espadas, sabres, floretes e aparar golpes.' }, { name: 'Luta', description: 'Capacidade de combater utilizando o próprio corpo.', examples: 'Socos, chutes, agarrões e imobilizações.' }, { name: 'Vigilância', description: 'Capacidade de manter atenção ativa diante de possíveis ameaças.', examples: 'Montar guarda, perceber aproximações e notar emboscadas.' }, { name: 'Proteção', description: 'Capacidade de defender outras pessoas contra perigos e ataques.', examples: 'Interceptar ataques, cobrir aliado, escoltar e proteger posição.' }, { name: 'Defesa', description: 'Técnica para evitar ou neutralizar ataques direcionados a si.', examples: 'Bloquear, aparar e assumir postura defensiva.' }, { name: 'Armaduras', description: 'Conhecimento e prática no uso de equipamentos de proteção.', examples: 'Vestir corretamente, movimentar-se com armadura e reconhecer proteções.' }, { name: 'Escaramuça', description: 'Capacidade de lutar com mobilidade e constante reposicionamento.', examples: 'Atacar e recuar, flanquear e realizar combate móvel.' }, { name: 'Tiro', description: 'Técnica para atingir alvos utilizando armas de ataque à distância.', examples: 'Arco, besta, armas de projétil e mirar.' }, { name: 'Emboscada', description: 'Capacidade de preparar e executar ataques aproveitando surpresa e posição.', examples: 'Preparar tocaia, escolher posição e atacar de surpresa.' }, { name: 'Atletismo', description: 'Capacidade física aplicada a atividades que exigem esforço e coordenação.', examples: 'Correr, escalar, nadar e saltar.' }],
@@ -357,6 +357,18 @@ export default function CharacterCreation({ player, onBack, onCreated }: Charact
   const [gender, setGender] = useState('');
   const [race, setRace] = useState('');
   const [lineage, setLineage] = useState('');
+  const [height, setHeight] = useState('');
+  const [weight, setWeight] = useState('');
+  const [appearance, setAppearance] = useState('');
+  const [distinctiveMarks, setDistinctiveMarks] = useState('');
+  const [origin, setOrigin] = useState('');
+  const [previousOccupation, setPreviousOccupation] = useState('');
+  const [personality, setPersonality] = useState('');
+  const [ideals, setIdeals] = useState('');
+  const [motivation, setMotivation] = useState('');
+  const [importantBond, setImportantBond] = useState('');
+  const [briefHistory, setBriefHistory] = useState('');
+  const [additionalCharacteristics, setAdditionalCharacteristics] = useState('');
   const [attributes, setAttributes] = useState<Record<string, number>>(() =>
     Object.fromEntries(allAttributeNames.map((attribute) => [attribute, ATTRIBUTE_INITIAL_POINTS]))
   );
@@ -410,8 +422,27 @@ export default function CharacterCreation({ player, onBack, onCreated }: Charact
         gender: gender || null,
         race,
         lineage,
+        height: height.trim() || null,
+        weight: weight.trim() || null,
+        appearance: appearance.trim() || null,
+        distinctive_marks: distinctiveMarks.trim() || null,
+        origin: origin.trim() || null,
+        previous_occupation: previousOccupation.trim() || null,
+        personality: personality.trim() || null,
+        ideals: ideals.trim() || null,
+        motivation: motivation.trim() || null,
+        important_bond: importantBond.trim() || null,
+        brief_history: briefHistory.trim() || null,
+        additional_characteristics: additionalCharacteristics.trim() || null,
         level: 1,
-        class_name: 'Aprendiz',
+        class_name: null,
+        specialization: null,
+        current_hp: 15 + ((attributes['Vigor'] ?? 1) * 5),
+        current_mp: (() => {
+          const mental = Math.max(...['Inteligência', 'Raciocínio', 'Sabedoria', 'Percepção'].map((key) => attributes[key] ?? 0));
+          const mystical = Math.max(...['Elementalismo', 'Arcanismo', 'Ritualismo', 'Manipulação Arcana', 'Teologia', 'Espiritualismo'].map((key) => skills[key] ?? 0));
+          return mystical > 0 ? 5 + mental * 2 + mystical * 2 + 1 : 0;
+        })(),
         attributes,
         skills,
       });
@@ -617,6 +648,39 @@ export default function CharacterCreation({ player, onBack, onCreated }: Charact
               </div>
             </div>
 
+            <div className="divider-gold my-8" />
+            <h3 className="font-display text-lg text-gold tracking-wide mb-6">Detalhes, personalidade e história</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                ['Altura', height, setHeight, 'Ex: 1,76 m'],
+                ['Peso', weight, setWeight, 'Ex: 80 kg'],
+                ['Origem', origin, setOrigin, 'De onde vem o personagem'],
+                ['Ocupação anterior', previousOccupation, setPreviousOccupation, 'O que fazia antes da aventura'],
+              ].map(([label, value, setter, placeholder]) => (
+                <label key={label as string} className="space-y-2">
+                  <span className="block font-display text-sm text-gold-bright">{label as string}</span>
+                  <input value={value as string} onChange={(e) => (setter as (v:string)=>void)(e.target.value)} placeholder={placeholder as string} className="w-full bg-shadow/60 border border-gold-dim rounded-lg px-4 py-3 text-parchment font-body text-sm focus:outline-none focus:border-gold" />
+                </label>
+              ))}
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-4">
+              {[
+                ['Aparência', appearance, setAppearance],
+                ['Marcas distintivas', distinctiveMarks, setDistinctiveMarks],
+                ['Personalidade', personality, setPersonality],
+                ['Ideais / Convicções', ideals, setIdeals],
+                ['Motivação', motivation, setMotivation],
+                ['Vínculo importante', importantBond, setImportantBond],
+                ['História breve', briefHistory, setBriefHistory],
+                ['Características adicionais', additionalCharacteristics, setAdditionalCharacteristics],
+              ].map(([label, value, setter]) => (
+                <label key={label as string} className="space-y-2">
+                  <span className="block font-display text-sm text-gold-bright">{label as string}</span>
+                  <textarea value={value as string} onChange={(e) => (setter as (v:string)=>void)(e.target.value)} rows={(label === 'História breve' || label === 'Características adicionais') ? 4 : 2} className="w-full bg-shadow/60 border border-gold-dim rounded-lg px-4 py-3 text-parchment font-body text-sm focus:outline-none focus:border-gold resize-y" />
+                </label>
+              ))}
+            </div>
+
             {/* Raça e Linhagem */}
             <div className="divider-gold my-8" />
             <section className="space-y-6">
@@ -803,7 +867,8 @@ export default function CharacterCreation({ player, onBack, onCreated }: Charact
                     <p><span className="text-parchment-dim">Idade:</span> <span className="text-parchment">{age}</span></p>
                     <p><span className="text-parchment-dim">Gênero e pronomes:</span> <span className="text-parchment">{genderLabel}</span></p>
                     <p><span className="text-parchment-dim">Nível:</span> <span className="text-parchment">1</span></p>
-                    <p><span className="text-parchment-dim">Classe:</span> <span className="text-gold-bright">Aprendiz</span></p>
+                    <p><span className="text-parchment-dim">Estágio:</span> <span className="text-gold-bright">Aprendiz</span></p>
+                    <p><span className="text-parchment-dim">Classe:</span> <span className="text-parchment">—</span></p>
                   </div>
                 </section>
 

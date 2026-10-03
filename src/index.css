@@ -416,3 +416,112 @@
   .trilha-resource-strip { grid-template-columns:1fr 1fr; }
   .trilha-resource { min-height:82px; padding:13px; }
 }
+
+/* ============================================================
+   TRILHA — abas secundárias da ficha
+   Herda a linguagem visual aprovada da aba Ficha.
+   ============================================================ */
+.trilha-secondary-tab { color:#4b4033; }
+.trilha-secondary-tab > div { max-width:100%; }
+.trilha-secondary-tab .bg-shadow\/40,
+.trilha-secondary-tab .bg-shadow\/50,
+.trilha-secondary-tab .bg-shadow\/60,
+.trilha-secondary-tab .bg-stone\/40,
+.trilha-secondary-tab .bg-stone\/50 {
+  background:rgba(255,251,239,.66) !important;
+  color:#4b4033 !important;
+  border-color:#c2ad82 !important;
+  box-shadow:0 7px 18px rgba(70,48,25,.06) !important;
+}
+.trilha-secondary-tab .border-gold-dim { border-color:#c2ad82 !important; }
+.trilha-secondary-tab .border-gold-dim\/40,
+.trilha-secondary-tab .border-gold-dim\/50,
+.trilha-secondary-tab .border-gold-dim\/60 { border-color:rgba(178,139,69,.35) !important; }
+.trilha-secondary-tab .text-parchment,
+.trilha-secondary-tab .text-gold-bright { color:#33291f !important; }
+.trilha-secondary-tab .text-parchment-dim { color:#786a56 !important; }
+.trilha-secondary-tab .text-parchment-dim\/60 { color:rgba(120,106,86,.72) !important; }
+.trilha-secondary-tab .text-gold { color:#9a3f2d !important; }
+.trilha-secondary-tab .text-gold\/70 { color:#b37b35 !important; }
+.trilha-secondary-tab .font-display.text-gold,
+.trilha-secondary-tab .font-display.text-gold-bright { color:#8d3829 !important; letter-spacing:.07em; }
+.trilha-secondary-tab input,
+.trilha-secondary-tab textarea,
+.trilha-secondary-tab select {
+  background:rgba(255,253,246,.86) !important;
+  color:#3d3227 !important;
+  border-color:#bca77d !important;
+  border-radius:2px !important;
+  box-shadow:inset 0 1px 2px rgba(70,48,25,.04);
+}
+.trilha-secondary-tab input::placeholder,
+.trilha-secondary-tab textarea::placeholder { color:#9b8b73 !important; }
+.trilha-secondary-tab button { transition:.16s ease; }
+.trilha-secondary-tab button:hover { filter:brightness(.96); }
+
+/* módulos: mesma moldura de Atributos/Habilidades */
+.trilha-secondary-tab section.bg-shadow\/40,
+.trilha-secondary-tab article.bg-shadow\/40,
+.trilha-secondary-tab div.bg-shadow\/40.border,
+.trilha-secondary-tab div.bg-shadow\/50.border {
+  position:relative;
+  border-radius:0 !important;
+}
+.trilha-secondary-tab section.bg-shadow\/40::before,
+.trilha-secondary-tab article.bg-shadow\/40::before,
+.trilha-secondary-tab div.bg-shadow\/40.border::before,
+.trilha-secondary-tab div.bg-shadow\/50.border::before {
+  content:'';
+  position:absolute;
+  left:-1px; top:-1px;
+  width:26px; height:26px;
+  border-left:2px solid #9e402d;
+  border-top:2px solid #9e402d;
+  pointer-events:none;
+}
+
+/* Combate */
+.trilha-secondary-tab .bg-gradient-gold { background:linear-gradient(90deg,#9e402d,#c89235) !important; }
+.trilha-secondary-tab .bg-shadow.border { background:#e8dcc0 !important; border-color:#bca77d !important; }
+.trilha-secondary-tab .rounded-full { border-radius:999px !important; }
+
+/* Jornada: módulos claros, títulos e registros separados */
+.trilha-secondary-tab section > .flex.justify-between > h3 {
+  color:#8d3829 !important;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.trilha-secondary-tab section > .flex.justify-between + p,
+.trilha-secondary-tab section > .flex.justify-between ~ div { border-color:rgba(178,139,69,.30); }
+
+/* Regras: página editorial, sem blocos cinza */
+.trilha-secondary-tab .max-w-4xl { max-width:980px; }
+.trilha-secondary-tab .max-w-4xl > .border-b { border-color:#c6aa70 !important; }
+.trilha-secondary-tab .max-w-4xl > .border-b h2 { color:#8d3829 !important; }
+.trilha-secondary-tab .max-w-4xl > section,
+.trilha-secondary-tab .max-w-4xl > .grid > section {
+  position:relative;
+  border-radius:0 !important;
+  background:rgba(255,251,239,.58) !important;
+  border:1px solid #c2ad82 !important;
+  box-shadow:0 7px 18px rgba(70,48,25,.05) !important;
+}
+.trilha-secondary-tab .max-w-4xl > section::before,
+.trilha-secondary-tab .max-w-4xl > .grid > section::before {
+  content:''; position:absolute; left:-1px; top:-1px; width:30px; height:30px;
+  border-left:2px solid #9e402d; border-top:2px solid #9e402d;
+}
+.trilha-secondary-tab .max-w-4xl section h3 { color:#8d3829 !important; }
+.trilha-secondary-tab .max-w-4xl section p,
+.trilha-secondary-tab .max-w-4xl section td { color:#625442 !important; }
+.trilha-secondary-tab .max-w-4xl section b { color:#342a20 !important; }
+.trilha-secondary-tab .max-w-4xl table th { color:#8d3829 !important; }
+.trilha-secondary-tab .max-w-4xl table tr { border-color:rgba(178,139,69,.35) !important; }
+
+/* História e Diário: aparência de documento, não painel administrativo */
+.trilha-secondary-tab textarea { line-height:1.55; }
+.trilha-secondary-tab article h4 { color:#8d3829 !important; }
+
+@media (max-width:640px){
+  .trilha-secondary-tab .grid { gap:12px; }
+}

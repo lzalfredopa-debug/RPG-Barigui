@@ -654,8 +654,9 @@
   border-right:1px solid rgba(203,155,58,.45);
 }
 .trilha-login-brand::before {
-  content:'❧'; position:absolute; top:-70px; left:-25px; color:#a9462f; opacity:.22;
-  font:340px/1 Georgia,serif; transform:rotate(-15deg);
+  content:'❧'; position:absolute; top:28px; left:34px; color:#a9462f; opacity:.18;
+  font:112px/1 Georgia,serif; transform:rotate(-10deg); transform-origin:center;
+  text-shadow:0 0 18px rgba(169,70,47,.08);
 }
 .trilha-login-brand::after {
   content:''; position:absolute; left:48px; right:48px; bottom:40px; height:2px;
@@ -690,7 +691,7 @@
   .trilha-login { padding:14px; }
   .trilha-login-frame { grid-template-columns:1fr; }
   .trilha-login-brand { min-height:235px; padding:34px 30px; }
-  .trilha-login-brand::before { font-size:220px; top:-55px; left:auto; right:-15px; }
+  .trilha-login-brand::before { font-size:82px; top:22px; left:auto; right:22px; opacity:.16; }
   .trilha-login-title { font-size:3rem; }
   .trilha-login-panel { padding:40px 30px; }
 }

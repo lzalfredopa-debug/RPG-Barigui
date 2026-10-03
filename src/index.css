@@ -654,9 +654,10 @@
   border-right:1px solid rgba(203,155,58,.45);
 }
 .trilha-login-brand::before {
-  content:'❧'; position:absolute; top:28px; left:34px; color:#a9462f; opacity:.18;
-  font:112px/1 Georgia,serif; transform:rotate(-10deg); transform-origin:center;
-  text-shadow:0 0 18px rgba(169,70,47,.08);
+  content:''; position:absolute; z-index:0; top:-22px; left:-28px; width:92%; height:62%;
+  background:url('/trilha-acanto-transparent.png') left top / contain no-repeat;
+  opacity:.72; pointer-events:none;
+  filter:saturate(.88) brightness(.78) contrast(1.06);
 }
 .trilha-login-brand::after {
   content:''; position:absolute; left:48px; right:48px; bottom:40px; height:2px;
@@ -673,7 +674,7 @@
     repeating-linear-gradient(0deg,rgba(75,51,27,.018) 0 1px,transparent 1px 4px),
     linear-gradient(135deg,#ead9b5,#dec69a);
 }
-.trilha-login-panel::before { content:''; position:absolute; left:0; top:0; width:42px; height:42px; border-left:2px solid #9e402d; border-top:2px solid #9e402d; }
+.trilha-login-panel::before { content:none; }
 .trilha-login-eyebrow { color:#9e402d; font-size:10px; font-weight:600; letter-spacing:.25em; text-transform:uppercase; }
 .trilha-login-heading { margin-top:8px; color:#34291f; font-size:2rem; letter-spacing:.06em; }
 .trilha-login-copy { margin-top:13px; color:#76644d; font-size:13px; line-height:1.6; }
@@ -691,7 +692,7 @@
   .trilha-login { padding:14px; }
   .trilha-login-frame { grid-template-columns:1fr; }
   .trilha-login-brand { min-height:235px; padding:34px 30px; }
-  .trilha-login-brand::before { font-size:82px; top:22px; left:auto; right:22px; opacity:.16; }
+  .trilha-login-brand::before { top:-8px; left:-12px; width:58%; height:58%; opacity:.48; }
   .trilha-login-title { font-size:3rem; }
   .trilha-login-panel { padding:40px 30px; }
 }

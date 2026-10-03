@@ -229,19 +229,6 @@
   opacity: .85;
 }
 
-.trilha-header-ornament {
-  position: absolute;
-  right: 68px;
-  top: -76px;
-  font-family: Georgia, serif;
-  font-size: 250px;
-  line-height: 1;
-  color: #a8462f;
-  opacity: .10;
-  transform: rotate(-20deg);
-  pointer-events: none;
-}
-
 .trilha-portrait {
   flex: none;
   border: 1px solid #d2a74c;
@@ -408,7 +395,6 @@
 
 @media (max-width: 640px) {
   .trilha-sheet-header { min-height: 128px; padding: 18px 17px; }
-  .trilha-header-ornament { display:none; }
   .trilha-character-meta { gap:5px; font-size:10px; }
   .trilha-tabs { padding:0 6px; }
   .trilha-tab { padding:12px 11px 11px; font-size:10px; }

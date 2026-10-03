@@ -26,6 +26,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
   return <div className="trilha-login animate-fade-in">
     <div className="trilha-login-frame animate-fade-in-up">
       <section className="trilha-login-brand" aria-label="TRILHA">
+        <img src="/trilha-acanto-oficial.png" alt="" aria-hidden="true" className="trilha-login-acanthus" />
         <p className="trilha-login-kicker">Sistema de RPG</p>
         <h1 className="trilha-login-title font-display">TRILHA</h1>
         <p className="trilha-login-expansion">Trajetória · Roleplay · Identidade<br/>Liberdade · História · Aventura</p>

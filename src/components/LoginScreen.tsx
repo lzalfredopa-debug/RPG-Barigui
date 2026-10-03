@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { supabase, type Player } from '@/lib/supabase';
 
 type LoginScreenProps = {
@@ -53,14 +53,11 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
       </div>
 
       <div className="relative w-full max-w-md animate-fade-in-up">
-        {/* Emblem */}
-        <div className="flex justify-center mb-8">
-          <div className="relative">
-            <div className="w-20 h-20 rounded-full bg-gradient-card border-2 border-gold flex items-center justify-center shadow-gold-lg animate-pulse-gold">
-              <Shield className="w-10 h-10 text-gold" strokeWidth={1.5} />
-            </div>
-            <div className="absolute -inset-2 rounded-full border border-gold-dim" />
-          </div>
+        {/* Símbolo oficial do TRILHA */}
+        <div className="flex flex-col items-center mb-7 trilha-brand">
+          <img src="/trilha-acanto.png" alt="Símbolo do TRILHA" className="trilha-emblem" />
+          <div className="trilha-wordmark font-display">TRILHA</div>
+          <div className="trilha-motto">A trilha é forjada a cada passo.</div>
         </div>
 
         {/* Card */}

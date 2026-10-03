@@ -9,8 +9,8 @@ export default {
       },
       colors: {
         gold: {
-          DEFAULT: '#c9a84c',
-          bright: '#e0c25c',
+          DEFAULT: '#d29a35',
+          bright: '#e1b65f',
         },
         parchment: {
           DEFAULT: '#f5e6c8',
@@ -18,13 +18,13 @@ export default {
           dim: '#c8b890',
         },
         blood: {
-          DEFAULT: '#8b1a1a',
-          dark: '#6b1414',
+          DEFAULT: '#9b3d27',
+          dark: '#6f291d',
         },
-        shadow: '#1a1208',
+        shadow: '#11110f',
         stone: {
-          DEFAULT: '#3d3528',
-          light: '#5a4d3a',
+          DEFAULT: '#302820',
+          light: '#514335',
         },
         forest: '#2d4a2d',
       },

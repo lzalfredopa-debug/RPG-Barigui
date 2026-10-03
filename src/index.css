@@ -188,3 +188,118 @@
     50% { box-shadow: 0 0 30px rgba(201, 168, 76, 0.3); }
   }
 }
+
+/* =========================================================
+   IDENTIDADE VISUAL TRILHA — Acanto / Carvão / Cobre / Ouro
+   ========================================================= */
+@layer base {
+  :root {
+    --trilha-charcoal: #1a1a18;
+    --trilha-black: #11110f;
+    --trilha-copper: #9b3d27;
+    --trilha-copper-dark: #6f291d;
+    --trilha-gold: #d29a35;
+    --trilha-gold-soft: #e1b65f;
+    --trilha-parchment: #ead9b7;
+    --trilha-parchment-dark: #cdb78e;
+    --trilha-earth: #4b3626;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 18% 12%, rgba(210,154,53,.08), transparent 26rem),
+      radial-gradient(circle at 85% 75%, rgba(155,61,39,.07), transparent 30rem),
+      linear-gradient(135deg, #11110f 0%, #1a1713 45%, #0e0e0d 100%);
+  }
+
+  ::selection { background: rgba(210,154,53,.35); color: #fff7e8; }
+}
+
+@layer utilities {
+  .bg-gradient-fantasy {
+    background:
+      radial-gradient(circle at 50% -10%, rgba(210,154,53,.11), transparent 34rem),
+      radial-gradient(circle at 100% 100%, rgba(155,61,39,.10), transparent 30rem),
+      linear-gradient(145deg, #10100f 0%, #1c1814 48%, #10100f 100%);
+  }
+
+  .bg-gradient-card {
+    background: linear-gradient(155deg, rgba(38,32,25,.94), rgba(18,17,15,.97));
+    position: relative;
+  }
+
+  .bg-gradient-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(115deg, rgba(234,217,183,.035), transparent 28%, rgba(210,154,53,.025));
+  }
+
+  .bg-gradient-gold {
+    background: linear-gradient(135deg, #8f351f 0%, #b44d2d 48%, #8f351f 100%);
+    border: 1px solid #d29a35;
+    color: #fff2d8;
+  }
+
+  .bg-gradient-blood,
+  .bg-blood { background: linear-gradient(135deg, #9b3d27, #6f291d); }
+  .bg-blood-dark { background-color: #6f291d; }
+
+  .text-gold { color: #d29a35; }
+  .text-gold-bright { color: #e1b65f; }
+  .text-blood { color: #c35a38; }
+  .border-gold { border-color: #d29a35; }
+  .border-gold-dim { border-color: rgba(210,154,53,.34); }
+  .border-blood { border-color: #9b3d27; }
+
+  .divider-gold {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #9b3d27 18%, #d29a35 50%, #9b3d27 82%, transparent);
+    position: relative;
+  }
+  .divider-gold::after {
+    content: '◆';
+    position: absolute;
+    left: 50%; top: 50%; transform: translate(-50%,-52%);
+    color: #d29a35; font-size: 8px; background: #1a1713; padding: 0 6px;
+  }
+
+  .shadow-gold { box-shadow: 0 0 0 1px rgba(155,61,39,.16), 0 0 22px rgba(210,154,53,.10), 0 8px 22px rgba(0,0,0,.38); }
+  .shadow-gold-lg { box-shadow: 0 0 0 1px rgba(155,61,39,.20), 0 0 42px rgba(210,154,53,.12), 0 16px 38px rgba(0,0,0,.5); }
+  .text-shadow-gold { text-shadow: 0 0 18px rgba(210,154,53,.25), 0 2px 3px rgba(0,0,0,.7); }
+
+  .trilha-brand { filter: drop-shadow(0 10px 18px rgba(0,0,0,.35)); }
+  .trilha-emblem {
+    width: 154px; height: 170px; object-fit: contain;
+    object-position: center;
+    margin-bottom: -22px;
+    filter: saturate(.95) contrast(1.08) drop-shadow(0 4px 7px rgba(0,0,0,.55));
+  }
+  .trilha-wordmark {
+    color: #e1b65f;
+    font-size: clamp(2rem, 7vw, 3rem);
+    font-weight: 700;
+    letter-spacing: .16em;
+    line-height: 1;
+    text-shadow: 0 2px 0 #6f291d, 0 5px 12px rgba(0,0,0,.55);
+  }
+  .trilha-motto {
+    margin-top: .55rem;
+    color: rgba(234,217,183,.64);
+    font-family: 'Cinzel', serif;
+    font-size: .64rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  /* Acanto sutil em painéis importantes sem sobrecarregar a interface */
+  .border-gold-dim.rounded-xl,
+  .border-gold-dim.rounded-2xl {
+    box-shadow: inset 0 0 0 1px rgba(155,61,39,.08), 0 10px 28px rgba(0,0,0,.18);
+  }
+
+  button, a { transition: border-color .2s ease, color .2s ease, background-color .2s ease, filter .2s ease, transform .2s ease; }
+  button:not(:disabled):active { transform: translateY(1px); }
+}

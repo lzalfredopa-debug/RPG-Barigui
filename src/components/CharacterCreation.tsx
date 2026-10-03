@@ -6,6 +6,7 @@ type CharacterCreationProps = {
   player: Player;
   onBack: () => void;
   onCreated: () => void;
+  consumeCharacterAllowance?: boolean;
 };
 
 const STEPS = [
@@ -20,7 +21,7 @@ const STEPS = [
 type Lineage = { name: string; description: string; image: string };
 type Race = { name: string; lineages: Lineage[] };
 
-const RACES: Race[] = [
+export const RACES: Race[] = [
   { name: 'Humanos', lineages: [
     { name: 'Terranos', image: '/images/linhagens/humanos-terrano.png', description: 'Constituição próxima à humana comum, com grande variedade de aparência. Representam a ancestralidade humana mais difundida.' },
     { name: 'Altaneiros', image: '/images/linhagens/humanos-altaneiro.png', description: 'Descendentes de povos das grandes altitudes, com facilidade para respirar em ar rarefeito e suportar o frio.' },
@@ -341,14 +342,14 @@ const APPRENTICE_SKILL_MAX = 2;
 const allAttributeNames = ATTRIBUTE_GROUPS.flatMap((group) => group.attributes.map((attribute) => attribute.name));
 const allSkillNames = SKILL_GROUPS.flatMap((group) => group.skills.map((skill) => skill.name));
 
-const GENDER_OPTIONS = [
+export const GENDER_OPTIONS = [
   { id: 'ele', label: 'Ele / Dele' },
   { id: 'ela', label: 'Ela / Dela' },
   { id: 'elu', label: 'Elu / Delu' },
   { id: 'neutro', label: 'Não faz diferença' },
 ];
 
-export default function CharacterCreation({ player, onBack, onCreated }: CharacterCreationProps) {
+export default function CharacterCreation({ player, onBack, onCreated, consumeCharacterAllowance = true }: CharacterCreationProps) {
   const [currentStep, setCurrentStep] = useState(1);
 
   const [name, setName] = useState('');
@@ -449,7 +450,7 @@ export default function CharacterCreation({ player, onBack, onCreated }: Charact
       });
 
       if (error) throw error;
-      if (player.character_creation_allowed) {
+      if (consumeCharacterAllowance && player.character_creation_allowed) {
         await supabase.from('players').update({ character_creation_allowed: false }).eq('id', player.id);
       }
       setConfirmOpen(false);

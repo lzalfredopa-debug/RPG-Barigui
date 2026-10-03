@@ -470,8 +470,9 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
           const mystical = Math.max(...['Elementalismo', 'Arcanismo', 'Ritualismo', 'Manipulação Arcana', 'Teologia', 'Espiritualismo'].map((key) => effectiveSkills[key] ?? 0));
           return mystical > 0 ? 5 + mental * 2 + mystical * 2 + 1 : 0;
         })(),
-        attributes: effectiveAttributes,
-        skills: effectiveSkills,
+        // Mantém os pontos distribuídos separados dos bônus de ancestralidade.
+        attributes,
+        skills,
         racial_attribute_bonus: appliedRacialAttribute ? {[appliedRacialAttribute]:1} : {},
         lineage_skill_bonuses: Object.fromEntries([lineageSkill1,lineageSkill2].filter(Boolean).map(x=>[x,1])),
       });

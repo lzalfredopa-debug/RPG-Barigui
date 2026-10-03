@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, ChevronRight, Check, Info, Loader2, Lock } from 'lucide-react';
 import { supabase, type Player } from '@/lib/supabase';
+import { attributeChoices, type RaceDefinition, type LineageDefinition } from '@/lib/ancestry';
 
 type CharacterCreationProps = {
   player: Player;
@@ -18,56 +19,56 @@ const STEPS = [
 
 
 
-type Lineage = { name: string; description: string; image: string };
-type Race = { name: string; lineages: Lineage[] };
+type Lineage = { id?: string; race_id?: string; name: string; description: string; image: string; skill_group_1?: string; skill_group_2?: string };
+type Race = { id?: string; name: string; description?: string; image?: string; attribute_mode?: RaceDefinition['attribute_mode']; fixed_attribute?: string|null; lineages: Lineage[] };
 
 export const RACES: Race[] = [
-  { name: 'Humanos', lineages: [
+  { id: 'humanos', name: 'Humanos', lineages: [
     { name: 'Terranos', image: '/images/linhagens/humanos-terrano.png', description: 'Constituição próxima à humana comum, com grande variedade de aparência. Representam a ancestralidade humana mais difundida.' },
     { name: 'Altaneiros', image: '/images/linhagens/humanos-altaneiro.png', description: 'Descendentes de povos das grandes altitudes, com facilidade para respirar em ar rarefeito e suportar o frio.' },
     { name: 'Marítimos', image: '/images/linhagens/humanos-maritimo.png', description: 'Descendentes de povos dos arquipélagos, com adaptações à vida na água, como maior capacidade de prender a respiração.' },
   ]},
-  { name: 'Elfos', lineages: [
+  { id: 'elfos', name: 'Elfos', lineages: [
     { name: 'Silvestres', image: '/images/linhagens/elfos-silvestre.png', description: 'Herança ligada às florestas; olhos e cabelos podem apresentar tons de folhas, madeira e âmbar.' },
     { name: 'Astrais', image: '/images/linhagens/elfos-astral.png', description: 'Herança ligada ao céu noturno; olhos luminosos e marcas semelhantes a constelações.' },
     { name: 'Profundos', image: '/images/linhagens/elfos-profundo.png', description: 'Adaptados ao subterrâneo; olhos sensíveis à luz e aparência em tons de pedra, cinza ou violeta.' },
   ]},
-  { name: 'Anões', lineages: [
+  { id: 'anoes', name: 'Anões', lineages: [
     { name: 'Graníticos', image: '/images/linhagens/anoes-granitico.png', description: 'Corpos compactos e ossatura densa, associados às antigas linhagens das montanhas.' },
     { name: 'Ígneos', image: '/images/linhagens/anoes-igneo.png', description: 'Herança de regiões vulcânicas; pele quente e cabelos em tons de cobre, carvão ou brasa.' },
     { name: 'Cristalinos', image: '/images/linhagens/anoes-cristalino.png', description: 'Pequenas formações minerais surgem na pele ou nos cabelos, com sensibilidade às vibrações da pedra.' },
   ]},
-  { name: 'Orcs', lineages: [
+  { id: 'orcs', name: 'Orcs', lineages: [
     { name: 'Colossais', image: '/images/linhagens/orcs-colossal.png', description: 'Maior estatura e musculatura, com presas e estrutura óssea acentuadas.' },
     { name: 'Glaciais', image: '/images/linhagens/orcs-glacial.png', description: 'Pelagem fina ou cabelos densos, pele em tons frios e adaptação às baixas temperaturas.' },
     { name: 'Rubros', image: '/images/linhagens/orcs-rubro.png', description: 'Pele em tons de ocre, cobre ou vermelho, com adaptação ao calor de regiões áridas.' },
   ]},
-  { name: 'Pequeninos', lineages: [
+  { id: 'pequeninos', name: 'Pequeninos', lineages: [
     { name: 'Campestres', image: '/images/linhagens/pequeninos-campestre.png', description: 'Pés largos, geralmente cobertos de pelos, e constituição robusta para seu tamanho.' },
     { name: 'Brumosos', image: '/images/linhagens/pequeninos-brumoso.png', description: 'Herança feérica sutil, com passos silenciosos e contornos que parecem se confundir com a névoa.' },
     { name: 'Ribeirinhos', image: '/images/linhagens/pequeninos-ribeirinho.png', description: 'Dedos parcialmente palmados e facilidade para nadar e se movimentar em terrenos alagados.' },
   ]},
-  { name: 'Goblins', lineages: [
+  { id: 'goblins', name: 'Goblins', lineages: [
     { name: 'Cavernícolas', image: '/images/linhagens/goblins-cavernicola.png', description: 'Olhos e orelhas grandes, adaptados à percepção em ambientes subterrâneos.' },
     { name: 'Arborícolas', image: '/images/linhagens/goblins-arboricola.png', description: 'Membros alongados e dedos fortes, próprios para agarrar galhos e escalar.' },
     { name: 'Ferruginosos', image: '/images/linhagens/goblins-ferruginoso.png', description: 'Pele de aspecto salpicado, em tons de ferrugem, e capacidade de perceber metais pelo cheiro.' },
   ]},
-  { name: 'Tiferinos', lineages: [
+  { id: 'tiferinos', name: 'Tiferinos', lineages: [
     { name: 'Infernais', image: '/images/linhagens/tiferinos-infernal.png', description: 'Chifres marcantes, cauda e sinais de uma herança ligada ao fogo e a antigos pactos.' },
     { name: 'Abissais', image: '/images/linhagens/tiferinos-abissal.png', description: 'Traços assimétricos, chifres irregulares e manifestações de uma herança ligada ao caos e à transformação.' },
     { name: 'Umbráticos', image: '/images/linhagens/tiferinos-umbratico.png', description: 'Cores escuras ou desbotadas, olhos contrastantes e sombras que parecem acompanhar seus movimentos com atraso.' },
   ]},
-  { name: 'Povo Fúngico', lineages: [
+  { id: 'povo-fungico', name: 'Povo Fúngico', lineages: [
     { name: 'Micelares', image: '/images/linhagens/povo-fungico-micelar.png', description: 'Corpos fibrosos, semelhantes a raízes entrelaçadas, capazes de perceber sinais através de redes de fungos.' },
     { name: 'Chapeleiros', image: '/images/linhagens/povo-fungico-chapeleiro.png', description: 'Chapéus de cogumelo de diferentes formatos e cores; produzem pequenos conjuntos de esporos.' },
     { name: 'Luminescentes', image: '/images/linhagens/povo-fungico-luminescente.png', description: 'Partes do corpo emitem luz, usada para iluminar suavemente e transmitir sinais.' },
   ]},
-  { name: 'Draconatos', lineages: [
+  { id: 'draconatos', name: 'Draconatos', lineages: [
     { name: 'Metálicos', image: '/images/linhagens/draconatos-metalico.png', description: 'Escamas com brilho e aspecto de metal.' },
     { name: 'Cromáticos', image: '/images/linhagens/draconatos-cromatico.png', description: 'Escamas de cores intensas e bem definidas.' },
     { name: 'Gemáticos', image: '/images/linhagens/draconatos-gematico.png', description: 'Escamas cristalinas ou facetadas, semelhantes a pedras preciosas.' },
   ]},
-  { name: 'Povo Fera', lineages: [
+  { id: 'povo-fera', name: 'Povo Fera', lineages: [
     { name: 'Felinos', image: '/images/linhagens/povo-fera-felino.png', description: 'Traços de gatos, linces, onças ou leões, com garras retráteis e equilíbrio apurado.' },
     { name: 'Canídeos', image: '/images/linhagens/povo-fera-canideo.png', description: 'Traços de lobos, cães ou raposas, com olfato desenvolvido e orelhas expressivas.' },
     { name: 'Avianos', image: '/images/linhagens/povo-fera-aviano.png', description: 'Penas, bicos e características de diferentes aves. O formato das asas e sua utilidade ainda serão definidos.' },
@@ -351,6 +352,10 @@ export const GENDER_OPTIONS = [
 
 export default function CharacterCreation({ player, onBack, onCreated, consumeCharacterAllowance = true }: CharacterCreationProps) {
   const [currentStep, setCurrentStep] = useState(1);
+  const [raceOptions, setRaceOptions] = useState<Race[]>(RACES);
+  const [racialAttribute, setRacialAttribute] = useState('');
+  const [lineageSkill1, setLineageSkill1] = useState('');
+  const [lineageSkill2, setLineageSkill2] = useState('');
 
   const [name, setName] = useState('');
   const [nickname, setNickname] = useState('');
@@ -380,7 +385,16 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
 
-  const selectedRace = RACES.find((item) => item.name === race);
+  useEffect(() => {
+    (async () => {
+      const [rr,ll] = await Promise.all([supabase.from('races').select('*').order('name'), supabase.from('lineages').select('*').order('name')]);
+      if (rr.error || ll.error || !rr.data?.length) return;
+      const mapped: Race[] = rr.data.map((r:any) => ({...r, image:r.image_url, lineages:(ll.data||[]).filter((l:any)=>l.race_id===r.id).map((l:any)=>({...l,image:l.image_url}))}));
+      setRaceOptions(mapped);
+    })();
+  }, []);
+
+  const selectedRace = raceOptions.find((item) => item.name === race);
   const isFormValid = name.trim() !== '' && age.trim() !== '' && race !== '' && lineage !== '';
   const attributePointsSpent = Object.values(attributes).reduce((total, value) => total + (value - ATTRIBUTE_INITIAL_POINTS), 0);
   const attributePointsRemaining = ATTRIBUTE_BONUS_POINTS - attributePointsSpent;
@@ -407,7 +421,18 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
 
   const genderLabel = GENDER_OPTIONS.find((option) => option.id === gender)?.label || 'Não informado';
   const selectedLineage = selectedRace?.lineages.find((item) => item.name === lineage);
-  const selectedSkills = Object.entries(skills).filter(([, rank]) => rank > 0);
+  const raceMode = selectedRace?.attribute_mode || ({Humanos:'any',Elfos:'mental',Anões:'fixed',Orcs:'fixed',Pequeninos:'fixed',Goblins:'fixed',Tiferinos:'social','Povo Fúngico':'fixed',Draconatos:'fixed','Povo Fera':'physical'} as any)[race] || 'fixed';
+  const fixedRaceAttribute = selectedRace?.fixed_attribute || ({Anões:'Vigor',Orcs:'Força',Pequeninos:'Agilidade',Goblins:'Destreza','Povo Fúngico':'Sabedoria',Draconatos:'Presença'} as any)[race] || '';
+  const appliedRacialAttribute = raceMode === 'fixed' ? fixedRaceAttribute : racialAttribute;
+  const effectiveAttributes = {...attributes, ...(appliedRacialAttribute ? {[appliedRacialAttribute]:(attributes[appliedRacialAttribute]??1)+1} : {})};
+  const effectiveSkills = {...skills};
+  if(lineageSkill1) effectiveSkills[lineageSkill1]=(effectiveSkills[lineageSkill1]??0)+1;
+  if(lineageSkill2) effectiveSkills[lineageSkill2]=(effectiveSkills[lineageSkill2]??0)+1;
+  const selectedSkills = Object.entries(effectiveSkills).filter(([, rank]) => rank > 0);
+  const lineageGroup1=selectedLineage?.skill_group_1||''; const lineageGroup2=selectedLineage?.skill_group_2||'';
+  const skillsForGroup=(groupName:string)=>SKILL_GROUPS.find(g=>g.name===groupName)?.skills.map(s=>s.name)||[];
+  const racialChoiceValid = raceMode==='fixed' ? !!fixedRaceAttribute : !!racialAttribute;
+  const lineageChoicesValid = !!lineageSkill1 && !!lineageSkill2 && lineageSkill1!==lineageSkill2;
 
   const handleFinalize = async () => {
     if (saving) return;
@@ -439,14 +464,16 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
         class_name: null,
         specialization: null,
         status: 'vivo',
-        current_hp: 15 + ((attributes['Vigor'] ?? 1) * 5),
+        current_hp: 15 + ((effectiveAttributes['Vigor'] ?? 1) * 5),
         current_mp: (() => {
-          const mental = Math.max(...['Inteligência', 'Raciocínio', 'Sabedoria', 'Percepção'].map((key) => attributes[key] ?? 0));
-          const mystical = Math.max(...['Elementalismo', 'Arcanismo', 'Ritualismo', 'Manipulação Arcana', 'Teologia', 'Espiritualismo'].map((key) => skills[key] ?? 0));
+          const mental = Math.max(...['Inteligência', 'Raciocínio', 'Sabedoria', 'Percepção'].map((key) => effectiveAttributes[key] ?? 0));
+          const mystical = Math.max(...['Elementalismo', 'Arcanismo', 'Ritualismo', 'Manipulação Arcana', 'Teologia', 'Espiritualismo'].map((key) => effectiveSkills[key] ?? 0));
           return mystical > 0 ? 5 + mental * 2 + mystical * 2 + 1 : 0;
         })(),
-        attributes,
-        skills,
+        attributes: effectiveAttributes,
+        skills: effectiveSkills,
+        racial_attribute_bonus: appliedRacialAttribute ? {[appliedRacialAttribute]:1} : {},
+        lineage_skill_bonuses: Object.fromEntries([lineageSkill1,lineageSkill2].filter(Boolean).map(x=>[x,1])),
       });
 
       if (error) throw error;
@@ -465,8 +492,8 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
 
  const canContinue =
     (currentStep === 1 && isFormValid) ||
-    (currentStep === 2 && attributePointsRemaining === 0) ||
-    (currentStep === 3 && skillPointsRemaining === 0) ||
+    (currentStep === 2 && attributePointsRemaining === 0 && racialChoiceValid) ||
+    (currentStep === 3 && skillPointsRemaining === 0 && lineageChoicesValid) ||
     currentStep === 4;
 
   const goBack = () => {
@@ -487,6 +514,7 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
     if (raceName !== race) {
       setRace(raceName);
       setLineage('');
+      setRacialAttribute(''); setLineageSkill1(''); setLineageSkill2('');
     }
   };
 
@@ -699,7 +727,7 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                   Raça <span className="text-blood">*</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {RACES.map((item) => (
+                  {raceOptions.map((item) => (
                     <button
                       key={item.name}
                       type="button"
@@ -718,18 +746,19 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
 
               {selectedRace && (
                 <div className="space-y-3 animate-fade-in-up">
+                  {selectedRace.description&&<p className="text-sm text-parchment-dim border-l-2 border-gold-dim pl-3">{selectedRace.description}</p>}
                   <div className="font-display text-sm font-500 text-gold-bright tracking-wide">
                     Linhagem <span className="text-blood">*</span>
                   </div>
                   <p className="text-parchment-dim/60 text-xs font-body">
-                    Escolha uma linhagem de {selectedRace.name}. As descrições são informativas e ainda não concedem bônus ou habilidades.
+                    Escolha uma linhagem de {selectedRace.name}. A linhagem definirá duas categorias para seus bônus de Habilidade.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {selectedRace.lineages.map((item) => (
                       <button
                         key={item.name}
                         type="button"
-                        onClick={() => setLineage(item.name)}
+                        onClick={() => {setLineage(item.name);setLineageSkill1('');setLineageSkill2('')}}
                         className={`p-4 rounded-lg border text-left transition-all duration-200 ${
                           lineage === item.name
                             ? 'bg-gold/15 border-gold shadow-gold'
@@ -766,6 +795,13 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
               <div className="flex items-center justify-between gap-4 bg-shadow/50 border border-gold-dim rounded-lg px-4 py-3 mb-8">
                 <span className="font-body text-sm text-parchment-dim">Aprendiz · máximo de 2 pontos por atributo</span>
                 <span className="font-display text-gold-bright">Pontos disponíveis: {attributePointsRemaining}</span>
+              </div>
+              <div className="bg-shadow/50 border border-gold-dim rounded-lg p-4 mb-6">
+                <h3 className="font-display text-gold-bright mb-2">Traço racial · +1 Atributo</h3>
+                {raceMode==='fixed' ? <p className="text-sm text-parchment">{selectedRace?.name}: <b className="text-gold-bright">+1 {fixedRaceAttribute}</b></p> : <>
+                  <p className="text-xs text-parchment-dim mb-3">Escolha o atributo que receberá o bônus racial. Este ponto não consome seus 4 pontos de criação.</p>
+                  <select className="w-full bg-shadow border border-gold-dim rounded-lg px-3 py-2 text-parchment" value={racialAttribute} onChange={e=>setRacialAttribute(e.target.value)}><option value="">Escolha um atributo...</option>{attributeChoices(raceMode,allAttributeNames).map(a=><option key={a} value={a}>{a}</option>)}</select>
+                </>}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {ATTRIBUTE_GROUPS.map((group) => (
@@ -815,6 +851,11 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                   <span className="font-display text-gold-bright">Pontos disponíveis: {skillPointsRemaining}</span>
                 </div>
                 <p className="font-body text-xs text-parchment-dim/70">Custo progressivo: 1º ponto custa 1 · 2º ponto custa +2.</p>
+              </div>
+              <div className="bg-shadow/50 border border-gold-dim rounded-lg p-4 mb-6">
+                <h3 className="font-display text-gold-bright mb-2">Aptidões de linhagem · +1 em duas Habilidades</h3>
+                <p className="text-xs text-parchment-dim mb-3">{selectedLineage?.name}: escolha uma habilidade de <b>{lineageGroup1}</b> e uma de <b>{lineageGroup2}</b>. Os bônus não consomem seus pontos de criação.</p>
+                <div className="grid sm:grid-cols-2 gap-3"><select className="bg-shadow border border-gold-dim rounded-lg px-3 py-2 text-parchment" value={lineageSkill1} onChange={e=>setLineageSkill1(e.target.value)}><option value="">1ª habilidade...</option>{skillsForGroup(lineageGroup1).map(x=><option key={x} value={x}>{x}</option>)}</select><select className="bg-shadow border border-gold-dim rounded-lg px-3 py-2 text-parchment" value={lineageSkill2} onChange={e=>setLineageSkill2(e.target.value)}><option value="">2ª habilidade...</option>{skillsForGroup(lineageGroup2).filter(x=>x!==lineageSkill1).map(x=><option key={x} value={x}>{x}</option>)}</select></div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 {SKILL_GROUPS.map((group) => (
@@ -892,7 +933,7 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                     {ATTRIBUTE_GROUPS.flatMap((group) => group.attributes).map((attribute) => (
                       <div key={attribute.name} className="flex justify-between gap-3 font-body text-sm border-b border-gold-dim/20 pb-1">
                         <span className="text-parchment-dim">{attribute.name}</span>
-                        <span className="text-gold-bright">{attributes[attribute.name]}</span>
+                        <span className="text-gold-bright">{effectiveAttributes[attribute.name]}{appliedRacialAttribute===attribute.name&&<small className="ml-1 text-parchment-dim">(+1 racial)</small>}</span>
                       </div>
                     ))}
                   </div>

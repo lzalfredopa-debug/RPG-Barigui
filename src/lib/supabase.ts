@@ -72,6 +72,8 @@ export type Character = {
   // Atributos e Habilidades
   attributes: Record<string, number>;
   skills: Record<string, number>;
+  racial_attribute_bonus?: Record<string, number>;
+  lineage_skill_bonuses?: Record<string, number>;
 
   // Recursos atuais
   current_hp: number | null;

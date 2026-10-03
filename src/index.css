@@ -525,3 +525,75 @@
 @media (max-width:640px){
   .trilha-secondary-tab .grid { gap:12px; }
 }
+
+/* ============================================================
+   TRILHA — Página do Jogador / cards de personagem
+   Carvão = ambiente; cobre→ouro = percurso/progressão.
+   Retratos oficiais em proporção 3:4.
+   ============================================================ */
+.trilha-player-characters { position:relative; }
+.trilha-player-section-title {
+  display:grid; grid-template-columns:auto auto 1fr; align-items:center; gap:10px;
+  margin-bottom:18px; color:#d1a23e;
+}
+.trilha-player-section-title h2 { color:#e3b84d; font-size:1.18rem; letter-spacing:.08em; }
+.trilha-player-section-title i { height:1px; background:linear-gradient(90deg,#9d402c,#d2a13c 45%,transparent); opacity:.75; }
+.trilha-player-loading,.trilha-player-empty { padding:36px 0; color:#b8a98a; text-align:center; }
+.trilha-character-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,240px)); gap:20px;
+  align-items:start;
+}
+.trilha-character-card {
+  position:relative; overflow:hidden; width:100%; text-align:left;
+  border:1px solid rgba(202,154,57,.42); border-radius:2px;
+  background:linear-gradient(160deg,#211c16,#17140f);
+  box-shadow:0 13px 30px rgba(0,0,0,.28);
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.trilha-character-card::after {
+  content:''; position:absolute; inset:auto 0 0; height:2px;
+  background:linear-gradient(90deg,#9e402d,#d4a33e 60%,transparent);
+}
+.trilha-character-card:hover { transform:translateY(-3px); border-color:#d1a13d; box-shadow:0 18px 34px rgba(0,0,0,.38); }
+.trilha-character-card-portrait {
+  position:relative; aspect-ratio:3/4; overflow:hidden; display:grid; place-items:center;
+  background:#100f0c; color:#8f7c59; border-bottom:1px solid rgba(202,154,57,.34);
+}
+.trilha-character-card-portrait img {
+  width:100%; height:100%; object-fit:cover; object-position:center; display:block;
+}
+.trilha-character-card-portrait::after {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(to bottom,transparent 64%,rgba(17,14,10,.38));
+}
+.trilha-character-level {
+  position:absolute; z-index:1; right:10px; bottom:10px; padding:4px 8px;
+  color:#f0d895; background:rgba(19,16,12,.86); border:1px solid rgba(205,157,59,.58);
+  font:600 10px/1 'Inter',sans-serif; letter-spacing:.07em;
+}
+.trilha-character-card-body { padding:15px 16px 17px; }
+.trilha-character-card-body h3 { color:#efd996; font-size:1.05rem; letter-spacing:.07em; }
+.trilha-character-nickname { margin-top:3px; color:#b8aa8d; font-size:11px; }
+.trilha-character-card-rule { height:1px; margin:11px 0 10px; background:linear-gradient(90deg,#9e402d,#d2a13c,transparent); }
+.trilha-character-lineage { color:#c7b99c; font-size:12px; }
+.trilha-character-stage { margin-top:4px; color:#d4a23c; font-size:11px; }
+.trilha-open-sheet { display:inline-flex; gap:7px; align-items:center; margin-top:13px; color:#9f9178; font-size:10px; text-transform:uppercase; letter-spacing:.12em; }
+.trilha-character-card:hover .trilha-open-sheet { color:#e0b34a; }
+.trilha-create-character { display:flex; justify-content:center; margin-top:24px; }
+.trilha-create-character button {
+  display:flex; align-items:center; gap:8px; padding:10px 17px; color:#f2dfad;
+  border:1px solid rgba(205,157,59,.55); border-radius:2px;
+  background:linear-gradient(90deg,#813a2c,#b86c31 48%,#c99537);
+  box-shadow:0 8px 20px rgba(0,0,0,.22); font-family:'Cinzel',serif; font-size:11px; letter-spacing:.05em;
+}
+.trilha-create-character > div { display:flex; align-items:center; gap:8px; color:#9f9178; font-size:12px; }
+
+/* O retrato na ficha usa a mesma proporção oficial 3:4. */
+.trilha-sheet-header .trilha-portrait { aspect-ratio:3/4; height:auto !important; object-fit:cover; object-position:center; }
+
+@media(max-width:640px){
+  .trilha-character-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .trilha-character-card-body { padding:12px; }
+  .trilha-player-section-title i { display:none; }
+}
+@media(max-width:420px){ .trilha-character-grid { grid-template-columns:1fr; } }

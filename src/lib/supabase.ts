@@ -38,6 +38,34 @@ export type Suggestion = {
 };
 
 
+
+export type ClassNode = {
+  id: string;
+  root_class: string;
+  stage: 'Iniciante' | 'Competente' | 'Proficiente' | 'Especialista';
+  stage_order: number;
+  level_min: number;
+  level_max: number;
+  name: string;
+  description: string;
+  parent_id: string | null;
+  parent_name: string | null;
+  attribute_fixed: string | null;
+  attribute_alternative_a: string | null;
+  attribute_alternative_b: string | null;
+  attributes_base: string | null;
+  primary_skill: string | null;
+  secondary_skill: string | null;
+  primary_theme: string | null;
+  secondary_theme: string | null;
+  requirement_text: string;
+  requirements: Record<string, unknown>;
+  requirement_status: string;
+  sort_order: number;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type Character = {
   id: string;
   player_id: string;

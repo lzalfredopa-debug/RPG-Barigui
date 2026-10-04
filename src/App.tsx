@@ -4,6 +4,7 @@ import PlayerPage from '@/components/PlayerPage';
 import MasterPage from '@/components/MasterPage';
 import CharacterCreation from '@/components/CharacterCreation';
 import TableChat from '@/components/TableChat';
+import TableMusic from '@/components/TableMusic';
 import { type Player } from '@/lib/supabase';
 
 type View = 'login' | 'player' | 'character-creation';
@@ -21,6 +22,7 @@ export default function App() {
       <>
         <MasterPage player={currentPlayer} onLogout={() => { setCurrentPlayer(null); setView('login'); }} />
         <TableChat player={currentPlayer} />
+        <TableMusic player={currentPlayer} />
       </>
     );
   }
@@ -34,6 +36,7 @@ export default function App() {
           onCreated={() => setView('player')}
         />
         <TableChat player={currentPlayer} />
+        <TableMusic player={currentPlayer} />
       </>
     );
   }
@@ -46,6 +49,7 @@ export default function App() {
         onCreateCharacter={() => setView('character-creation')}
       />
       <TableChat player={currentPlayer} />
+      <TableMusic player={currentPlayer} />
     </>
   );
 }

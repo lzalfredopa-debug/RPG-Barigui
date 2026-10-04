@@ -1542,3 +1542,58 @@
   .trilha-radio-copy strong { font-size: 10px; }
   .trilha-radio-copy span { font-size: 9px; }
 }
+
+/* Rádio TRILHA — recolher/abrir sem interromper a reprodução */
+.trilha-radio-close {
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(190,141,58,.22);
+  border-radius: 7px;
+  color: #a99a7e;
+  background: rgba(0,0,0,.16);
+  cursor: pointer;
+  transition: color .18s ease, border-color .18s ease, background .18s ease;
+}
+.trilha-radio-close:hover {
+  color: #ead9ae;
+  border-color: rgba(211,162,69,.52);
+  background: rgba(201,154,62,.08);
+}
+.trilha-radio-launcher {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 79;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(194,143,54,.46);
+  border-radius: 50%;
+  color: #bca679;
+  background: linear-gradient(145deg, rgba(35,30,25,.97), rgba(18,17,15,.98));
+  box-shadow: 0 10px 28px rgba(0,0,0,.34), inset 0 0 0 1px rgba(240,205,123,.035);
+  cursor: pointer;
+  backdrop-filter: blur(9px);
+  transition: transform .18s ease, color .18s ease, border-color .18s ease;
+}
+.trilha-radio-launcher:hover {
+  transform: translateY(-1px);
+  color: #e6c25c;
+  border-color: rgba(219,169,67,.68);
+}
+.trilha-radio-launcher.is-live {
+  color: #e6c25c;
+  box-shadow: 0 10px 28px rgba(0,0,0,.34), 0 0 16px rgba(204,151,50,.14);
+}
+
+@media (max-width: 560px) {
+  .trilha-radio-launcher {
+    left: 10px;
+    bottom: 10px;
+  }
+}

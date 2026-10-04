@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Radio, Volume2, VolumeX } from 'lucide-react';
+import { Radio, Volume2, VolumeX, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 const RADIO_BUCKET = 'radio-trilha';
@@ -74,6 +74,7 @@ export default function TrilhaRadio() {
   const [loading, setLoading] = useState(true);
   const [waitingInteraction, setWaitingInteraction] = useState(false);
   const [error, setError] = useState('');
+  const [isOpen, setIsOpen] = useState(true);
 
   const totalDuration = useMemo(
     () => tracks.reduce((sum, track) => sum + track.duration, 0),
@@ -255,7 +256,7 @@ export default function TrilhaRadio() {
   const silent = volume <= 0.001;
 
   return (
-    <aside className="trilha-radio" aria-label="Rádio TRILHA">
+    <>
       <audio
         ref={audioRef}
         preload="auto"
@@ -263,36 +264,59 @@ export default function TrilhaRadio() {
         onError={() => setError('A faixa atual não pôde ser reproduzida.')}
       />
 
-      <div className="trilha-radio-head">
-        <span className={`trilha-radio-signal ${currentTrack && !waitingInteraction ? 'is-live' : ''}`}>
-          <Radio className="w-4 h-4" />
-        </span>
-        <div className="trilha-radio-copy">
-          <strong>Rádio TRILHA</strong>
-          <span>
-            {loading && 'Preparando a transmissão...'}
-            {!loading && tracks.length === 0 && !error && 'Nenhuma faixa na programação.'}
-            {!loading && waitingInteraction && 'A rádio começa na sua primeira interação.'}
-            {!loading && !waitingInteraction && currentTrack && currentTrack.name}
-            {!loading && !waitingInteraction && !currentTrack && tracks.length > 0 && 'Sintonizando...'}
-            {error && error}
-          </span>
-        </div>
-      </div>
+      {isOpen ? (
+        <aside className="trilha-radio" aria-label="Rádio TRILHA">
+          <div className="trilha-radio-head">
+            <span className={`trilha-radio-signal ${currentTrack && !waitingInteraction ? 'is-live' : ''}`}>
+              <Radio className="w-4 h-4" />
+            </span>
+            <div className="trilha-radio-copy">
+              <strong>Rádio TRILHA</strong>
+              <span>
+                {loading && 'Preparando a transmissão...'}
+                {!loading && tracks.length === 0 && !error && 'Nenhuma faixa na programação.'}
+                {!loading && waitingInteraction && 'A rádio começa na sua primeira interação.'}
+                {!loading && !waitingInteraction && currentTrack && currentTrack.name}
+                {!loading && !waitingInteraction && !currentTrack && tracks.length > 0 && 'Sintonizando...'}
+                {error && error}
+              </span>
+            </div>
+            <button
+              type="button"
+              className="trilha-radio-close"
+              onClick={() => setIsOpen(false)}
+              aria-label="Fechar Rádio TRILHA"
+              title="Fechar rádio"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
 
-      <label className="trilha-radio-volume" title={`Volume ${Math.round(volume * 100)}%`}>
-        {silent ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-        <input
-          aria-label="Volume da Rádio TRILHA"
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value={volume}
-          onChange={(event) => setVolume(Number(event.target.value))}
-        />
-        <span>{Math.round(volume * 100)}%</span>
-      </label>
-    </aside>
+          <label className="trilha-radio-volume" title={`Volume ${Math.round(volume * 100)}%`}>
+            {silent ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            <input
+              aria-label="Volume da Rádio TRILHA"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={(event) => setVolume(Number(event.target.value))}
+            />
+            <span>{Math.round(volume * 100)}%</span>
+          </label>
+        </aside>
+      ) : (
+        <button
+          type="button"
+          className={`trilha-radio-launcher ${currentTrack && !waitingInteraction ? 'is-live' : ''}`}
+          onClick={() => setIsOpen(true)}
+          aria-label="Abrir Rádio TRILHA"
+          title="Abrir Rádio TRILHA"
+        >
+          <Radio className="w-5 h-5" />
+        </button>
+      )}
+    </>
   );
 }

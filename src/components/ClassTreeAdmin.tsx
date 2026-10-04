@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { GitBranch, RefreshCw, Search, ChevronRight, BookOpen, Layers3, CheckCircle2, Route } from 'lucide-react';
+import { GitBranch, RefreshCw, Search, ChevronRight, BookOpen, Layers3, CheckCircle2, Route, Eye, EyeOff } from 'lucide-react';
 import { supabase, type Character, type ClassNode, type Player } from '@/lib/supabase';
 import { evaluateClassUnlocks } from '@/lib/classUnlocks';
 
@@ -29,23 +29,48 @@ function classPath(node: ClassNode, byId: Map<string, ClassNode>) {
   return names;
 }
 
-function NodeCard({ node, selected, onClick }: { node: ClassNode; selected: boolean; onClick: () => void }) {
+function NodeCard({
+  node,
+  selected,
+  onClick,
+  revealEnabled,
+  revealed,
+  revealBusy,
+  onToggleReveal,
+}: {
+  node: ClassNode;
+  selected: boolean;
+  onClick: () => void;
+  revealEnabled: boolean;
+  revealed: boolean;
+  revealBusy: boolean;
+  onToggleReveal: () => void;
+}) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`w-full text-left rounded-xl border p-3 transition hover:border-gold ${stageTone[node.stage]} ${selected ? 'ring-1 ring-gold border-gold' : ''}`}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="font-display text-sm text-gold-bright truncate">{node.name}</p>
-          <p className="mt-1 text-[10px] uppercase tracking-[.16em] text-parchment-dim">Níveis {node.level_min}–{node.level_max}</p>
+    <div className={`w-full rounded-xl border transition ${stageTone[node.stage]} ${selected ? 'ring-1 ring-gold border-gold' : ''}`}>
+      <button type="button" onClick={onClick} className="w-full text-left p-3 hover:bg-gold/5 rounded-t-xl">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="font-display text-sm text-gold-bright truncate">{node.name}</p>
+            <p className="mt-1 text-[10px] uppercase tracking-[.16em] text-parchment-dim">Níveis {node.level_min}–{node.level_max}</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gold shrink-0 mt-0.5" />
         </div>
-        <ChevronRight className="w-4 h-4 text-gold shrink-0 mt-0.5" />
+        {node.parent_name && <p className="mt-2 text-[11px] text-parchment-dim">Vem de: <span className="text-parchment">{node.parent_name}</span></p>}
+        <p className="mt-2 text-xs leading-relaxed text-parchment/90">{node.requirement_text}</p>
+      </button>
+      <div className="border-t border-gold-dim/60 px-3 py-2">
+        <button
+          type="button"
+          disabled={!revealEnabled || revealBusy}
+          onClick={onToggleReveal}
+          className={`inline-flex w-full items-center justify-center gap-2 rounded-lg border px-2 py-1.5 text-xs transition disabled:opacity-40 ${revealed ? 'border-gold/70 bg-gold/10 text-gold-bright' : 'border-parchment-dim/30 text-parchment-dim hover:border-gold-dim hover:text-gold'}`}
+        >
+          {revealed ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+          {revealBusy ? 'Salvando...' : revealed ? 'Revelada ao personagem' : 'Oculta para o personagem'}
+        </button>
       </div>
-      {node.parent_name && <p className="mt-2 text-[11px] text-parchment-dim">Vem de: <span className="text-parchment">{node.parent_name}</span></p>}
-      <p className="mt-2 text-xs leading-relaxed text-parchment/90">{node.requirement_text}</p>
-    </button>
+    </div>
   );
 }
 
@@ -54,11 +79,19 @@ function BranchTree({
   nodes,
   selectedId,
   onSelect,
+  revealCharacterId,
+  revealedIds,
+  revealBusyId,
+  onToggleReveal,
 }: {
   root: string;
   nodes: ClassNode[];
   selectedId: string | null;
   onSelect: (node: ClassNode) => void;
+  revealCharacterId: string;
+  revealedIds: Set<string>;
+  revealBusyId: string | null;
+  onToggleReveal: (node: ClassNode) => void;
 }) {
   const branch = nodes.filter((node) => node.root_class === root);
   return (
@@ -82,7 +115,16 @@ function BranchTree({
                 </div>
                 <div className="space-y-3">
                   {stageNodes.map((node) => (
-                    <NodeCard key={node.id} node={node} selected={selectedId === node.id} onClick={() => onSelect(node)} />
+                    <NodeCard
+                      key={node.id}
+                      node={node}
+                      selected={selectedId === node.id}
+                      onClick={() => onSelect(node)}
+                      revealEnabled={!!revealCharacterId}
+                      revealed={revealedIds.has(node.id)}
+                      revealBusy={revealBusyId === node.id}
+                      onToggleReveal={() => onToggleReveal(node)}
+                    />
                   ))}
                 </div>
               </div>
@@ -103,6 +145,10 @@ export default function ClassTreeAdmin({ characters = [], players = [] }: Props)
   const [rootFilter, setRootFilter] = useState('__all__');
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [revealCharacterId, setRevealCharacterId] = useState('');
+  const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
+  const [revealError, setRevealError] = useState('');
+  const [revealBusyId, setRevealBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -120,6 +166,58 @@ export default function ClassTreeAdmin({ characters = [], players = [] }: Props)
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (!characters.length) {
+      setRevealCharacterId('');
+      return;
+    }
+    setRevealCharacterId((current) => current && characters.some((character) => character.id === current) ? current : characters[0].id);
+  }, [characters]);
+
+  const loadReveals = useCallback(async (characterId: string) => {
+    if (!characterId) {
+      setRevealedIds(new Set());
+      setRevealError('');
+      return;
+    }
+    setRevealError('');
+    const { data, error: requestError } = await supabase
+      .from('character_class_reveals')
+      .select('class_node_id')
+      .eq('character_id', characterId);
+    if (requestError) {
+      setRevealError(requestError.message);
+      setRevealedIds(new Set());
+      return;
+    }
+    setRevealedIds(new Set((data || []).map((row) => String(row.class_node_id))));
+  }, []);
+
+  useEffect(() => { loadReveals(revealCharacterId); }, [revealCharacterId, loadReveals]);
+
+  const toggleReveal = useCallback(async (node: ClassNode) => {
+    if (!revealCharacterId || revealBusyId) return;
+    setRevealBusyId(node.id);
+    setRevealError('');
+    const isRevealed = revealedIds.has(node.id);
+    if (isRevealed) {
+      const { error: requestError } = await supabase
+        .from('character_class_reveals')
+        .delete()
+        .eq('character_id', revealCharacterId)
+        .eq('class_node_id', node.id);
+      if (requestError) setRevealError(requestError.message);
+      else setRevealedIds((current) => { const next = new Set(current); next.delete(node.id); return next; });
+    } else {
+      const { error: requestError } = await supabase
+        .from('character_class_reveals')
+        .insert({ character_id: revealCharacterId, class_node_id: node.id, revealed_by: 'Mestre' });
+      if (requestError) setRevealError(requestError.message);
+      else setRevealedIds((current) => new Set(current).add(node.id));
+    }
+    setRevealBusyId(null);
+  }, [revealCharacterId, revealBusyId, revealedIds]);
 
   const roots = useMemo(
     () => nodes.filter((node) => node.stage === 'Iniciante').sort((a, b) => a.sort_order - b.sort_order).map((node) => node.root_class),
@@ -140,6 +238,8 @@ export default function ClassTreeAdmin({ characters = [], players = [] }: Props)
   const visibleRoots = rootFilter === '__all__' ? roots : roots.filter((root) => root === rootFilter);
   const path = selected ? classPath(selected, byId) : [];
   const playerMap = useMemo(() => new Map(players.map((player) => [player.id, player])), [players]);
+  const revealCharacter = useMemo(() => characters.find((character) => character.id === revealCharacterId) || null, [characters, revealCharacterId]);
+  const revealOwner = revealCharacter ? playerMap.get(revealCharacter.player_id) : undefined;
   const unlockedPossibilities = useMemo(() => {
     return characters.flatMap((character) => {
       const owner = playerMap.get(character.player_id);
@@ -164,9 +264,9 @@ export default function ClassTreeAdmin({ characters = [], players = [] }: Props)
             <span className="text-[10px] uppercase tracking-[.22em]">Progressão do TRILHA</span>
           </div>
           <h2 className="mt-1 font-display text-2xl text-gold-bright">Classes</h2>
-          <p className="mt-1 max-w-3xl text-sm text-parchment-dim">Consulta completa da árvore de classes, vínculos e requisitos. Nesta etapa a estrutura é somente leitura.</p>
+          <p className="mt-1 max-w-3xl text-sm text-parchment-dim">Consulta completa da árvore de classes, vínculos e requisitos. O Mestre também controla quais casas cada personagem já conhece.</p>
         </div>
-        <button onClick={load} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gold-dim text-gold hover:border-gold text-sm">
+        <button onClick={async()=>{await load();await loadReveals(revealCharacterId)}} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gold-dim text-gold hover:border-gold text-sm">
           <RefreshCw className="w-4 h-4" /> Atualizar
         </button>
       </div>
@@ -246,6 +346,35 @@ export default function ClassTreeAdmin({ characters = [], players = [] }: Props)
         </section>
       )}
 
+      <section className="rounded-2xl border border-gold-dim bg-shadow/25 overflow-hidden">
+        <div className="px-4 py-4 border-b border-gold-dim bg-shadow/45">
+          <p className="text-[10px] uppercase tracking-[.2em] text-parchment-dim">Controle do Mestre</p>
+          <h3 className="font-display text-lg text-gold-bright">Revelação da árvore por personagem</h3>
+          <p className="mt-1 text-xs text-parchment-dim">Escolha um personagem e use os botões de cada casa abaixo para revelar ou ocultar aquela classe somente para ele.</p>
+        </div>
+        <div className="grid gap-3 p-4 md:grid-cols-[1fr_auto] md:items-end">
+          <label className="block">
+            <span className="text-xs text-gold">Personagem que receberá as revelações</span>
+            <select
+              value={revealCharacterId}
+              onChange={(event) => setRevealCharacterId(event.target.value)}
+              className="mt-1 w-full bg-shadow/60 border border-gold-dim rounded-lg px-3 py-2 text-parchment text-sm focus:outline-none focus:border-gold"
+            >
+              {characters.length === 0 && <option value="">Nenhum personagem cadastrado</option>}
+              {characters.map((character) => {
+                const owner = playerMap.get(character.player_id);
+                return <option key={character.id} value={character.id}>{owner?.player_name || owner?.alcunha || 'Jogador'} — {character.name}</option>;
+              })}
+            </select>
+          </label>
+          <div className="rounded-lg border border-gold-dim bg-stone/40 px-4 py-2 text-sm text-parchment-dim">
+            <span className="text-gold-bright">{revealedIds.size}</span> casas reveladas{revealCharacter ? ` para ${revealCharacter.name}` : ''}
+          </div>
+        </div>
+        {revealOwner && revealCharacter && <p className="px-4 pb-4 text-xs text-parchment-dim">Jogador: <span className="text-parchment">{revealOwner.player_name || revealOwner.alcunha}</span> · Personagem: <span className="text-parchment">{revealCharacter.name}</span></p>}
+        {revealError && <div className="mx-4 mb-4 rounded-lg border border-red-800/60 bg-red-950/20 p-3 text-xs text-red-100">{revealError}<br/><span className="text-parchment-dim">Se a tabela ainda não existir, execute a migration da Etapa 3 no Supabase.</span></div>}
+      </section>
+
       <div className="grid lg:grid-cols-[1fr_auto] gap-3 items-end">
         <label className="block">
           <span className="text-xs text-gold">Buscar em todas as 180 classes</span>
@@ -315,7 +444,17 @@ export default function ClassTreeAdmin({ characters = [], players = [] }: Props)
       {!loading && !error && !normalizedQuery && (
         <div className="space-y-5">
           {visibleRoots.map((root) => (
-            <BranchTree key={root} root={root} nodes={nodes} selectedId={selectedId} onSelect={(node) => setSelectedId(node.id)} />
+            <BranchTree
+              key={root}
+              root={root}
+              nodes={nodes}
+              selectedId={selectedId}
+              onSelect={(node) => setSelectedId(node.id)}
+              revealCharacterId={revealCharacterId}
+              revealedIds={revealedIds}
+              revealBusyId={revealBusyId}
+              onToggleReveal={toggleReveal}
+            />
           ))}
         </div>
       )}
@@ -336,6 +475,18 @@ export default function ClassTreeAdmin({ characters = [], players = [] }: Props)
               </div>
             </div>
           </div>
+          {revealCharacterId && <div className="px-5 py-3 border-b border-gold-dim bg-shadow/30 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-parchment-dim">Visibilidade para <span className="text-parchment">{revealCharacter?.name || 'personagem selecionado'}</span></p>
+            <button
+              type="button"
+              disabled={revealBusyId === selected.id}
+              onClick={() => toggleReveal(selected)}
+              className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${revealedIds.has(selected.id) ? 'border-gold bg-gold/10 text-gold-bright' : 'border-gold-dim text-parchment-dim hover:text-gold'}`}
+            >
+              {revealedIds.has(selected.id) ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              {revealedIds.has(selected.id) ? 'Ocultar esta classe' : 'Revelar esta classe'}
+            </button>
+          </div>}
           <div className="p-5 grid md:grid-cols-2 xl:grid-cols-3 gap-4 text-sm">
             <div><p className="text-xs text-gold">Estágio</p><p className="mt-1 text-parchment">{selected.stage} · níveis {selected.level_min}–{selected.level_max}</p></div>
             <div><p className="text-xs text-gold">Classe inicial</p><p className="mt-1 text-parchment">{selected.root_class}</p></div>

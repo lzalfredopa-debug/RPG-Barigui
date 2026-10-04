@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { GitBranch, RefreshCw, Search, ChevronRight, BookOpen, Layers3 } from 'lucide-react';
-import { supabase, type ClassNode } from '@/lib/supabase';
+import { GitBranch, RefreshCw, Search, ChevronRight, BookOpen, Layers3, CheckCircle2, Route } from 'lucide-react';
+import { supabase, type Character, type ClassNode, type Player } from '@/lib/supabase';
+import { evaluateClassUnlocks } from '@/lib/classUnlocks';
 
 const STAGES: Array<{ key: ClassNode['stage']; levels: string; label: string }> = [
   { key: 'Iniciante', levels: '5–8', label: 'Iniciante' },
@@ -93,7 +94,9 @@ function BranchTree({
   );
 }
 
-export default function ClassTreeAdmin() {
+type Props = { characters?: Character[]; players?: Player[] };
+
+export default function ClassTreeAdmin({ characters = [], players = [] }: Props) {
   const [nodes, setNodes] = useState<ClassNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -136,6 +139,21 @@ export default function ClassTreeAdmin() {
 
   const visibleRoots = rootFilter === '__all__' ? roots : roots.filter((root) => root === rootFilter);
   const path = selected ? classPath(selected, byId) : [];
+  const playerMap = useMemo(() => new Map(players.map((player) => [player.id, player])), [players]);
+  const unlockedPossibilities = useMemo(() => {
+    return characters.flatMap((character) => {
+      const owner = playerMap.get(character.player_id);
+      return evaluateClassUnlocks(character, nodes).map((unlock) => ({
+        character,
+        owner,
+        unlock,
+      }));
+    }).sort((a, b) => {
+      const playerA = a.owner?.player_name || a.owner?.alcunha || '';
+      const playerB = b.owner?.player_name || b.owner?.alcunha || '';
+      return playerA.localeCompare(playerB, 'pt-BR') || a.character.name.localeCompare(b.character.name, 'pt-BR') || a.unlock.node.sort_order - b.unlock.node.sort_order;
+    });
+  }, [characters, nodes, playerMap]);
 
   return (
     <section className="space-y-5">
@@ -175,6 +193,57 @@ export default function ClassTreeAdmin() {
           <p className="mt-1 text-sm text-parchment-dim">Níveis 1–4: <b className="text-parchment">Aprendiz</b>, sem classe especializada. A árvore começa no nível 5.</p>
         </div>
       </div>
+
+      {!loading && !error && (
+        <section className="rounded-2xl border border-gold-dim bg-shadow/25 overflow-hidden">
+          <div className="px-4 py-4 border-b border-gold-dim bg-shadow/45 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <Route className="w-5 h-5 text-gold shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[10px] uppercase tracking-[.2em] text-parchment-dim">Visível apenas ao Mestre</p>
+                <h3 className="font-display text-lg text-gold-bright">Possibilidades de evolução abertas</h3>
+                <p className="mt-1 text-xs text-parchment-dim">Somente caminhos realmente desbloqueados são listados. Bônus raciais e de linhagem não contam nos pré-requisitos.</p>
+              </div>
+            </div>
+            <span className="rounded-full border border-gold-dim bg-stone/50 px-3 py-1 text-xs text-gold">{unlockedPossibilities.length} aberta(s)</span>
+          </div>
+          <div className="p-4">
+            {unlockedPossibilities.length === 0 ? (
+              <p className="text-sm text-parchment-dim">Nenhum personagem possui uma nova possibilidade de classe neste momento.</p>
+            ) : (
+              <div className="grid lg:grid-cols-2 gap-3">
+                {unlockedPossibilities.map(({ character, owner, unlock }) => (
+                  <article key={`${character.id}:${unlock.node.id}`} className="rounded-xl border border-gold-dim bg-gradient-card p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[.16em] text-parchment-dim">{owner?.player_name || owner?.alcunha || 'Jogador'} · {character.name}</p>
+                        <h4 className="mt-1 font-display text-lg text-gold-bright">{unlock.node.name}</h4>
+                        <p className="mt-1 text-xs text-gold">{unlock.path.join(' → ')}</p>
+                      </div>
+                      <span className="text-[10px] uppercase tracking-[.14em] text-parchment-dim">{unlock.node.stage} · Nv. {unlock.node.level_min}+</span>
+                    </div>
+                    <div className="mt-4 rounded-lg border border-gold-dim/70 bg-shadow/35 p-3">
+                      <p className="text-xs text-gold">Requisito da classe</p>
+                      <p className="mt-1 text-sm text-parchment">{unlock.node.requirement_text}</p>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      {unlock.checks.filter((check) => check.met && !check.key.startsWith('one-of-result:')).map((check) => (
+                        <div key={check.key} className="flex items-start gap-2 text-xs">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                          <div>
+                            <span className="text-parchment">{check.label}</span>
+                            <span className="text-parchment-dim"> · atual {check.current} / necessário {check.required}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       <div className="grid lg:grid-cols-[1fr_auto] gap-3 items-end">
         <label className="block">

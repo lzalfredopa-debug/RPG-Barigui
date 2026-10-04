@@ -17,3 +17,22 @@ export const RACE_RULES: Record<string,{mode:RaceDefinition['attribute_mode'];fi
   humanos:{mode:'any',fixed:null}, elfos:{mode:'mental',fixed:null}, anoes:{mode:'fixed',fixed:'Vigor'}, orcs:{mode:'fixed',fixed:'Força'}, pequeninos:{mode:'fixed',fixed:'Agilidade'}, goblins:{mode:'fixed',fixed:'Destreza'}, tiferinos:{mode:'social',fixed:null}, 'povo-fungico':{mode:'fixed',fixed:'Sabedoria'}, draconatos:{mode:'fixed',fixed:'Presença'}, 'povo-fera':{mode:'physical',fixed:null},
 };
 export const attributeChoices=(mode:RaceDefinition['attribute_mode'], all:string[])=> mode==='any'?all:mode==='physical'?['Força','Vigor','Agilidade','Destreza']:mode==='mental'?['Inteligência','Raciocínio','Sabedoria','Percepção']:mode==='social'?['Carisma','Presença','Manipulação','Empatia']:[];
+
+export const raceBenefitText=(race:Partial<RaceDefinition> & {id?:string})=>{
+  const rule=(race.id&&RACE_RULES[race.id])||{mode:race.attribute_mode||'fixed',fixed:race.fixed_attribute||null};
+  if(rule.mode==='fixed') return rule.fixed ? `+1 ${rule.fixed}` : '+1 em um Atributo definido pela raça';
+  if(rule.mode==='physical') return '+1 em um Atributo Físico à escolha (Força, Vigor, Agilidade ou Destreza)';
+  if(rule.mode==='mental') return '+1 em um Atributo Mental à escolha (Inteligência, Raciocínio, Sabedoria ou Percepção)';
+  if(rule.mode==='social') return '+1 em um Atributo Social à escolha (Carisma, Presença, Manipulação ou Empatia)';
+  return '+1 em qualquer Atributo à escolha';
+};
+
+export const lineageBenefitText=(lineage:Partial<LineageDefinition> & {id?:string})=>{
+  const fallback=(lineage.id&&LINEAGE_GROUPS[lineage.id])||['',''];
+  const first=lineage.skill_group_1||fallback[0];
+  const second=lineage.skill_group_2||fallback[1];
+  if(!first&&!second) return '+1 em duas Habilidades definidas pela linhagem';
+  if(first===second) return `+1 em duas Habilidades diferentes de ${first} à escolha`;
+  return `+1 em uma Habilidade de ${first} e +1 em uma Habilidade de ${second}`;
+};
+

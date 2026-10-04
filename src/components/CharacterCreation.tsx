@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, ChevronRight, Check, Info, Loader2, Lock } from 'lucide-react';
 import { supabase, type Player } from '@/lib/supabase';
-import { attributeChoices, type RaceDefinition, type LineageDefinition } from '@/lib/ancestry';
+import { attributeChoices, lineageBenefitText, raceBenefitText, type RaceDefinition, type LineageDefinition } from '@/lib/ancestry';
 
 type CharacterCreationProps = {
   player: Player;
@@ -748,6 +748,10 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
               {selectedRace && (
                 <div className="space-y-3 animate-fade-in-up">
                   {selectedRace.description&&<p className="text-sm text-parchment-dim border-l-2 border-gold-dim pl-3">{selectedRace.description}</p>}
+                  <div className="rounded-lg border border-gold-dim/70 bg-gold/5 px-3 py-2.5">
+                    <span className="block text-[10px] uppercase tracking-[.16em] text-gold/70 mb-1">Benefício racial</span>
+                    <span className="block font-body text-xs leading-relaxed text-gold-bright">{raceBenefitText(selectedRace as any)}</span>
+                  </div>
                   <div className="font-display text-sm font-500 text-gold-bright tracking-wide">
                     Linhagem <span className="text-blood">*</span>
                   </div>
@@ -777,6 +781,10 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                         </span>
                         <span className="block font-body text-xs leading-relaxed text-parchment-dim">
                           {item.description}
+                        </span>
+                        <span className="block mt-3 pt-2.5 border-t border-gold-dim/40">
+                          <span className="block text-[9px] uppercase tracking-[.14em] text-gold/60 mb-1">Aptidão da linhagem</span>
+                          <span className="block font-body text-[11px] leading-relaxed text-gold-bright/90">{lineageBenefitText(item as any)}</span>
                         </span>
                       </button>
                     ))}

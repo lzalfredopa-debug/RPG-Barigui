@@ -39,6 +39,28 @@ export type Suggestion = {
 
 
 
+
+export type WeaponPublic = {
+  id: string;
+  name: string;
+  family: string;
+};
+
+export type WeaponMaster = WeaponPublic & {
+  damage_base: number;
+  damage_type: string;
+  attack_attribute: string;
+  attack_skill: string;
+  requirement_attribute: string | null;
+  requirement_attribute_min: number;
+  requirement_skill: string | null;
+  requirement_skill_min: number;
+  hands: number;
+  range_label: string;
+  special_rule: string | null;
+  sort_order: number;
+};
+
 export type ClassNode = {
   id: string;
   root_class: string;

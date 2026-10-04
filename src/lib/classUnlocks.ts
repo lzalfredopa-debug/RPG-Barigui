@@ -102,10 +102,11 @@ function requirementChecks(character: Character, node: ClassNode, nodeMap: Map<s
 
   checks.push({
     key: `level:${node.id}`,
-    label: 'Nível mínimo',
+    label: 'Nível para assumir a classe',
     current: String(character.level),
     required: String(node.level_min),
     met: character.level >= node.level_min,
+    note: 'O nível mínimo define quando a classe pode ser assumida, mas não impede que o caminho seja percebido antes.',
   });
 
   const previous = previousClassCheck(character, node, nodeMap);
@@ -158,7 +159,9 @@ export function evaluateClassUnlocks(character: Character, nodes: ClassNode[]): 
   const nodeMap = byId(nodes);
   return candidateNodes(character, nodes)
     .map((node) => ({ node, path: pathFor(node, nodeMap), checks: requirementChecks(character, node, nodeMap) }))
-    .filter((unlock) => unlock.checks.filter((check) => !check.key.startsWith('one-of:')).every((check) => check.met));
+    .filter((unlock) => unlock.checks
+      .filter((check) => !check.key.startsWith('one-of:') && !check.key.startsWith('level:'))
+      .every((check) => check.met));
 }
 
 export function classUnlockCount(character: Character, nodes: ClassNode[]) {

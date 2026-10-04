@@ -202,7 +202,7 @@ export default function ClassTreeAdmin({ characters = [], players = [] }: Props)
               <div>
                 <p className="text-[10px] uppercase tracking-[.2em] text-parchment-dim">Visível apenas ao Mestre</p>
                 <h3 className="font-display text-lg text-gold-bright">Possibilidades de evolução abertas</h3>
-                <p className="mt-1 text-xs text-parchment-dim">Somente caminhos realmente desbloqueados são listados. Bônus raciais e de linhagem não contam nos pré-requisitos.</p>
+                <p className="mt-1 text-xs text-parchment-dim">Caminhos aparecem assim que os requisitos de construção forem alcançados, mesmo antes do nível em que a classe poderá ser assumida. Bônus raciais e de linhagem não contam nos pré-requisitos.</p>
               </div>
             </div>
             <span className="rounded-full border border-gold-dim bg-stone/50 px-3 py-1 text-xs text-gold">{unlockedPossibilities.length} aberta(s)</span>
@@ -225,9 +225,10 @@ export default function ClassTreeAdmin({ characters = [], players = [] }: Props)
                     <div className="mt-4 rounded-lg border border-gold-dim/70 bg-shadow/35 p-3">
                       <p className="text-xs text-gold">Requisito da classe</p>
                       <p className="mt-1 text-sm text-parchment">{unlock.node.requirement_text}</p>
+                      <p className="mt-2 text-xs text-parchment-dim">Pode assumir a partir do nível {unlock.node.level_min}. Nível atual: {character.level}.</p>
                     </div>
                     <div className="mt-3 space-y-2">
-                      {unlock.checks.filter((check) => check.met && !check.key.startsWith('one-of-result:')).map((check) => (
+                      {unlock.checks.filter((check) => check.met && !check.key.startsWith('one-of-result:') && !check.key.startsWith('level:')).map((check) => (
                         <div key={check.key} className="flex items-start gap-2 text-xs">
                           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                           <div>

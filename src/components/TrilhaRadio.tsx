@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Radio, Volume2, VolumeX, X } from 'lucide-react';
+import { Radio, Volume2, VolumeX, X, Square, Play } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 const RADIO_BUCKET = 'radio-trilha';
@@ -67,6 +67,7 @@ export default function TrilhaRadio() {
   const tracksRef = useRef<RadioTrack[]>([]);
   const activeIndexRef = useRef(-1);
   const tryingRef = useRef(false);
+  const stoppedRef = useRef(false);
 
   const [tracks, setTracks] = useState<RadioTrack[]>([]);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -75,6 +76,7 @@ export default function TrilhaRadio() {
   const [waitingInteraction, setWaitingInteraction] = useState(false);
   const [error, setError] = useState('');
   const [isOpen, setIsOpen] = useState(true);
+  const [stopped, setStopped] = useState(false);
 
   const totalDuration = useMemo(
     () => tracks.reduce((sum, track) => sum + track.duration, 0),
@@ -168,7 +170,7 @@ export default function TrilhaRadio() {
   const syncToRadio = useCallback(async (forcePlay = false) => {
     const audio = audioRef.current;
     const playlist = tracksRef.current;
-    if (!audio || playlist.length === 0 || tryingRef.current) return;
+    if (!audio || playlist.length === 0 || tryingRef.current || stoppedRef.current) return;
 
     const position = getRadioPosition(playlist);
     if (!position) return;
@@ -212,7 +214,7 @@ export default function TrilhaRadio() {
   }, [getRadioPosition, volume]);
 
   useEffect(() => {
-    if (tracks.length === 0 || totalDuration <= 0) return;
+    if (tracks.length === 0 || totalDuration <= 0 || stopped) return;
     syncToRadio(true);
   }, [tracks, totalDuration, syncToRadio]);
 
@@ -234,10 +236,10 @@ export default function TrilhaRadio() {
   }, [waitingInteraction, tracks.length, syncToRadio]);
 
   useEffect(() => {
-    if (tracks.length === 0) return;
+    if (tracks.length === 0 || stopped) return;
 
     const interval = window.setInterval(() => {
-      if (!document.hidden) syncToRadio(false);
+      if (!document.hidden && !stoppedRef.current) syncToRadio(false);
     }, 60000);
     const onVisible = () => {
       if (!document.hidden) syncToRadio(true);
@@ -251,6 +253,24 @@ export default function TrilhaRadio() {
       window.removeEventListener('focus', onVisible);
     };
   }, [tracks.length, syncToRadio]);
+
+  useEffect(() => {
+    stoppedRef.current = stopped;
+  }, [stopped]);
+
+  const handleStop = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+    }
+    setStopped(true);
+    setWaitingInteraction(false);
+  }, []);
+
+  const handleResume = useCallback(() => {
+    setStopped(false);
+    syncToRadio(true);
+  }, [syncToRadio]);
 
   const currentTrack = activeIndex >= 0 ? tracks[activeIndex] : null;
   const silent = volume <= 0.001;
@@ -267,7 +287,7 @@ export default function TrilhaRadio() {
       {isOpen ? (
         <aside className="trilha-radio" aria-label="Rádio TRILHA">
           <div className="trilha-radio-head">
-            <span className={`trilha-radio-signal ${currentTrack && !waitingInteraction ? 'is-live' : ''}`}>
+            <span className={`trilha-radio-signal ${currentTrack && !waitingInteraction && !stopped ? 'is-live' : ''}`}>
               <Radio className="w-4 h-4" />
             </span>
             <div className="trilha-radio-copy">
@@ -275,9 +295,10 @@ export default function TrilhaRadio() {
               <span>
                 {loading && 'Preparando a transmissão...'}
                 {!loading && tracks.length === 0 && !error && 'Nenhuma faixa na programação.'}
+                {!loading && stopped && 'Reprodução pausada.'}
                 {!loading && waitingInteraction && 'A rádio começa na sua primeira interação.'}
-                {!loading && !waitingInteraction && currentTrack && currentTrack.name}
-                {!loading && !waitingInteraction && !currentTrack && tracks.length > 0 && 'Sintonizando...'}
+                {!loading && !waitingInteraction && !stopped && currentTrack && currentTrack.name}
+                {!loading && !waitingInteraction && !stopped && !currentTrack && tracks.length > 0 && 'Sintonizando...'}
                 {error && error}
               </span>
             </div>
@@ -305,11 +326,22 @@ export default function TrilhaRadio() {
             />
             <span>{Math.round(volume * 100)}%</span>
           </label>
+
+          <button
+            type="button"
+            className={`trilha-radio-stop ${stopped ? 'is-stopped' : ''}`}
+            onClick={stopped ? handleResume : handleStop}
+            aria-label={stopped ? 'Retomar Rádio TRILHA' : 'Parar Rádio TRILHA'}
+            title={stopped ? 'Retomar rádio' : 'Parar rádio'}
+          >
+            {stopped ? <Play className="w-3.5 h-3.5" /> : <Square className="w-3 h-3" />}
+            <span>{stopped ? 'Retomar' : 'Parar'}</span>
+          </button>
         </aside>
       ) : (
         <button
           type="button"
-          className={`trilha-radio-launcher ${currentTrack && !waitingInteraction ? 'is-live' : ''}`}
+          className={`trilha-radio-launcher ${currentTrack && !waitingInteraction && !stopped ? 'is-live' : ''}`}
           onClick={() => setIsOpen(true)}
           aria-label="Abrir Rádio TRILHA"
           title="Abrir Rádio TRILHA"

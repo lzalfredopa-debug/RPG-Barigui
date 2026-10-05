@@ -1543,6 +1543,36 @@
   .trilha-radio-copy span { font-size: 9px; }
 }
 
+.trilha-radio-stop {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 28px;
+  border: 1px solid rgba(190,141,58,.22);
+  border-radius: 7px;
+  color: #a99a7e;
+  background: rgba(0,0,0,.16);
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color .18s ease, border-color .18s ease, background .18s ease;
+}
+.trilha-radio-stop:hover {
+  color: #ead9ae;
+  border-color: rgba(211,162,69,.52);
+  background: rgba(201,154,62,.08);
+}
+.trilha-radio-stop.is-stopped {
+  color: #e6c25c;
+  border-color: rgba(219,169,67,.52);
+}
+
 /* Rádio TRILHA — recolher/abrir sem interromper a reprodução */
 .trilha-radio-close {
   width: 28px;

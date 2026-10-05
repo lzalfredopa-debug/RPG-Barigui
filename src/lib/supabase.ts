@@ -61,6 +61,65 @@ export type WeaponMaster = WeaponPublic & {
   sort_order: number;
 };
 
+
+export type ArmorPublic = {
+  id: string;
+  name: string;
+  category: 'Leve' | 'Média' | 'Pesada';
+};
+
+export type ArmorMaster = ArmorPublic & {
+  absorption: number;
+  requirement_attribute: string | null;
+  requirement_attribute_min: number;
+  requirement_skill: string | null;
+  requirement_skill_min: number;
+  evasion_penalty: number;
+  movement_penalty: number;
+  sort_order: number;
+};
+
+export type ShieldPublic = {
+  id: string;
+  name: string;
+};
+
+export type ShieldMaster = ShieldPublic & {
+  block_attribute: string;
+  block_bonus: number;
+  requirement_attribute: string | null;
+  requirement_attribute_min: number;
+  requirement_skill: string | null;
+  requirement_skill_min: number;
+  evasion_penalty: number;
+  movement_penalty: number;
+  sort_order: number;
+};
+
+export type CombatEquipmentSummary = {
+  weapon_item_id: string | null;
+  weapon_name: string | null;
+  weapon_effective_damage: number | null;
+  weapon_is_proficient: boolean | null;
+  armor_item_id: string | null;
+  armor_name: string | null;
+  armor_effective_absorption: number;
+  armor_is_proficient: boolean | null;
+  armor_evasion_penalty: number;
+  armor_movement_penalty: number;
+  shield_item_id: string | null;
+  shield_name: string | null;
+  shield_effective_bonus: number;
+  shield_is_proficient: boolean | null;
+  shield_block_attribute: string;
+  shield_evasion_penalty: number;
+  shield_movement_penalty: number;
+  hand1_item_id: string | null;
+  hand1_name: string | null;
+  hand2_item_id: string | null;
+  hand2_name: string | null;
+};
+
 export type ClassNode = {
   id: string;
   root_class: string;
@@ -128,6 +187,13 @@ export type Character = {
   // Recursos atuais
   current_hp: number | null;
   current_mp: number | null;
+  current_hunger?: number | null;
+  current_thirst?: number | null;
+  hunger_hours_remainder?: number;
+  thirst_hours_remainder?: number;
+  currency_obolos?: number;
+  currency_dracmas?: number;
+  currency_estaters?: number;
 
   // Estado e apresentação
   status: 'vivo' | 'morto' | 'desaparecido';

@@ -1,0 +1,19 @@
+import { useEffect, useState } from 'react';
+import { RefreshCw, Shield, Shirt } from 'lucide-react';
+import { supabase, type ArmorMaster, type ShieldMaster } from '@/lib/supabase';
+
+const btn='inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gold-dim text-gold hover:border-gold text-sm';
+const req=(a:string|null,n:number,s:string|null,m:number)=>[a&&n>0?`${a} ${n}`:'',s&&m>0?`${s} ${m}`:''].filter(Boolean).join(' + ')||'—';
+
+export default function ProtectionCatalogAdmin({playerId}:{playerId:string}){
+  const [armors,setArmors]=useState<ArmorMaster[]>([]);
+  const [shields,setShields]=useState<ShieldMaster[]>([]);
+  const [loading,setLoading]=useState(true);
+  const load=async()=>{setLoading(true);const [a,s]=await Promise.all([supabase.rpc('get_master_armor_catalog',{p_player_id:playerId}),supabase.rpc('get_master_shield_catalog',{p_player_id:playerId})]);setArmors((a.data||[]) as ArmorMaster[]);setShields((s.data||[]) as ShieldMaster[]);setLoading(false)};
+  useEffect(()=>{load()},[playerId]);
+  return <div className="space-y-6">
+    <div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-display text-xl text-gold-bright flex items-center gap-2"><Shield className="w-5 h-5"/>Armaduras & Escudos</h2><p className="text-xs text-parchment-dim mt-1">Especificações mecânicas reservadas ao Mestre.</p></div><button className={btn} onClick={load}><RefreshCw className={`w-4 h-4 ${loading?'animate-spin':''}`}/>Atualizar</button></div>
+    <section className="rounded-xl border border-gold-dim bg-gradient-card overflow-hidden"><div className="px-4 py-3 border-b border-gold-dim bg-shadow/45"><h3 className="font-display text-lg text-gold-bright flex gap-2"><Shirt className="w-5 h-5"/>Armaduras</h3></div><div className="overflow-x-auto"><table className="w-full min-w-[800px] text-xs"><thead className="text-left text-gold bg-shadow/30"><tr><th className="p-3">Armadura</th><th className="p-3">Peso</th><th className="p-3">Absorção</th><th className="p-3">Requisito</th><th className="p-3">Evasão</th><th className="p-3">Movimento</th></tr></thead><tbody>{armors.map(a=><tr key={a.id} className="border-t border-gold-dim/40"><td className="p-3 font-display text-gold-bright">{a.name}</td><td className="p-3">{a.category}</td><td className="p-3 text-gold">{a.absorption}</td><td className="p-3">{req(a.requirement_attribute,a.requirement_attribute_min,a.requirement_skill,a.requirement_skill_min)}</td><td className="p-3">{a.evasion_penalty?`−${a.evasion_penalty}`:'—'}</td><td className="p-3">{a.movement_penalty?`−${a.movement_penalty} m`:'—'}</td></tr>)}</tbody></table></div></section>
+    <section className="rounded-xl border border-gold-dim bg-gradient-card overflow-hidden"><div className="px-4 py-3 border-b border-gold-dim bg-shadow/45"><h3 className="font-display text-lg text-gold-bright flex gap-2"><Shield className="w-5 h-5"/>Escudos</h3></div><div className="overflow-x-auto"><table className="w-full min-w-[800px] text-xs"><thead className="text-left text-gold bg-shadow/30"><tr><th className="p-3">Escudo</th><th className="p-3">Bloqueio</th><th className="p-3">Cálculo</th><th className="p-3">Requisito</th><th className="p-3">Evasão</th><th className="p-3">Movimento</th></tr></thead><tbody>{shields.map(s=><tr key={s.id} className="border-t border-gold-dim/40"><td className="p-3 font-display text-gold-bright">{s.name}</td><td className="p-3 text-gold">+{s.block_bonus}</td><td className="p-3">{s.block_attribute} + Defesa</td><td className="p-3">{req(s.requirement_attribute,s.requirement_attribute_min,s.requirement_skill,s.requirement_skill_min)}</td><td className="p-3">{s.evasion_penalty?`−${s.evasion_penalty}`:'—'}</td><td className="p-3">{s.movement_penalty?`−${s.movement_penalty} m`:'—'}</td></tr>)}</tbody></table></div></section>
+  </div>;
+}

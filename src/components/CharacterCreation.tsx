@@ -424,8 +424,8 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
   const raceMode = selectedRace?.attribute_mode || ({Humanos:'any',Elfos:'mental',Anões:'fixed',Orcs:'fixed',Pequeninos:'fixed',Goblins:'fixed',Tiferinos:'social','Povo Fúngico':'fixed',Draconatos:'fixed','Povo Fera':'physical'} as any)[race] || 'fixed';
   const fixedRaceAttribute = selectedRace?.fixed_attribute || ({Anões:'Vigor',Orcs:'Força',Pequeninos:'Agilidade',Goblins:'Destreza','Povo Fúngico':'Sabedoria',Draconatos:'Presença'} as any)[race] || '';
   const appliedRacialAttribute = raceMode === 'fixed' ? fixedRaceAttribute : racialAttribute;
-  const effectiveAttributes = {...attributes, ...(appliedRacialAttribute ? {[appliedRacialAttribute]:(attributes[appliedRacialAttribute]??1)+1} : {})};
-  const effectiveSkills = {...skills};
+  const effectiveAttributes: Record<string, number> = {...attributes, ...(appliedRacialAttribute ? {[appliedRacialAttribute]:(attributes[appliedRacialAttribute]??1)+1} : {})};
+  const effectiveSkills: Record<string, number> = {...skills};
   if(lineageSkill1) effectiveSkills[lineageSkill1]=(effectiveSkills[lineageSkill1]??0)+1;
   if(lineageSkill2) effectiveSkills[lineageSkill2]=(effectiveSkills[lineageSkill2]??0)+1;
   const selectedSkills = Object.entries(effectiveSkills).filter(([, rank]) => rank > 0);

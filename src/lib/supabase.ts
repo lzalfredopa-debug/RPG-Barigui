@@ -201,3 +201,45 @@ export type Character = {
 
   created_at: string;
 };
+
+export type ItemCatalogPublic = {
+  id: string;
+  name: string;
+  category: string;
+  category_order: number;
+  sort_order: number;
+  is_consumable: boolean;
+  is_perishable: boolean;
+  is_container: boolean;
+  is_durable: boolean;
+  unit: string;
+  default_amount: number;
+  capacity_ml: number | null;
+  shelf_life_minutes: number | null;
+  durability_max: number | null;
+  repairable: boolean;
+  notes: string | null;
+};
+
+export type TimeAdvanceCharacterChange = {
+  id: string;
+  name: string;
+  hunger_before: number;
+  hunger_after: number;
+  thirst_before: number;
+  thirst_after: number;
+  hp_before: number;
+  hp_after: number;
+  mp_before: number;
+  mp_after: number;
+};
+
+export type TimeAdvanceSummary = {
+  event_id: string;
+  minutes: number;
+  rest_type: 'short' | 'long' | null;
+  characters: TimeAdvanceCharacterChange[];
+  effects_expired: number;
+  items_spoiled: number;
+  elapsed_minutes: number;
+};

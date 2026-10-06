@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { LogOut, Scroll, MessageSquare, Lightbulb, Plus, User, Send, Loader2, Save, X, Lock, Info, Shield, Sword, Trash2, Pencil, ImagePlus, Check, Ban } from 'lucide-react';
+import { LogOut, Scroll, MessageSquare, Lightbulb, Plus, User, Send, Loader2, Save, X, Lock, Info, Shield, Sword, Trash2, Pencil, ImagePlus, Check, Ban, BookOpen, UsersRound, Route, Package } from 'lucide-react';
 import { supabase, type Player, type PersonalNote, type MasterMessage, type Character, type ClassNode, type CombatEquipmentSummary } from '@/lib/supabase';
 import { ATTRIBUTE_GROUPS, SKILL_GROUPS } from '@/components/CharacterCreation';
 import { renderCharacterText } from '@/lib/characterLanguage';
-import { attributeChoices, type RaceDefinition } from '@/lib/ancestry';
+import { attributeChoices, lineageBenefitText, raceBenefitText, type RaceDefinition } from '@/lib/ancestry';
+import { NAMING_CULTURES } from '@/lib/nameCultures';
 import { classUnlockCount } from '@/lib/classUnlocks';
 import ClassDiscoveryTree from '@/components/ClassDiscoveryTree';
 import CatalogPage from '@/components/CatalogPage';
@@ -20,6 +21,7 @@ type PlayerPageProps = {
     onMasterEdit?: (character: Character) => void;
 };
 type Tab = 'ficha' | 'combate' | 'inventario' | 'historia' | 'jornada' | 'diario' | 'classes' | 'catalogo' | 'regras';
+type ReferenceView = 'regras' | 'povos' | 'classes' | 'itens' | null;
 type DiaryEntry = {
     id: string;
     character_id: string;
@@ -145,6 +147,94 @@ function RulesPanel({ playerName }: {
     </section>
   </div>;
 }
+
+function AncestryReference({ races }: { races: RaceDefinition[] }) {
+  return <div className="max-w-5xl mx-auto space-y-5 pb-10">
+    <div className="border-b border-gold-dim pb-4">
+      <p className="text-xs uppercase tracking-[0.25em] text-gold/70">Consulta do jogador</p>
+      <h2 className="font-display text-2xl sm:text-3xl text-gold-bright mt-1">Povos e Linhagens</h2>
+      <p className="mt-2 text-sm text-parchment-dim">História, características públicas, linhagens e costumes de nomeação dos povos do TRILHA.</p>
+    </div>
+    {races.length === 0 ? <div className="trilha-player-empty">Carregando povos e linhagens...</div> : <div className="space-y-5">{races.map(race => {
+      const naming = NAMING_CULTURES[race.id];
+      return <article key={race.id} className="rounded-2xl border border-gold-dim bg-gradient-card overflow-hidden shadow-gold">
+        <div className="grid md:grid-cols-[220px_1fr] gap-0">
+          <div className="bg-shadow/45 min-h-44 flex items-center justify-center border-b md:border-b-0 md:border-r border-gold-dim">
+            {race.image_url ? <img src={race.image_url} alt={race.name} className="w-full h-full max-h-72 object-cover"/> : <UsersRound className="w-14 h-14 text-gold/50"/>}
+          </div>
+          <div className="p-5 sm:p-6 space-y-5">
+            <div>
+              <p className="text-[10px] uppercase tracking-[.2em] text-gold/70">Povo</p>
+              <h3 className="font-display text-2xl text-gold-bright">{race.name}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-parchment-dim whitespace-pre-line">{race.description || 'Descrição ainda não registrada.'}</p>
+              <div className="mt-3 inline-flex rounded-full border border-gold-dim bg-shadow/35 px-3 py-1 text-xs text-gold">{raceBenefitText(race)}</div>
+            </div>
+            {naming && <section className="rounded-xl border border-gold-dim/70 bg-shadow/30 p-4">
+              <p className="text-[10px] uppercase tracking-[.18em] text-gold/70">Cultura</p>
+              <h4 className="font-display text-lg text-gold-bright mt-1">{naming.title}</h4>
+              <p className="mt-2 text-sm leading-relaxed text-parchment-dim">{naming.description}</p>
+              <div className="mt-3 flex flex-wrap gap-2">{naming.examples.map(name => <span key={name} className="rounded-full border border-gold-dim/70 bg-stone/35 px-2.5 py-1 text-xs text-parchment">{name}</span>)}</div>
+              <p className="mt-3 border-l-2 border-gold/60 pl-3 text-sm italic text-parchment-dim">{naming.applied}</p>
+            </section>}
+            <section>
+              <div className="flex items-center gap-2 mb-3"><Route className="w-4 h-4 text-gold"/><h4 className="font-display text-lg text-gold">Linhagens</h4></div>
+              <div className="grid sm:grid-cols-3 gap-3">{race.lineages.map(lineage => <div key={lineage.id} className="rounded-xl border border-gold-dim/70 bg-shadow/35 p-3">
+                {lineage.image_url && <img src={lineage.image_url} alt={lineage.name} className="w-full aspect-[4/3] object-cover rounded-lg border border-gold-dim mb-3"/>}
+                <h5 className="font-display text-gold-bright">{lineage.name}</h5>
+                <p className="mt-1 text-xs leading-relaxed text-parchment-dim">{lineage.description || 'Descrição ainda não registrada.'}</p>
+                <p className="mt-2 text-[11px] text-gold/85">{lineageBenefitText(lineage)}</p>
+              </div>)}</div>
+            </section>
+          </div>
+        </div>
+      </article>;
+    })}</div>}
+  </div>;
+}
+
+function PublicClassesReference() {
+  const stages = [
+    ['Aprendiz', 'Níveis 1–4', 'O personagem ainda está formando sua identidade e seus caminhos.'],
+    ['Iniciante', 'Níveis 5–8', 'Os primeiros caminhos de classe podem começar a se revelar.'],
+    ['Competente', 'Níveis 9–12', 'Novas ramificações surgem a partir da trajetória já percorrida.'],
+    ['Proficiente', 'Níveis 13–16', 'Os caminhos se tornam mais específicos e especializados.'],
+    ['Especialista', 'Níveis 17–20', 'As formas finais de especialização representam trajetórias muito particulares.'],
+  ];
+  return <div className="max-w-4xl mx-auto space-y-5 pb-10">
+    <div className="border-b border-gold-dim pb-4">
+      <p className="text-xs uppercase tracking-[0.25em] text-gold/70">Consulta do jogador</p>
+      <h2 className="font-display text-2xl sm:text-3xl text-gold-bright mt-1">Classes e Subclasses</h2>
+      <p className="mt-2 text-sm text-parchment-dim">No TRILHA, a classe é descoberta durante a jornada. Os nomes e requisitos de caminhos ainda não revelados permanecem ocultos.</p>
+    </div>
+    <section className="rounded-2xl border border-gold-dim bg-gradient-card p-5 sm:p-6">
+      <div className="flex items-start gap-3"><Lock className="w-5 h-5 text-gold mt-0.5"/><div><h3 className="font-display text-xl text-gold-bright">A trilha não é um catálogo de escolhas</h3><p className="mt-2 text-sm leading-relaxed text-parchment-dim">Atributos, habilidades, decisões e experiências fazem certos caminhos se tornarem perceptíveis. Até isso acontecer, a identidade da classe, suas subclasses e seus requisitos continuam velados para o jogador.</p></div></div>
+    </section>
+    <div className="grid sm:grid-cols-2 gap-3">{stages.map(([name, levels, description], index) => <section key={name} className="rounded-xl border border-gold-dim bg-shadow/35 p-4">
+      <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] uppercase tracking-[.18em] text-gold/70">Etapa {String(index + 1).padStart(2, '0')}</p><h3 className="font-display text-lg text-gold-bright">{name}</h3></div><span className="text-xs text-gold">{levels}</span></div>
+      <p className="mt-2 text-sm text-parchment-dim">{description}</p>
+      {index > 0 && <div className="mt-3 rounded-lg border border-gold-dim/60 bg-stone/25 px-3 py-2 text-xs text-parchment-dim flex items-center gap-2"><Lock className="w-3.5 h-3.5 text-gold"/>Identidades e requisitos: ocultos até a revelação.</div>}
+    </section>)}</div>
+  </div>;
+}
+
+function ReferenceOverlay({ view, onClose, player, races }: { view: Exclude<ReferenceView, null>; onClose: () => void; player: Player; races: RaceDefinition[] }) {
+  const title = view === 'regras' ? 'Regras' : view === 'povos' ? 'Povos e Linhagens' : view === 'classes' ? 'Classes e Subclasses' : 'Itens';
+  return <div className="fixed inset-0 z-[65] bg-black/80 p-2 sm:p-5 flex items-center justify-center">
+    <div className="w-full max-w-6xl h-[94vh] overflow-hidden rounded-2xl border border-gold bg-stone shadow-2xl flex flex-col">
+      <div className="shrink-0 border-b border-gold-dim bg-shadow/80 px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+        <div><p className="text-[10px] uppercase tracking-[.2em] text-gold/70">Biblioteca do jogador</p><h2 className="font-display text-xl text-gold-bright">{title}</h2></div>
+        <button type="button" onClick={onClose} className="trilha-sheet-close" aria-label="Fechar consulta"><X className="w-5 h-5"/></button>
+      </div>
+      <div className="overflow-y-auto flex-1 p-4 sm:p-6">
+        {view === 'regras' && <RulesPanel playerName={player.player_name || player.alcunha}/>} 
+        {view === 'povos' && <AncestryReference races={races}/>} 
+        {view === 'classes' && <PublicClassesReference/>}
+        {view === 'itens' && <CatalogPage playerId={player.id} isMaster={false}/>} 
+      </div>
+    </div>
+  </div>;
+}
+
 export default function PlayerPage({ player, onLogout, onCreateCharacter, masterMode = false, masterCharacter = null, onMasterClose, onMasterEdit }: PlayerPageProps) {
     const isMaster = player.player_identifier === 'Mestre';
     const [characters, setCharacters] = useState<Character[]>([]), [charactersLoading, setCharactersLoading] = useState(true), [selectedCharacter, setSelectedCharacter] = useState<Character | null>(masterCharacter || null), [tab, setTab] = useState<Tab>('ficha');
@@ -159,6 +249,7 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
     const [equipmentSummary, setEquipmentSummary] = useState<CombatEquipmentSummary | null>(null);
     const [legacyAttribute, setLegacyAttribute] = useState(''), [legacySkill1, setLegacySkill1] = useState(''), [legacySkill2, setLegacySkill2] = useState(''), [legacySaving, setLegacySaving] = useState(false);
     const [rollingAttack, setRollingAttack] = useState(false), [attackRollError, setAttackRollError] = useState('');
+    const [referenceView, setReferenceView] = useState<ReferenceView>(null);
     const loadCharacters = useCallback(async () => { if (masterMode) {
         setCharactersLoading(false);
         return;
@@ -365,6 +456,22 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
     {!masterMode && <>
     <header className="sticky top-0 z-20 bg-shadow/80 backdrop-blur-md border-b border-gold-dim"><div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-gradient-card border border-gold-dim flex items-center justify-center"><User className="w-5 h-5 text-gold"/></div><h1 className="font-display text-lg sm:text-xl text-gold-bright">Bem-vindo, {player.player_name || player.alcunha}</h1></div><button onClick={onLogout} className="flex items-center gap-2 text-parchment-dim hover:text-blood text-sm"><LogOut className="w-4 h-4"/>Sair</button></div></header>
     <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <section className="trilha-player-reference">
+        <div className="trilha-player-section-title"><BookOpen className="w-5 h-5"/><h2 className="font-display">Biblioteca do Jogador</h2><i /></div>
+        <p className="text-sm text-parchment-dim mb-4">Consulte o sistema antes de escolher um personagem. Informações que dependem de descoberta continuam ocultas.</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            ['regras', 'Regras', BookOpen, 'Como testes, recursos e ações funcionam.'],
+            ['povos', 'Povos e Linhagens', UsersRound, 'Culturas, linhagens e costumes de nomeação.'],
+            ['classes', 'Classes e Subclasses', Route, 'Entenda a progressão sem revelar caminhos ocultos.'],
+            ['itens', 'Itens', Package, 'Catálogo público de equipamentos e objetos.'],
+          ].map(([id, label, Icon, description]) => { const C = Icon as typeof BookOpen; return <button key={String(id)} type="button" onClick={() => setReferenceView(id as Exclude<ReferenceView, null>)} className="group min-h-28 rounded-xl border border-gold-dim bg-gradient-card p-4 text-left hover:border-gold transition">
+            <div className="flex items-center justify-between gap-2"><C className="w-5 h-5 text-gold"/><span className="text-gold/60 group-hover:text-gold">→</span></div>
+            <h3 className="font-display text-gold-bright mt-3">{String(label)}</h3><p className="mt-1 text-xs leading-relaxed text-parchment-dim">{String(description)}</p>
+          </button>; })}
+        </div>
+      </section>
+      <div className="divider-gold"/>
       <section className="trilha-player-characters"><div className="trilha-player-section-title"><Scroll className="w-5 h-5"/><h2 className="font-display">Meus Personagens</h2><i /></div>{charactersLoading ? <div className="trilha-player-loading"><Loader2 className="w-6 h-6 animate-spin"/></div> : characters.length === 0 ? <div className="trilha-player-empty">Você ainda não possui personagens.</div> : <div className="trilha-character-grid">{characters.map(c => <button key={c.id} onClick={() => { setSelectedCharacter(c); setTab('ficha'); }} className="trilha-character-card"><div className="trilha-character-card-portrait">{c.thumbnail_url ? <img src={c.thumbnail_url} alt={`Miniatura de ${c.name}`}/> : <User className="w-10 h-10"/>}<span className="trilha-character-level">Nv. {c.level}</span></div><div className="trilha-character-card-body"><h3 className="font-display">{c.name}</h3>{c.nickname && <p className="trilha-character-nickname">“{c.nickname}”</p>}<div className="trilha-character-card-rule"/><p className="trilha-character-lineage">{c.race} · {c.lineage}</p><p className="trilha-character-stage">{stageForLevel(c.level)} · {statusLabel(c.status)}</p>{(classUnlockCounts[c.id] || 0) > 0 && <div className="mt-2 flex flex-wrap items-center gap-1" title={`${classUnlockCounts[c.id]} possibilidade(s) de evolução percebida(s). As identidades continuam ocultas.`}><span className="mr-1 text-[10px] uppercase tracking-[.14em] text-gold/70">Caminhos</span>{Array.from({ length: classUnlockCounts[c.id] }, (_, i) => <span key={i} className="text-gold-bright text-sm" aria-hidden="true">✦</span>)}</div>}<span className="trilha-open-sheet">Abrir ficha <b>→</b></span></div></button>)}</div>}<div className="trilha-create-character">{canCreate ? <button onClick={onCreateCharacter}><Plus className="w-4 h-4"/>Criar novo personagem</button> : <div><Lock className="w-4 h-4"/>Novo personagem requer autorização do Mestre.</div>}</div></section>
 
       {isMaster && <><div className="divider-gold"/><section><h2 className="font-display text-xl text-gold-bright mb-4">Painel do Mestre</h2><div className="grid lg:grid-cols-2 gap-4"><div className="bg-gradient-card border border-gold-dim rounded-xl p-5"><h3 className="font-display text-gold mb-3">Autorizar novo personagem</h3><div className="space-y-2">{allPlayers.filter(p => p.id !== player.id).map(p => <div key={p.id} className="flex items-center justify-between bg-shadow/40 rounded-lg p-3"><span className="text-sm">{p.player_name || p.alcunha}</span><button onClick={() => authorizePlayer(p, !p.character_creation_allowed)} className="text-xs text-gold flex gap-1">{p.character_creation_allowed ? <><Ban className="w-4 h-4"/>Revogar</> : <><Check className="w-4 h-4"/>Autorizar</>}</button></div>)}</div></div><div className="bg-gradient-card border border-gold-dim rounded-xl p-5"><h3 className="font-display text-gold mb-3">Status dos personagens</h3><div className="space-y-2">{allCharacters.map(c => <div key={c.id} className="flex items-center justify-between gap-3 bg-shadow/40 rounded-lg p-3"><span className="text-sm">{c.name}</span><select value={c.status || 'vivo'} onChange={e => changeStatus(c, e.target.value as Character['status'])} className="bg-shadow border border-gold-dim rounded px-2 py-1 text-xs text-parchment"><option value="vivo">Vivo</option><option value="morto">Morto</option><option value="desaparecido">Desaparecido</option></select></div>)}</div></div></div></section></>}
@@ -374,6 +481,8 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
       <div className="divider-gold"/><section>{!suggestionOpen ? <button onClick={() => setSuggestionOpen(true)} className="flex gap-2 text-parchment-dim/60 hover:text-gold text-sm"><Lightbulb className="w-4 h-4"/>Enviar sugestão</button> : <div className="trilha-player-paper border border-gold-dim rounded-xl p-5"><div className="flex justify-between"><h3 className="font-display text-gold">Enviar Sugestão</h3><button onClick={() => setSuggestionOpen(false)}><X className="w-4 h-4"/></button></div>{suggestionSent ? <p className="text-gold mt-3">Sugestão enviada.</p> : <><textarea value={suggestionText} onChange={e => setSuggestionText(e.target.value)} rows={4} className={`${field} mt-3`}/><button onClick={handleSendSuggestion} disabled={suggestionSending || !suggestionText.trim()} className="mt-3 flex gap-2 bg-gradient-gold text-stone px-4 py-2 rounded-lg"><Send className="w-4 h-4"/>Enviar</button></>}</div>}</section>
     </main>
     </>}
+
+    {!masterMode && referenceView && <ReferenceOverlay view={referenceView} onClose={() => setReferenceView(null)} player={player} races={ancestryRaces}/>}
 
     {!masterMode && ancestryPending && selectedCharacter && legacyRace && legacyLineage && <div className="fixed inset-0 z-[70] bg-black/80 flex items-center justify-center p-4"><div className="w-full max-w-2xl bg-stone border border-gold rounded-2xl p-6 shadow-2xl"><p className="text-xs uppercase tracking-[.2em] text-gold/70">Atualização do TRILHA</p><h2 className="font-display text-2xl text-gold-bright mt-1">Características raciais pendentes</h2><p className="text-sm text-parchment-dim mt-2">{selectedCharacter.name} foi criado antes das novas regras de raça e linhagem. Faça as escolhas abaixo uma única vez. Os bônus serão guardados separadamente dos pontos normais da ficha.</p><div className="mt-5 space-y-5">{!hasRacialBonus && <div><label className="text-sm text-gold">Bônus de raça · {legacyRace.name}</label>{legacyRace.attribute_mode === 'fixed' ? <div className="mt-2 border border-gold-dim rounded-lg p-3">+1 {legacyFixedAttribute}</div> : <select className={`${field} mt-2`} value={legacyAttribute} onChange={e => setLegacyAttribute(e.target.value)}><option value="">Escolha o atributo...</option>{attributeChoices(legacyRace.attribute_mode, allAttributeNames).map(a => <option key={a} value={a}>{a}</option>)}</select>}</div>}{!hasLineageBonus && <div><label className="text-sm text-gold">Aptidões de linhagem · {legacyLineage.name}</label><p className="text-xs text-parchment-dim mt-1">Escolha +1 em uma habilidade de <b>{legacyLineage.skill_group_1}</b> e +1 em uma de <b>{legacyLineage.skill_group_2}</b>.</p><div className="grid sm:grid-cols-2 gap-3 mt-2"><select className={field} value={legacySkill1} onChange={e => setLegacySkill1(e.target.value)}><option value="">1ª habilidade...</option>{skillsForGroup(legacyLineage.skill_group_1).map(x => <option key={x} value={x}>{x}</option>)}</select><select className={field} value={legacySkill2} onChange={e => setLegacySkill2(e.target.value)}><option value="">2ª habilidade...</option>{skillsForGroup(legacyLineage.skill_group_2).filter(x => x !== legacySkill1).map(x => <option key={x} value={x}>{x}</option>)}</select></div></div>}</div><div className="flex justify-end gap-3 mt-6"><button className="text-sm text-parchment-dim" onClick={() => setSelectedCharacter(null)}>Agora não</button><button className="bg-gradient-gold text-stone font-display px-5 py-2 rounded-lg disabled:opacity-40" disabled={legacySaving || (!hasRacialBonus && !legacyAttributeValue) || (!hasLineageBonus && (!legacySkill1 || !legacySkill2 || legacySkill1 === legacySkill2))} onClick={saveLegacyAncestry}>{legacySaving ? 'Salvando...' : 'Aplicar características'}</button></div></div></div>}
 

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -1543,36 +1543,6 @@
   .trilha-radio-copy span { font-size: 9px; }
 }
 
-.trilha-radio-stop {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  height: 28px;
-  border: 1px solid rgba(190,141,58,.22);
-  border-radius: 7px;
-  color: #a99a7e;
-  background: rgba(0,0,0,.16);
-  font-family: 'Cinzel', serif;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: color .18s ease, border-color .18s ease, background .18s ease;
-}
-.trilha-radio-stop:hover {
-  color: #ead9ae;
-  border-color: rgba(211,162,69,.52);
-  background: rgba(201,154,62,.08);
-}
-.trilha-radio-stop.is-stopped {
-  color: #e6c25c;
-  border-color: rgba(219,169,67,.52);
-}
-
 /* Rádio TRILHA — recolher/abrir sem interromper a reprodução */
 .trilha-radio-close {
   width: 28px;
@@ -1626,4 +1596,546 @@
     left: 10px;
     bottom: 10px;
   }
+}
+
+
+/* ============================================================
+   TRILHA — Harmonização visual pós-051026.01
+   Identidade oficial: carvão, cobre, ouro, pergaminho e terroso.
+   Escopo: Controle do Mestre, Catálogo, Inventário e editores novos.
+   ============================================================ */
+:root {
+  --trilha-coal: #1A1A1A;
+  --trilha-copper: #8B2F23;
+  --trilha-gold-official: #D4A44A;
+  --trilha-parchment-official: #EAD9B7;
+  --trilha-earth: #4B3626;
+  --trilha-paper: #F4E8CC;
+  --trilha-paper-light: #FBF3DF;
+  --trilha-muted-ink: #75634D;
+}
+
+.trilha-catalog-page,
+.trilha-inventory-panel,
+.trilha-master-page,
+.trilha-master-editor {
+  --color-gold: var(--trilha-gold-official);
+  --color-gold-bright: #E7C46D;
+  --color-parchment: var(--trilha-parchment-official);
+  --color-ink: #2D241B;
+}
+
+/* Botões e campos compartilhados das telas novas */
+.trilha-ui-button {
+  border-radius: 2px !important;
+  border-color: rgba(212,164,74,.58) !important;
+  color: #E8C76F !important;
+  background: linear-gradient(180deg, rgba(75,54,38,.70), rgba(26,26,26,.72)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,242,201,.04), 0 4px 10px rgba(0,0,0,.12);
+  font-family: 'Inter', sans-serif;
+  transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+.trilha-ui-button:hover:not(:disabled) {
+  border-color: var(--trilha-gold-official) !important;
+  background: linear-gradient(180deg, rgba(139,47,35,.76), rgba(75,54,38,.82)) !important;
+  transform: translateY(-1px);
+}
+.trilha-ui-button:disabled { opacity:.42; transform:none; }
+
+.trilha-ui-field {
+  border-radius: 2px !important;
+  border-color: #B9975D !important;
+  background: rgba(250,240,216,.92) !important;
+  color: #30251B !important;
+  box-shadow: inset 0 1px 3px rgba(75,54,38,.09) !important;
+  font-family: 'Lora', serif;
+}
+.trilha-ui-field::placeholder { color:#8B765C !important; }
+.trilha-ui-field:focus { border-color:var(--trilha-copper) !important; box-shadow:0 0 0 2px rgba(139,47,35,.10) !important; }
+.trilha-ui-field option { color:#2D241B; background:#F4E8CC; }
+
+/* ---------------- CATÁLOGO ---------------- */
+.trilha-catalog-page {
+  color:#3C3024;
+  font-family:'Lora', serif;
+}
+.trilha-catalog-page > div:first-child {
+  position:relative;
+  padding:18px 20px 16px;
+  border:1px solid rgba(212,164,74,.52) !important;
+  border-radius:2px;
+  background:
+    radial-gradient(circle at 92% -30%, rgba(139,47,35,.28), transparent 36%),
+    linear-gradient(120deg,#1A1A1A,#2A231D 58%,#1A1A1A);
+  box-shadow:0 12px 25px rgba(0,0,0,.18);
+}
+.trilha-catalog-page > div:first-child::after {
+  content:''; position:absolute; left:20px; right:20px; bottom:7px; height:1px;
+  background:linear-gradient(90deg,transparent,var(--trilha-copper),var(--trilha-gold-official),var(--trilha-copper),transparent);
+}
+.trilha-catalog-page > div:first-child .text-gold-bright { color:#F0DDA8 !important; }
+.trilha-catalog-page > div:first-child .text-parchment-dim { color:#BBAE91 !important; }
+.trilha-catalog-page > div:first-child .text-gold\/70 { color:#D4A44A !important; }
+
+.trilha-catalog-page > .flex.flex-wrap.gap-2 > .trilha-ui-button {
+  background:#342A22 !important;
+}
+.trilha-catalog-page > .flex.flex-wrap.gap-2 > .trilha-ui-button.bg-gold\/15 {
+  color:#FFF0BF !important;
+  border-color:#D4A44A !important;
+  background:linear-gradient(90deg,#8B2F23,#A95E31 56%,#B88435) !important;
+}
+
+.trilha-catalog-group {
+  border-radius:2px !important;
+  border-color:#B99B65 !important;
+  background:
+    repeating-linear-gradient(0deg,rgba(75,54,38,.018) 0 1px,transparent 1px 4px),
+    linear-gradient(135deg,#EAD9B7,#E4CFA7) !important;
+  box-shadow:0 8px 20px rgba(75,54,38,.10) !important;
+}
+.trilha-catalog-group > div:first-child {
+  color:#F2DFB0;
+  border-color:#D4A44A !important;
+  background:linear-gradient(90deg,#1A1A1A,#30251D 64%,#4B3626) !important;
+}
+.trilha-catalog-group > div:first-child .text-gold-bright { color:#F0DDA8 !important; }
+.trilha-catalog-group > div:first-child .text-parchment-dim { color:#C6B899 !important; }
+
+.trilha-catalog-item {
+  position:relative;
+  border-radius:2px !important;
+  border-color:rgba(154,116,55,.48) !important;
+  background:rgba(251,243,223,.74) !important;
+  color:#3B2D21 !important;
+  box-shadow:0 5px 13px rgba(75,54,38,.07) !important;
+}
+.trilha-catalog-item::before {
+  content:''; position:absolute; left:-1px; top:-1px; width:24px; height:24px;
+  border-left:2px solid var(--trilha-copper); border-top:2px solid var(--trilha-copper);
+}
+.trilha-catalog-item .text-gold-bright { color:#713126 !important; }
+.trilha-catalog-item .text-gold { color:#8B2F23 !important; }
+.trilha-catalog-item .text-parchment-dim { color:#75634D !important; }
+
+/* Editor do catálogo: pergaminho dentro de moldura escura */
+.trilha-catalog-editor-panel {
+  border-radius:3px !important;
+  overflow:hidden;
+  color:#34291F;
+  background:linear-gradient(135deg,#EAD9B7,#DFC79A) !important;
+}
+.trilha-catalog-editor-panel > div:first-child {
+  background:linear-gradient(110deg,#1A1A1A,#32271E) !important;
+  border-color:#D4A44A !important;
+}
+.trilha-catalog-editor-panel > div:last-child { color:#3B3025; }
+.trilha-catalog-editor-panel label.text-gold { color:#7E3428 !important; font-weight:600; }
+.trilha-catalog-editor-panel .text-parchment { color:#3B3025 !important; }
+
+/* ---------------- INVENTÁRIO ---------------- */
+.trilha-inventory-panel { color:#403326; font-family:'Lora',serif; }
+.trilha-inventory-panel > .flex:first-child {
+  padding-bottom:11px;
+  border-bottom:1px solid rgba(139,47,35,.34);
+}
+.trilha-inventory-panel > .flex:first-child h3 { color:#7F3428 !important; letter-spacing:.08em; }
+.trilha-inventory-panel > .flex:first-child .text-parchment-dim { color:#75634D !important; }
+
+.trilha-load-card {
+  border-radius:2px !important;
+  border-color:#B79659 !important;
+  color:#F0DDA8 !important;
+  background:
+    radial-gradient(circle at 90% -50%,rgba(139,47,35,.28),transparent 42%),
+    linear-gradient(120deg,#1A1A1A,#30251D 62%,#4B3626) !important;
+}
+.trilha-load-card .text-parchment-dim { color:#C3B697 !important; }
+.trilha-load-card .text-gold, .trilha-load-card .text-gold-bright { color:#E6BE5D !important; }
+.trilha-load-card .bg-shadow { background:#111 !important; }
+.trilha-load-card .bg-gold { background:linear-gradient(90deg,#8B2F23,#D4A44A) !important; }
+
+.trilha-inventory-group {
+  border-radius:2px !important;
+  border-color:#B99B65 !important;
+  background:linear-gradient(135deg,#EAD9B7,#E1C99D) !important;
+  box-shadow:0 8px 18px rgba(75,54,38,.08) !important;
+}
+.trilha-inventory-group > button {
+  border-radius:0 !important;
+  color:#F0DDA8 !important;
+  background:linear-gradient(90deg,#1A1A1A,#30251D 70%,#4B3626) !important;
+  border-bottom:1px solid #D4A44A;
+}
+.trilha-inventory-group > button .text-gold-bright { color:#F0DDA8 !important; }
+.trilha-inventory-group > button .text-parchment-dim { color:#C1B397 !important; }
+.trilha-inventory-group > button .text-gold { color:#D4A44A !important; }
+.trilha-inventory-group > div { color:#3A2D22; }
+.trilha-inventory-group > div .text-gold { color:#7E3428 !important; }
+.trilha-inventory-group > div .text-parchment-dim { color:#75634D !important; }
+.trilha-inventory-group > div .border-gold-dim\/50 { border-color:rgba(139,47,35,.27) !important; }
+
+.trilha-inventory-item {
+  border-radius:2px !important;
+  border-color:rgba(154,116,55,.47) !important;
+  background:rgba(251,243,223,.74) !important;
+  color:#3B2D21 !important;
+  box-shadow:0 4px 12px rgba(75,54,38,.06) !important;
+}
+.trilha-inventory-item .text-gold-bright { color:#713126 !important; }
+.trilha-inventory-item .text-gold { color:#8B2F23 !important; }
+.trilha-inventory-item .text-parchment-dim { color:#75634D !important; }
+.trilha-inventory-item button {
+  color:#6A5946 !important;
+  border-color:#B89C69 !important;
+  background:rgba(255,249,232,.58);
+}
+.trilha-inventory-item button:hover:not(:disabled) { color:#7A3025 !important; border-color:#8B2F23 !important; }
+.trilha-inventory-item button.border-gold,
+.trilha-inventory-item button.text-gold-bright { color:#7A3025 !important; border-color:#A96B38 !important; background:rgba(212,164,74,.13); }
+
+/* ---------------- CONTROLE DO MESTRE ---------------- */
+.trilha-master-page {
+  color:#EAD9B7;
+  background:
+    radial-gradient(circle at 8% 0%,rgba(139,47,35,.15),transparent 27%),
+    radial-gradient(circle at 94% 12%,rgba(212,164,74,.08),transparent 24%),
+    linear-gradient(135deg,#171717,#211B17 48%,#1A1A1A) !important;
+}
+.trilha-master-page > header {
+  background:rgba(26,26,26,.96) !important;
+  border-color:rgba(212,164,74,.48) !important;
+  box-shadow:0 5px 18px rgba(0,0,0,.24);
+}
+.trilha-master-page > header h1 { color:#E8C76F !important; }
+.trilha-master-main > nav {
+  padding:8px;
+  border:1px solid rgba(212,164,74,.24);
+  border-radius:3px;
+  background:rgba(26,26,26,.46);
+}
+.trilha-master-main > nav .trilha-ui-button.bg-gold\/15 {
+  color:#FFF0BF !important;
+  border-color:#D4A44A !important;
+  background:linear-gradient(90deg,#8B2F23,#A65B30 58%,#B68335) !important;
+}
+.trilha-master-main .bg-gradient-card {
+  border-radius:2px !important;
+  border-color:rgba(212,164,74,.40) !important;
+  background:linear-gradient(145deg,rgba(75,54,38,.72),rgba(35,29,24,.86)) !important;
+}
+.trilha-master-main .bg-gradient-card .bg-shadow\/40 { background:rgba(17,17,17,.56) !important; }
+
+/* O catálogo dentro do Controle deve ser uma folha legível, não mais um painel preto. */
+.trilha-master-page .trilha-catalog-page {
+  padding:18px;
+  border:1px solid rgba(212,164,74,.34);
+  border-radius:3px;
+  background:
+    repeating-linear-gradient(0deg,rgba(75,54,38,.018) 0 1px,transparent 1px 4px),
+    linear-gradient(135deg,#EAD9B7,#DEC596);
+  box-shadow:0 15px 34px rgba(0,0,0,.18);
+}
+
+/* ---------------- EDITOR DO MESTRE ---------------- */
+.trilha-master-editor {
+  color:#3B3025 !important;
+  font-family:'Lora',serif;
+  background:
+    radial-gradient(circle at 100% 0%,rgba(139,47,35,.09),transparent 28%),
+    repeating-linear-gradient(0deg,rgba(75,54,38,.017) 0 1px,transparent 1px 4px),
+    linear-gradient(135deg,#EAD9B7,#DEC596) !important;
+}
+.trilha-master-editor > header {
+  color:#EAD9B7;
+  background:linear-gradient(100deg,rgba(26,26,26,.98),rgba(47,37,29,.98)) !important;
+  border-color:#D4A44A !important;
+  box-shadow:0 7px 20px rgba(0,0,0,.22);
+}
+.trilha-master-editor > header .text-gold-bright { color:#F0DDA8 !important; }
+.trilha-master-editor > header .text-parchment-dim { color:#BCAE90 !important; }
+.trilha-master-editor > header .text-amber-200 { color:#E8C76F !important; }
+.trilha-master-editor main .text-gold-bright { color:#7B3327 !important; }
+.trilha-master-editor main .text-gold { color:#8B2F23 !important; }
+.trilha-master-editor main .text-parchment { color:#3B3025 !important; }
+.trilha-master-editor main .text-parchment-dim { color:#75634D !important; }
+
+.trilha-master-card {
+  position:relative;
+  border-radius:2px !important;
+  border-color:#B99B65 !important;
+  color:#3B3025 !important;
+  background:rgba(251,243,223,.72) !important;
+  box-shadow:0 7px 17px rgba(75,54,38,.07) !important;
+}
+.trilha-master-card::before {
+  content:''; position:absolute; left:-1px; top:-1px; width:25px; height:25px;
+  border-left:2px solid #8B2F23; border-top:2px solid #8B2F23; pointer-events:none;
+}
+.trilha-master-card .text-gold-bright { color:#713126 !important; }
+.trilha-master-card .text-gold { color:#8B2F23 !important; }
+.trilha-master-card .text-parchment-dim { color:#75634D !important; }
+.trilha-master-card .bg-shadow { background:rgba(255,249,232,.82) !important; color:#30251B !important; }
+
+@media(max-width:640px) {
+  .trilha-catalog-page > div:first-child { padding:15px 14px 14px; }
+  .trilha-master-page .trilha-catalog-page { padding:12px; }
+  .trilha-catalog-group > div:first-child,
+  .trilha-inventory-group > button { padding-left:13px !important; padding-right:13px !important; }
+}
+
+/* ============================================================
+   TRILHA — Refinamento visual 02 / consistência entre ficha,
+   catálogo, inventário e Controle do Mestre.
+   Mantém a paleta oficial e reduz cores utilitárias destoantes.
+   ============================================================ */
+
+/* Estados semânticos compartilhados */
+.trilha-ui-button.is-primary {
+  color:#fff0c5 !important;
+  border-color:#c99a3c !important;
+  background:linear-gradient(90deg,#85372a 0%,#a95230 52%,#b98535 100%) !important;
+  box-shadow:0 6px 14px rgba(72,39,22,.22), inset 0 1px 0 rgba(255,241,198,.12);
+}
+.trilha-ui-button.is-primary:hover:not(:disabled) {
+  filter:brightness(1.06);
+  background:linear-gradient(90deg,#923e2d 0%,#b35d35 52%,#c4933b 100%) !important;
+}
+.trilha-ui-button.is-quiet {
+  color:#d9c9a5 !important;
+  border-color:rgba(212,164,74,.34) !important;
+  background:rgba(30,27,23,.56) !important;
+  box-shadow:none;
+}
+.trilha-ui-button.is-quiet:hover:not(:disabled) {
+  color:#f0deb0 !important;
+  border-color:rgba(212,164,74,.64) !important;
+  background:rgba(75,54,38,.72) !important;
+}
+.trilha-ui-button.is-danger {
+  color:#f0d7c7 !important;
+  border-color:rgba(139,47,35,.72) !important;
+  background:linear-gradient(180deg,rgba(95,37,30,.78),rgba(54,29,25,.82)) !important;
+}
+.trilha-ui-button.is-danger:hover:not(:disabled) {
+  color:#fff0e7 !important;
+  border-color:#a64b39 !important;
+  background:linear-gradient(180deg,rgba(139,47,35,.88),rgba(78,35,28,.90)) !important;
+}
+
+.trilha-ui-segment {
+  min-height:36px;
+  padding-inline:13px !important;
+  letter-spacing:.02em;
+}
+.trilha-ui-segment.is-active,
+.trilha-master-nav-button.is-active,
+.trilha-master-section-button.is-active {
+  color:#fff0bf !important;
+  border-color:#d4a44a !important;
+  background:linear-gradient(90deg,#7f3429 0%,#9e5030 58%,#a87831 100%) !important;
+  box-shadow:0 5px 13px rgba(74,42,25,.18), inset 0 -2px 0 rgba(240,205,113,.22);
+}
+
+.trilha-icon-button {
+  width:30px;
+  height:30px;
+  display:inline-grid;
+  place-items:center;
+  flex:none;
+  color:#7e3428;
+  border:1px solid rgba(169,125,62,.44);
+  border-radius:2px;
+  background:rgba(255,248,228,.52);
+  transition:background .15s ease,border-color .15s ease,color .15s ease,transform .15s ease;
+}
+.trilha-icon-button:hover {
+  color:#6e2a20;
+  border-color:#8b2f23;
+  background:rgba(139,47,35,.08);
+  transform:translateY(-1px);
+}
+.trilha-icon-button.is-danger { color:#865246; }
+.trilha-icon-button.is-danger:hover { color:#8b2f23; border-color:#8b2f23; background:rgba(139,47,35,.10); }
+
+.trilha-status-danger { color:#a84a39 !important; }
+
+/* CATÁLOGO — menos “painel genérico”, mais folha de referência */
+.trilha-catalog-search { width:min(100%,34rem); }
+.trilha-catalog-search .trilha-ui-field { padding-left:2.35rem !important; }
+.trilha-catalog-group { transition:box-shadow .18s ease,border-color .18s ease; }
+.trilha-catalog-group:hover { border-color:#aa8449 !important; box-shadow:0 10px 24px rgba(75,54,38,.12) !important; }
+.trilha-catalog-item { min-height:112px; transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease; }
+.trilha-catalog-item:hover { transform:translateY(-1px); border-color:rgba(139,47,35,.45) !important; box-shadow:0 8px 18px rgba(75,54,38,.10) !important; }
+.trilha-catalog-editor { backdrop-filter:blur(5px); }
+.trilha-catalog-editor-panel { box-shadow:0 28px 80px rgba(0,0,0,.48),0 0 0 1px rgba(212,164,74,.14) !important; }
+.trilha-catalog-editor-panel input[type="checkbox"] { accent-color:#8b2f23; width:15px; height:15px; }
+
+/* INVENTÁRIO — ações, marcadores e carga usam a mesma linguagem */
+.trilha-load-fill {
+  background:linear-gradient(90deg,#8b2f23 0%,#b66631 48%,#d4a44a 100%);
+  transition:width .28s ease;
+}
+.trilha-load-fill.is-overloaded {
+  background:linear-gradient(90deg,#7b2d25 0%,#a84432 62%,#c86d3e 100%);
+}
+.trilha-item-action {
+  min-height:26px;
+  padding:4px 8px;
+  color:#655642 !important;
+  border:1px solid #b99b67 !important;
+  border-radius:2px !important;
+  background:rgba(255,249,232,.62) !important;
+  font:600 10px/1.15 'Inter',sans-serif;
+  transition:.15s ease;
+}
+.trilha-item-action:hover:not(:disabled) {
+  color:#783125 !important;
+  border-color:#8b2f23 !important;
+  background:rgba(139,47,35,.07) !important;
+}
+.trilha-item-action.is-active {
+  color:#793125 !important;
+  border-color:#b68338 !important;
+  background:rgba(212,164,74,.16) !important;
+  box-shadow:inset 0 -2px 0 rgba(139,47,35,.14);
+}
+.trilha-item-action.is-primary {
+  color:#fff3cf !important;
+  border-color:#9f6930 !important;
+  background:linear-gradient(90deg,#85372a,#a65a32 58%,#b98535) !important;
+}
+.trilha-item-action:disabled { opacity:.42; cursor:not-allowed; }
+.trilha-item-badge {
+  display:inline-flex;
+  align-items:center;
+  min-height:22px;
+  padding:3px 7px;
+  color:#75634d;
+  border:1px solid rgba(169,136,79,.42);
+  border-radius:999px;
+  background:rgba(255,249,232,.48);
+}
+
+/* CONTROLE — hierarquia mais clara, com o dourado só nos pontos de decisão */
+.trilha-master-main > nav {
+  gap:6px !important;
+  position:sticky;
+  top:73px;
+  z-index:18;
+  backdrop-filter:blur(10px);
+  box-shadow:0 8px 18px rgba(0,0,0,.12);
+}
+.trilha-master-nav-button {
+  min-height:36px;
+  padding:8px 11px !important;
+  color:#c7b896 !important;
+  background:transparent !important;
+  border-color:transparent !important;
+  box-shadow:none !important;
+}
+.trilha-master-nav-button:hover:not(:disabled) {
+  color:#ecd9aa !important;
+  border-color:rgba(212,164,74,.28) !important;
+  background:rgba(75,54,38,.34) !important;
+  transform:none;
+}
+.trilha-master-clock-card {
+  border-radius:3px !important;
+  border-color:rgba(212,164,74,.46) !important;
+  background:
+    radial-gradient(circle at 95% -35%,rgba(139,47,35,.22),transparent 40%),
+    linear-gradient(120deg,#1c1a17,#31261f 64%,#463225) !important;
+  box-shadow:0 12px 24px rgba(0,0,0,.15);
+}
+.trilha-master-character-card {
+  border-radius:3px !important;
+  border-color:rgba(212,164,74,.34) !important;
+  background:linear-gradient(145deg,rgba(70,52,39,.64),rgba(35,29,24,.84)) !important;
+  box-shadow:0 8px 18px rgba(0,0,0,.12);
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.trilha-master-character-card:hover {
+  transform:translateY(-2px);
+  border-color:rgba(212,164,74,.72) !important;
+  box-shadow:0 13px 24px rgba(0,0,0,.18);
+}
+.trilha-master-character-card.is-alert {
+  border-color:rgba(139,47,35,.78) !important;
+  box-shadow:inset 3px 0 0 #8b2f23,0 8px 18px rgba(0,0,0,.12);
+}
+.trilha-master-resource-chip {
+  color:#c9ba99;
+  border-color:rgba(212,164,74,.25) !important;
+  background:rgba(17,17,17,.34) !important;
+}
+.trilha-master-resource-chip b { color:#e0bd62; }
+.trilha-master-resource-chip.is-danger {
+  color:#e8c3b8 !important;
+  border-color:rgba(139,47,35,.72) !important;
+  background:rgba(139,47,35,.16) !important;
+}
+.trilha-master-resource-chip.is-danger b { color:#f0d2c8; }
+
+/* MODO MESTRE — navegação compacta e cards próximos da ficha do jogador */
+.trilha-master-section-nav {
+  padding-top:2px;
+  padding-bottom:1px;
+}
+.trilha-master-section-button {
+  min-height:34px;
+  color:#c8b99a !important;
+  background:transparent !important;
+  border-color:rgba(212,164,74,.18) !important;
+  box-shadow:none !important;
+}
+.trilha-master-section-button:hover:not(:disabled) {
+  color:#f0ddb0 !important;
+  border-color:rgba(212,164,74,.44) !important;
+  background:rgba(75,54,38,.36) !important;
+  transform:none;
+}
+.trilha-master-editor > header span.rounded-full {
+  border-radius:2px !important;
+  color:#e7c46d !important;
+  border-color:rgba(212,164,74,.46) !important;
+  background:rgba(139,47,35,.12) !important;
+}
+.trilha-master-editor > header .text-amber-200 {
+  color:#e8c76f !important;
+  padding-left:8px;
+  border-left:1px solid rgba(212,164,74,.28);
+}
+.trilha-master-card > .rounded-lg.border,
+.trilha-master-card .rounded-lg.border {
+  border-radius:2px !important;
+  border-color:rgba(169,136,79,.38) !important;
+  background:rgba(255,249,232,.36);
+}
+.trilha-master-card input[type="checkbox"] { accent-color:#8b2f23; }
+
+/* No papel da ficha, botões administrativos precisam continuar legíveis sem
+   parecer uma segunda identidade visual. */
+.trilha-secondary-tab .trilha-ui-button:not(.is-primary):not(.is-danger) {
+  color:#6f5940 !important;
+  border-color:#b39662 !important;
+  background:rgba(255,249,232,.56) !important;
+  box-shadow:none;
+}
+.trilha-secondary-tab .trilha-ui-button:not(.is-primary):not(.is-danger):hover:not(:disabled) {
+  color:#7e3428 !important;
+  border-color:#8b2f23 !important;
+  background:rgba(139,47,35,.06) !important;
+}
+.trilha-secondary-tab .trilha-ui-segment.is-active {
+  color:#fff0bf !important;
+  border-color:#a77731 !important;
+  background:linear-gradient(90deg,#81372a,#a25731 56%,#b98535) !important;
+}
+
+@media(max-width:760px) {
+  .trilha-master-main > nav { top:70px; overflow-x:auto; flex-wrap:nowrap !important; }
+  .trilha-master-nav-button { white-space:nowrap; }
+  .trilha-master-resource-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+  .trilha-catalog-item { min-height:0; }
 }

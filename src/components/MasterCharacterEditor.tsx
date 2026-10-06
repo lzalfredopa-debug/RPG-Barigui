@@ -59,9 +59,9 @@ type Props = {
   updateSkill: (key: string, value: number) => void;
 };
 
-const input = 'w-full bg-shadow/60 border border-gold-dim rounded-lg px-3 py-2 text-parchment text-sm focus:outline-none focus:border-gold';
-const btn = 'inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gold-dim text-gold hover:border-gold text-sm disabled:opacity-40';
-const card = 'rounded-xl border border-gold-dim bg-shadow/35 p-4';
+const input = 'trilha-ui-field w-full bg-shadow/60 border border-gold-dim rounded-lg px-3 py-2 text-parchment text-sm focus:outline-none focus:border-gold';
+const btn = 'trilha-ui-button inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gold-dim text-gold hover:border-gold text-sm disabled:opacity-40';
+const card = 'trilha-master-card rounded-xl border border-gold-dim bg-shadow/35 p-4';
 const stage = (n: number) => n <= 4 ? 'Aprendiz' : n <= 8 ? 'Competente' : n <= 12 ? 'Experiente' : n <= 16 ? 'Especialista' : 'Mestre';
 const cv = (c: Character, key: string) => (c.attributes?.[key] ?? 0) + (c.racial_attribute_bonus?.[key] ?? 0);
 const cs = (c: Character, key: string) => (c.skills?.[key] ?? 0) + (c.lineage_skill_bonuses?.[key] ?? 0);
@@ -208,8 +208,8 @@ export default function MasterCharacterEditor(props: Props) {
                 <p className="text-xs text-parchment-dim whitespace-pre-wrap">{r.description || r.notes || r.content || r.duration || r.type || '—'}{table === 'character_effects' && r.is_permanent === false && r.remaining_minutes != null ? ` · ${formatDuration(Number(r.remaining_minutes))} restantes` : ''}</p>
               </div>
               <div className="flex gap-2 shrink-0">
-                <button title="Editar" onClick={() => editRelated(table, r)}><Pencil className="w-4 h-4 text-gold" /></button>
-                <button title="Remover" onClick={() => deleteRelated(table, r.id)}><Trash2 className="w-4 h-4 text-parchment-dim" /></button>
+                <button className="trilha-icon-button" title="Editar" onClick={() => editRelated(table, r)}><Pencil className="w-4 h-4" /></button>
+                <button className="trilha-icon-button is-danger" title="Remover" onClick={() => deleteRelated(table, r.id)}><Trash2 className="w-4 h-4" /></button>
               </div>
             </div>
           ))}
@@ -220,7 +220,7 @@ export default function MasterCharacterEditor(props: Props) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 overflow-y-auto">
-      <div className="min-h-screen bg-gradient-fantasy text-parchment">
+      <div className="trilha-master-editor min-h-screen bg-gradient-fantasy text-parchment">
         <header className="sticky top-0 z-30 border-b border-gold-dim bg-stone/95 backdrop-blur">
           <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -233,21 +233,21 @@ export default function MasterCharacterEditor(props: Props) {
             </div>
             <div className="flex flex-wrap gap-2">
               {!editing ? (
-                <button className={btn} onClick={() => setEditing(true)}><Pencil className="w-4 h-4" />Editar ficha</button>
+                <button className={`${btn} is-primary`} onClick={() => setEditing(true)}><Pencil className="w-4 h-4" />Editar ficha</button>
               ) : (
                 <>
-                  <button className={btn} onClick={() => { setDraft(structuredClone(selected)); setEditing(false); }}><X className="w-4 h-4" />Cancelar</button>
-                  <button className={btn} disabled={saving} onClick={onSave}><Save className="w-4 h-4" />{saving ? 'Salvando...' : 'Salvar alterações'}</button>
+                  <button className={`${btn} is-quiet`} onClick={() => { setDraft(structuredClone(selected)); setEditing(false); }}><X className="w-4 h-4" />Cancelar</button>
+                  <button className={`${btn} is-primary`} disabled={saving} onClick={onSave}><Save className="w-4 h-4" />{saving ? 'Salvando...' : 'Salvar alterações'}</button>
                 </>
               )}
-              <button className={`${btn} text-red-300 border-red-900/70 hover:border-red-500`} onClick={onDeleteCharacter}><Trash2 className="w-4 h-4" />Excluir</button>
-              <button className={btn} onClick={onClose}><X className="w-4 h-4" />Voltar à ficha</button>
+              <button className={`${btn} is-danger`} onClick={onDeleteCharacter}><Trash2 className="w-4 h-4" />Excluir</button>
+              <button className={`${btn} is-quiet`} onClick={onClose}><X className="w-4 h-4" />Voltar à ficha</button>
             </div>
           </div>
           <div className="max-w-7xl mx-auto px-4 pb-3 overflow-x-auto">
-            <nav className="flex gap-2 min-w-max">
+            <nav className="trilha-master-section-nav flex gap-2 min-w-max">
               {sectionDefs.map(([key, label, Icon]) => (
-                <button key={key} onClick={() => setEditorSection(key)} className={`${btn} ${editorSection === key ? 'border-gold bg-gold/15 text-gold-bright' : ''}`}>
+                <button key={key} onClick={() => setEditorSection(key)} className={`${btn} trilha-master-section-button ${editorSection === key ? 'is-active' : ''}`}>
                   <Icon className="w-4 h-4" />{label}
                 </button>
               ))}
@@ -352,7 +352,7 @@ export default function MasterCharacterEditor(props: Props) {
                       <div className="space-y-2">{sub.rows.map((r: any) => (
                         <div key={r.id} className="rounded-lg border border-gold-dim/60 p-3 flex justify-between gap-3">
                           <div className="min-w-0"><b className="text-sm">{r.name}</b><p className="text-xs text-parchment-dim">{r.description || '—'}{r.amount != null && r.unit ? ` · ${formatAmount(Number(r.amount), r.unit)}` : ` · ${r.quantity ?? 1} un.`}{r.durability_max ? ` · ${durabilityLabel(r)} ${r.durability_current}/${r.durability_max}` : ''}{r.freshness_minutes_remaining != null ? ` · ${freshnessLabel(Number(r.freshness_minutes_remaining), Number(r.properties?.shelf_life_minutes || 0) || undefined)} (${formatDuration(Number(r.freshness_minutes_remaining))})` : ''}</p></div>
-                          <div className="flex gap-2 shrink-0"><button title="Editar" onClick={() => editRelated('character_items', r)}><Pencil className="w-4 h-4 text-gold" /></button><button title="Remover" onClick={() => deleteRelated('character_items', r.id)}><Trash2 className="w-4 h-4 text-parchment-dim" /></button></div>
+                          <div className="flex gap-2 shrink-0"><button className="trilha-icon-button" title="Editar" onClick={() => editRelated('character_items', r)}><Pencil className="w-4 h-4" /></button><button className="trilha-icon-button is-danger" title="Remover" onClick={() => deleteRelated('character_items', r.id)}><Trash2 className="w-4 h-4" /></button></div>
                         </div>
                       ))}</div>
                     </div>

@@ -217,9 +217,12 @@ export default function TrilhaRadio({ player }: { player: Player }) {
             <button type="button" className="trilha-radio-close" onClick={() => setIsOpen(false)} aria-label="Fechar Rádio TRILHA" title="Fechar rádio"><X className="w-4 h-4" /></button>
           </div>
 
-          <div className="trilha-radio-controls">
-            {stopped ? <button type="button" onClick={resumeLocal}><Play className="w-3.5 h-3.5" /> Retomar</button> : <button type="button" onClick={stopLocal}><Square className="w-3.5 h-3.5" /> Parar</button>}
-            {isMaster && <button type="button" onClick={skipForEveryone} disabled={skipping || !currentTrack} title="Pular a faixa para toda a mesa"><SkipForward className="w-3.5 h-3.5" /> {skipping ? 'Pulando...' : 'Pular para todos'}</button>}
+          <div className="trilha-radio-control-block">
+            <span className="trilha-radio-control-label">Controles</span>
+            <div className="trilha-radio-controls" aria-label="Controles da Rádio TRILHA">
+              {stopped ? <button type="button" onClick={resumeLocal}><Play className="w-3.5 h-3.5" /> Retomar música</button> : <button type="button" onClick={stopLocal}><Square className="w-3.5 h-3.5" /> Parar música</button>}
+              {isMaster && <button type="button" onClick={skipForEveryone} disabled={skipping || !currentTrack} title="Pular a faixa para toda a mesa"><SkipForward className="w-3.5 h-3.5" /> {skipping ? 'Pulando...' : 'Pular música para todos'}</button>}
+            </div>
           </div>
 
           <label className="trilha-radio-volume" title={`Volume ${Math.round(volume * 100)}%`}>

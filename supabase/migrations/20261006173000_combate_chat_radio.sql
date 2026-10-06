@@ -258,6 +258,7 @@ GRANT EXECUTE ON FUNCTION public.spend_character_movement(uuid,uuid) TO anon, au
 -- 7. ATAQUE — substitui a versão inicial sem alvo
 -- ------------------------------------------------------------
 DROP FUNCTION IF EXISTS public.roll_character_attack(uuid,uuid);
+DROP FUNCTION IF EXISTS public.roll_character_attack(uuid,uuid,uuid);
 CREATE OR REPLACE FUNCTION public.roll_character_attack(
   p_player_id uuid,
   p_character_id uuid,
@@ -397,6 +398,24 @@ END;
 $$;
 REVOKE ALL ON FUNCTION public.roll_character_attack(uuid,uuid,uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.roll_character_attack(uuid,uuid,uuid) TO anon, authenticated;
+
+-- Compatibilidade/diagnóstico para clientes antigos ainda em cache.
+-- Não escolhemos um alvo automaticamente, pois isso poderia atacar o personagem errado.
+CREATE OR REPLACE FUNCTION public.roll_character_attack(
+  p_player_id uuid,
+  p_character_id uuid
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path=public
+AS $$
+BEGIN
+  RAISE EXCEPTION 'Interface de combate desatualizada. Recarregue o site; a versão atual exige selecionar um Alvo antes de Atacar.';
+END;
+$$;
+REVOKE ALL ON FUNCTION public.roll_character_attack(uuid,uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.roll_character_attack(uuid,uuid) TO anon, authenticated;
 
 -- ------------------------------------------------------------
 -- 8. DEFESA DO ALVO
@@ -766,3 +785,6 @@ REVOKE ALL ON FUNCTION public.skip_radio_track(uuid,double precision) FROM PUBLI
 GRANT EXECUTE ON FUNCTION public.skip_radio_track(uuid,double precision) TO anon, authenticated;
 
 COMMIT;
+
+-- Força o PostgREST/Supabase a recarregar imediatamente as assinaturas RPC.
+NOTIFY pgrst, 'reload schema';

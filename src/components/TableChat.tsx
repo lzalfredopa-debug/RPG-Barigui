@@ -264,6 +264,7 @@ export default function TableChat({ player }: { player: Player }) {
   const [open, setOpen] = useState(false);
   const openRef = useRef(false);
   const atBottomRef = useRef(true);
+  const initialScrollDoneRef = useRef(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [online, setOnline] = useState<PresencePayload[]>([]);
   const [draft, setDraft] = useState('');
@@ -324,13 +325,7 @@ export default function TableChat({ player }: { player: Player }) {
     if (open) {
       setUnread(0);
       setNewBelow(false);
-      window.setTimeout(() => {
-        const el = listRef.current;
-        if (el) {
-          el.scrollTop = el.scrollHeight;
-          atBottomRef.current = true;
-        }
-      }, 0);
+      initialScrollDoneRef.current = false;
     }
   }, [open]);
 
@@ -359,13 +354,21 @@ export default function TableChat({ player }: { player: Player }) {
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     requestAnimationFrame(() => {
-      const el = listRef.current;
-      if (!el) return;
-      el.scrollTo({ top: el.scrollHeight, behavior });
-      atBottomRef.current = true;
-      setNewBelow(false);
+      requestAnimationFrame(() => {
+        const el = listRef.current;
+        if (!el) return;
+        el.scrollTo({ top: el.scrollHeight, behavior });
+        atBottomRef.current = true;
+        setNewBelow(false);
+      });
     });
   }, []);
+
+  useEffect(() => {
+    if (!open || loading || messages.length === 0 || initialScrollDoneRef.current) return;
+    initialScrollDoneRef.current = true;
+    scrollToBottom('auto');
+  }, [open, loading, messages.length, scrollToBottom]);
 
   const loadOlderMessages = useCallback(async () => {
     if (loadingOlder || !hasMore || messages.length === 0) return;
@@ -415,7 +418,6 @@ export default function TableChat({ player }: { player: Player }) {
           setHasMore(loaded.length === CHAT_LIMIT);
         }
         setLoading(false);
-        setTimeout(() => scrollToBottom('auto'), 0);
       }
     }
     loadMessages();

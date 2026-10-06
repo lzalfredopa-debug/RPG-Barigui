@@ -2563,14 +2563,34 @@
 }
 .trilha-chat-combat-master button { padding: 5px 8px; font-size: 8px; text-transform: uppercase; }
 
+.trilha-radio-control-block {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(212,164,74,.18);
+}
+.trilha-radio-control-label {
+  display: block;
+  margin-bottom: 5px;
+  color: #9f8b69;
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
 .trilha-radio-controls {
-  margin-top: 9px;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
-.trilha-radio-controls button { padding: 5px 9px; min-height: 30px; color: #c9b98f; }
-.trilha-radio-controls button:last-child { color: #e0c363; border-color: rgba(212,164,74,.50); }
+.trilha-radio-controls button {
+  padding: 6px 10px;
+  min-height: 32px;
+  color: #ead9b7;
+  background: rgba(139,47,35,.16);
+  border-color: rgba(212,164,74,.52);
+}
+.trilha-radio-controls button:last-child { color: #f1d477; border-color: rgba(212,164,74,.68); }
 
 @media (max-width: 560px) {
   .trilha-chat-combat-master { grid-template-columns: 1fr 1fr; }

@@ -83,39 +83,24 @@ function decisionText(decision: MasterDecision | null | undefined) {
 function ActionRollOverlay({ message }: { message: ChatMessage }) {
   const results = message.roll_results || [];
   const initialCount = Math.max(0, Number(message.roll_pool || 0));
-  const total = Math.max(1, results.length);
-  const columns = total <= 3 ? total : total <= 8 ? 4 : 5;
-  const rows = Math.max(1, Math.ceil(total / columns));
 
   return (
     <div className="trilha-roll-overlay" aria-live="polite" aria-label={`Rolagem de ${message.character_name || message.player_name}`}>
       <div className="trilha-roll-overlay-content">
         <div className="trilha-roll-overlay-title">
-          <Sword className="w-4 h-4" />
+          <Sword className="w-5 h-5" />
           <span><b>{message.character_name || message.player_name}</b> · {message.action_name || 'Ação'}</span>
           {message.action_source && <small>{message.action_source}</small>}
         </div>
-        <div className="trilha-roll-overlay-dice" style={{ '--dice-rows': rows } as React.CSSProperties}>
+        <div className="trilha-roll-overlay-dice">
           {results.map((result, index) => {
             const explosion = index >= initialCount;
-            const row = Math.floor(index / columns);
-            const rowStart = row * columns;
-            const rowCount = Math.min(columns, total - rowStart);
-            const columnInRow = index - rowStart;
-            const leftPercent = ((columnInRow + 0.5) / rowCount) * 100;
-            const topPercent = ((row + 0.5) / rows) * 100;
-            const jitterX = ((index * 47 + result * 13) % 19) - 9;
-            const jitterY = ((index * 31 + result * 7) % 15) - 7;
-            const startX = ((index * 67 + result * 29) % 260) - 130;
-            const finalRotation = ((index * 53 + result * 17) % 34) - 17;
-            const explosionIndex = Math.max(0, index - initialCount);
-            const delay = explosion ? 820 + explosionIndex * 180 : index * 58;
+            const offset = ((index * 37) % 140) - 70;
+            const rotation = ((index * 73) % 150) - 75;
             const style = {
-              '--die-left': `calc(${leftPercent}% + ${jitterX}px)`,
-              '--die-top': `calc(${topPercent}% + ${jitterY}px)`,
-              '--die-start-x': `${startX}px`,
-              '--die-final-rot': `${finalRotation}deg`,
-              '--die-delay': `${delay}ms`,
+              '--die-index': index,
+              '--die-x': `${offset}px`,
+              '--die-rot': `${rotation}deg`,
             } as React.CSSProperties;
             return (
               <span
@@ -124,9 +109,7 @@ function ActionRollOverlay({ message }: { message: ChatMessage }) {
                 style={style}
                 title={explosion ? 'Dado explosivo' : undefined}
               >
-                <span className="trilha-die-body" aria-hidden="true">
-                  <b className="trilha-die-value">{result}</b>
-                </span>
+                {result}
                 {explosion && <i>+</i>}
               </span>
             );
@@ -175,8 +158,7 @@ export default function TableChat({ player }: { player: Player }) {
   useEffect(() => {
     if (!animatedRoll) return;
     const totalDice = Math.max(1, animatedRoll.roll_results?.length || 1);
-    const explosionCount = Math.max(0, Number(animatedRoll.roll_explosion_count || 0));
-    const timeout = window.setTimeout(() => setAnimatedRoll(null), Math.min(4600, 2850 + explosionCount * 220 + Math.max(0, totalDice - 8) * 45));
+    const timeout = window.setTimeout(() => setAnimatedRoll(null), Math.min(4300, 1900 + totalDice * 115));
     return () => window.clearTimeout(timeout);
   }, [animatedRoll]);
 

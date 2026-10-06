@@ -2390,3 +2390,190 @@
   .trilha-dice3d-loading { animation: none; }
 }
 
+
+/* ============================================================
+   TRILHA — 061026 · Combate oposto, chat e rádio
+   ============================================================ */
+.trilha-combat-turn-reset,
+.trilha-combat-secondary-action,
+.trilha-radio-controls button,
+.trilha-chat-combat-master button,
+.trilha-chat-new-message {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(212,164,74,.42);
+  border-radius: 7px;
+  color: #ead9b7;
+  background: rgba(26,26,26,.34);
+  font-size: 10px;
+  font-weight: 700;
+}
+.trilha-combat-turn-reset:hover,
+.trilha-combat-secondary-action:hover,
+.trilha-radio-controls button:hover,
+.trilha-chat-combat-master button:hover,
+.trilha-chat-new-message:hover { border-color: rgba(212,164,74,.78); color: #f2d985; background: rgba(139,47,35,.18); }
+.trilha-combat-turn-reset:disabled,
+.trilha-combat-secondary-action:disabled,
+.trilha-radio-controls button:disabled,
+.trilha-chat-combat-master button:disabled { opacity: .42; cursor: not-allowed; }
+.trilha-combat-turn-reset { padding: 7px 10px; font-family: 'Cinzel', serif; }
+.trilha-combat-secondary-action { padding: 6px 10px; }
+.trilha-combat-token {
+  min-height: 50px;
+  padding: 9px 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgba(212,164,74,.22);
+  border-radius: 8px;
+  background: rgba(0,0,0,.13);
+  color: #978b74;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.trilha-combat-token b { font-size: 18px; line-height: 1; }
+.trilha-combat-token.is-ready { color: #dbc16f; border-color: rgba(212,164,74,.47); }
+.trilha-combat-token.is-spent { color: #756d60; opacity: .72; }
+
+.trilha-defense-prompt {
+  padding: 15px;
+  border: 1px solid rgba(212,164,74,.55);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 0 0, rgba(139,47,35,.14), transparent 38%),
+    rgba(26,26,26,.44);
+  box-shadow: inset 0 0 0 1px rgba(234,217,183,.025);
+}
+.trilha-defense-action {
+  min-height: 76px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid rgba(212,164,74,.34);
+  border-radius: 9px;
+  color: #ead9b7;
+  background: rgba(0,0,0,.18);
+  text-align: left;
+}
+.trilha-defense-action b { color: #e4c466; font-family: 'Cinzel', serif; font-size: 11px; }
+.trilha-defense-action span { color: #aa9b7f; font-size: 9px; line-height: 1.3; }
+.trilha-defense-action:hover:not(:disabled) { border-color: rgba(212,164,74,.72); background: rgba(139,47,35,.16); }
+.trilha-defense-action:disabled { opacity: .35; cursor: not-allowed; }
+
+.trilha-chat-new-message {
+  position: absolute;
+  left: 50%;
+  bottom: 61px;
+  z-index: 4;
+  transform: translateX(-50%);
+  padding: 5px 10px;
+  color: #f2dda2;
+  background: rgba(47,37,27,.96);
+  box-shadow: 0 5px 18px rgba(0,0,0,.28);
+}
+.trilha-chat-roll-breakdown {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.trilha-chat-roll-breakdown > div {
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr) auto;
+  gap: 7px;
+  align-items: start;
+  padding: 5px 6px;
+  border: 1px solid rgba(205,154,63,.18);
+  border-radius: 5px;
+  background: rgba(0,0,0,.16);
+  font-size: 9px;
+}
+.trilha-chat-roll-breakdown b { color: #e5c568; font-family: 'Cinzel', serif; }
+.trilha-chat-roll-breakdown span { color: #aa9c82; overflow-wrap: anywhere; }
+.trilha-chat-roll-breakdown strong { color: #e9d4a0; }
+
+.trilha-chat-combat-defense {
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(212,164,74,.20);
+}
+.trilha-chat-passive-defense {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border: 1px solid rgba(212,164,74,.2);
+  border-radius: 6px;
+  color: #d8c69e;
+  background: rgba(0,0,0,.14);
+  font-size: 9px;
+}
+.trilha-chat-combat-result {
+  margin-top: 9px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border: 1px solid rgba(212,164,74,.28);
+  border-radius: 7px;
+  background: rgba(0,0,0,.18);
+  font-size: 9px;
+}
+.trilha-chat-combat-result b { font-family: 'Cinzel', serif; letter-spacing: .07em; }
+.trilha-chat-combat-result span { color: #b3a58a; }
+.trilha-chat-combat-result strong { color: #efd476; }
+.trilha-chat-combat-result.is-success { border-color: rgba(212,164,74,.52); }
+.trilha-chat-combat-result.is-success b { color: #e8cb72; }
+.trilha-chat-combat-result.is-failure { border-color: rgba(139,47,35,.44); }
+.trilha-chat-combat-result.is-failure b { color: #d9aaa0; }
+.trilha-chat-combat-master {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto auto;
+  gap: 5px;
+}
+.trilha-chat-combat-master label {
+  min-height: 34px;
+  padding: 5px 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+  border: 1px solid rgba(212,164,74,.28);
+  border-radius: 7px;
+  color: #b7a687;
+  background: rgba(0,0,0,.16);
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.trilha-chat-combat-master select {
+  min-width: 46px;
+  border: 1px solid rgba(212,164,74,.34);
+  border-radius: 5px;
+  color: #f0d994;
+  background: #211c17;
+  padding: 3px 5px;
+}
+.trilha-chat-combat-master button { padding: 5px 8px; font-size: 8px; text-transform: uppercase; }
+
+.trilha-radio-controls {
+  margin-top: 9px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.trilha-radio-controls button { padding: 5px 9px; min-height: 30px; color: #c9b98f; }
+.trilha-radio-controls button:last-child { color: #e0c363; border-color: rgba(212,164,74,.50); }
+
+@media (max-width: 560px) {
+  .trilha-chat-combat-master { grid-template-columns: 1fr 1fr; }
+  .trilha-chat-combat-master label { grid-column: 1 / -1; }
+  .trilha-chat-new-message { bottom: 62px; white-space: nowrap; }
+}

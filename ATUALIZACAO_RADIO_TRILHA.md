@@ -10,7 +10,7 @@ Implementação simples de uma playlist contínua hospedada no Supabase Storage.
 - O navegador lê a duração das faixas e calcula qual música e qual ponto deveriam estar tocando naquele instante.
 - Quem entra depois é levado ao ponto atual da programação, em vez de começar do início.
 - Ao terminar a última faixa, a programação volta para a primeira automaticamente.
-- Não existe play, pause, avançar ou trocar faixa. O único controle do jogador é volume.
+- Todos podem parar/retomar a rádio localmente. O Mestre também pode pular a faixa para toda a mesa; o avanço global é sincronizado pelo Supabase.
 - O volume fica salvo no próprio navegador.
 - Por regra dos navegadores, se o autoplay for bloqueado a rádio começa automaticamente na primeira interação do jogador com a página.
 

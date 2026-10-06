@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { LogOut, Scroll, MessageSquare, Lightbulb, Plus, User, Send, Loader2, Save, X, Lock, Info, Shield, Sword, Trash2, Pencil, ImagePlus, Check, Ban, BookOpen, UsersRound, Route, Package, Brain } from 'lucide-react';
-import { supabase, type Player, type PersonalNote, type MasterMessage, type Character, type ClassNode, type CombatEquipmentSummary } from '@/lib/supabase';
+import { supabase, type Player, type PersonalNote, type MasterMessage, type Character, type ClassNode, type CombatEquipmentSummary, type CombatTarget, type CombatAction } from '@/lib/supabase';
 import { ATTRIBUTE_GROUPS, SKILL_GROUPS } from '@/components/CharacterCreation';
 import { renderCharacterText } from '@/lib/characterLanguage';
 import { attributeChoices, lineageBenefitText, raceBenefitText, type RaceDefinition } from '@/lib/ancestry';
@@ -128,7 +128,7 @@ function RulesPanel({ playerName }: {
 
     <section className={card}><h3 className={title}>💤 Descanso e Recuperação</h3><div className="grid sm:grid-cols-2 gap-4 text-sm"><div><b className="text-gold">Descanso Curto · 4 horas</b><p className="text-parchment-dim mt-1">PV: Vigor × 2<br />PM: maior Atributo Mental × 2</p></div><div><b className="text-gold">Descanso Longo · 8 horas</b><p className="text-parchment-dim mt-1">Recupera todos os PV e PM.</p></div></div><p className="text-xs text-parchment-dim mt-4 border-t border-gold-dim/50 pt-3">A passagem do tempo também afeta Fome e Sede. O Mestre controla o relógio da mesa.</p></section>
 
-    <section className={card}><h3 className={title}>⚔️ Combate</h3><div className="space-y-4 text-sm text-parchment-dim"><div><b className="text-gold">Iniciativa</b><p>Percepção + Vigilância. A maior age primeiro; em empate, vence a maior Percepção.</p></div><div><b className="text-gold">Turno</b><p>1 Ação + 1 Movimento. O Movimento pode ser dividido antes e depois da Ação. A Ação pode atacar, conjurar, usar habilidade/item, interagir ou realizar um segundo Movimento.</p></div><div><b className="text-gold">Reação Defensiva</b><p>1 reação para Evasão ou Bloqueio. Depois de usada, retorna quando chega novamente o turno do personagem. Sem reação disponível, usa-se a Defesa Passiva.</p></div><div className="grid sm:grid-cols-3 gap-3"><div className="bg-stone/40 rounded-lg p-3"><b className="text-parchment">Evasão</b><br />Agilidade + Defesa − penalidades</div><div className="bg-stone/40 rounded-lg p-3"><b className="text-parchment">Bloqueio</b><br />Força + Defesa; o Broquel usa Destreza. Escudos podem conceder bônus.</div><div className="bg-stone/40 rounded-lg p-3"><b className="text-parchment">Defesa Passiva</b><br />⌊Defesa ÷ 2⌋ sucessos automáticos</div></div><div><b className="text-gold">Ataque × Defesa</b><p>É um Teste Oposto. O ataque precisa superar os sucessos da defesa; <b className="text-parchment">empates favorecem o defensor</b>. Sucessos excedentes do atacante aumentam o dano.</p></div><div><b className="text-gold">Dano</b><p>Dano Bruto = Dano Base + Sucessos Excedentes. Dano Final = Dano Bruto − Armadura. Um ataque que acerta causa no mínimo 1 PV.</p></div></div></section>
+    <section className={card}><h3 className={title}>⚔️ Combate</h3><div className="space-y-4 text-sm text-parchment-dim"><div><b className="text-gold">Iniciativa</b><p>Percepção + Vigilância. A maior age primeiro; em empate, vence a maior Percepção.</p></div><div><b className="text-gold">Turno</b><p>1 Ação + 1 Movimento. O Movimento pode ser dividido antes e depois da Ação. A Ação pode atacar, conjurar, usar habilidade/item, interagir ou realizar um segundo Movimento.</p></div><div><b className="text-gold">Reação Defensiva</b><p>1 reação para Evasão ou Bloqueio. Depois de usada, retorna quando chega novamente o turno do personagem. Sem reação disponível, usa-se a Defesa Passiva.</p></div><div className="grid sm:grid-cols-3 gap-3"><div className="bg-stone/40 rounded-lg p-3"><b className="text-parchment">Evasão</b><br />Agilidade + Defesa − penalidades</div><div className="bg-stone/40 rounded-lg p-3"><b className="text-parchment">Bloqueio</b><br />Força + Defesa; o Broquel usa Destreza. Escudos podem conceder bônus.</div><div className="bg-stone/40 rounded-lg p-3"><b className="text-parchment">Defesa Passiva</b><br />⌊Defesa ÷ 2⌋ sucessos automáticos</div></div><div><b className="text-gold">Ataque × Defesa</b><p>É um Teste Oposto. O ataque precisa superar os sucessos da defesa; <b className="text-parchment">empates favorecem o defensor</b>. Sucessos excedentes do atacante aumentam o dano.</p></div><div><b className="text-gold">Dano</b><p>Dano Bruto = Dano Base + Sucessos Excedentes. Dano Final = Dano Bruto − Armadura. Um ataque que acerta causa no mínimo 1 PV.</p></div><div><b className="text-gold">Equipamento sem proficiência</b><p>O equipamento continua utilizável, mas seu benefício é reduzido pelo déficit de requisitos: armas perdem Dano Base, escudos perdem bônus de Bloqueio e armaduras perdem Absorção. Os requisitos permanecem ocultos ao jogador.</p></div></div></section>
 
     <div className="grid md:grid-cols-2 gap-5"><section className={card}><h3 className={title}>🛡️ Equipamentos</h3><div className="space-y-2 text-sm text-parchment-dim"><p><b className="text-parchment">Armas:</b> a falta de proficiência reduz o Dano efetivo.</p><p><b className="text-parchment">Armaduras:</b> reduzem dano por Absorção; falta de proficiência reduz a Absorção, mas não remove penalidades.</p><p><b className="text-parchment">Escudos:</b> aumentam o Bloqueio; falta de proficiência reduz esse bônus.</p><p>Somente o Mestre adiciona itens à ficha. O jogador decide o que equipar entre os itens que recebeu.</p></div></section><section className={card}><h3 className={title}>🤝 Ajudar</h3><p className="text-sm text-parchment-dim">Gaste sua <b className="text-parchment">Ação</b> para conceder <b className="text-parchment">+1 sucesso automático</b> ao teste de um aliado. Descreva a ajuda e relacione-a a um de seus próprios Atributos ou Habilidades. Um teste recebe no máximo +1 sucesso por Ajudar.</p></section></div>
 
@@ -282,6 +282,8 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
     const [equipmentSummary, setEquipmentSummary] = useState<CombatEquipmentSummary | null>(null);
     const [legacyAttribute, setLegacyAttribute] = useState(''), [legacySkill1, setLegacySkill1] = useState(''), [legacySkill2, setLegacySkill2] = useState(''), [legacySaving, setLegacySaving] = useState(false);
     const [rollingAttack, setRollingAttack] = useState(false), [attackRollError, setAttackRollError] = useState('');
+    const [combatTargets, setCombatTargets] = useState<CombatTarget[]>([]), [selectedTargetId, setSelectedTargetId] = useState('');
+    const [pendingDefenses, setPendingDefenses] = useState<CombatAction[]>([]), [combatBusy, setCombatBusy] = useState(false);
     const [referenceView, setReferenceView] = useState<ReferenceView>(null);
     const loadCharacters = useCallback(async () => { if (masterMode) {
         setCharactersLoading(false);
@@ -309,12 +311,44 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
     }
     else
         setEquipmentSummary(((data || [])[0] || null) as CombatEquipmentSummary | null); }, []);
+    const loadCombatTargets = useCallback(async (id: string) => { const { data, error } = await supabase.rpc('get_combat_targets', { p_character_id: id }); if (error) {
+        console.error(error);
+        setCombatTargets([]);
+        return;
+    } setCombatTargets((data || []) as CombatTarget[]); }, []);
+    const loadPendingDefenses = useCallback(async (id: string) => { const { data, error } = await supabase.from('combat_actions').select('*').eq('target_character_id', id).eq('status', 'awaiting_defense').order('created_at', { ascending: true }); if (error) {
+        console.error(error);
+        setPendingDefenses([]);
+        return;
+    } setPendingDefenses((data || []) as CombatAction[]); }, []);
+    const reloadSelectedCharacter = useCallback(async (id: string) => { const { data } = await supabase.from('characters').select('*').eq('id', id).maybeSingle(); if (!data) return; const c = data as Character; setSelectedCharacter(current => current?.id === id ? c : current); setCharacters(xs => xs.map(x => x.id === c.id ? c : x)); }, []);
+    useEffect(() => { setSelectedTargetId(''); }, [selectedCharacter?.id]);
     useEffect(() => { if (selectedCharacter) {
         loadRelations(selectedCharacter.id);
         loadCombatEquipment(selectedCharacter.id);
+        loadCombatTargets(selectedCharacter.id);
+        loadPendingDefenses(selectedCharacter.id);
     }
-    else
-        setEquipmentSummary(null); }, [selectedCharacter, loadRelations, loadCombatEquipment]);
+    else {
+        setEquipmentSummary(null);
+        setCombatTargets([]);
+        setPendingDefenses([]);
+    } }, [selectedCharacter?.id, loadRelations, loadCombatEquipment, loadCombatTargets, loadPendingDefenses]);
+    useEffect(() => {
+        if (!selectedCharacter) return;
+        const id = selectedCharacter.id;
+        const channel = supabase.channel(`trilha-combate-personagem-${id}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'combat_actions', filter: `target_character_id=eq.${id}` }, (payload) => {
+                loadPendingDefenses(id);
+                const next = payload.new as Partial<CombatAction>;
+                if (next.status === 'resolved' || next.status === 'void') reloadSelectedCharacter(id);
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'combat_actions', filter: `attacker_character_id=eq.${id}` }, () => {
+                reloadSelectedCharacter(id);
+            })
+            .subscribe();
+        return () => { supabase.removeChannel(channel); };
+    }, [selectedCharacter?.id, loadPendingDefenses, reloadSelectedCharacter]);
     const patchCharacter = async (patch: Partial<Character>) => { if (!selectedCharacter)
         return; setSaving(true); let query = supabase.from('characters').update(patch).eq('id', selectedCharacter.id); if (!masterMode)
         query = query.eq('player_id', player.id); const { data, error } = await query.select().single(); if (error)
@@ -388,11 +422,38 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
     } await Promise.all([loadRelations(selectedCharacter.id), loadCombatEquipment(selectedCharacter.id)]); };
     const rollAttack = async () => {
         if (!selectedCharacter || rollingAttack) return;
+        if (!selectedTargetId) { setAttackRollError('Selecione um alvo antes de atacar.'); return; }
         setAttackRollError('');
         setRollingAttack(true);
-        const { error } = await supabase.rpc('roll_character_attack', { p_player_id: player.id, p_character_id: selectedCharacter.id });
+        const { error } = await supabase.rpc('roll_character_attack', { p_player_id: player.id, p_character_id: selectedCharacter.id, p_target_character_id: selectedTargetId });
         if (error) setAttackRollError(error.message || 'Não foi possível realizar o ataque.');
+        else await reloadSelectedCharacter(selectedCharacter.id);
         setRollingAttack(false);
+    };
+    const defendCombat = async (action: CombatAction, kind: 'evasion' | 'block' | 'passive') => {
+        if (!selectedCharacter || combatBusy) return;
+        setCombatBusy(true);
+        setAttackRollError('');
+        const { error } = await supabase.rpc('defend_combat_action', { p_player_id: player.id, p_character_id: selectedCharacter.id, p_combat_action_id: action.id, p_defense_kind: kind });
+        if (error) setAttackRollError(error.message || 'Não foi possível registrar a defesa.');
+        await Promise.all([loadPendingDefenses(selectedCharacter.id), reloadSelectedCharacter(selectedCharacter.id), loadCombatEquipment(selectedCharacter.id)]);
+        setCombatBusy(false);
+    };
+    const startTurn = async () => {
+        if (!selectedCharacter || combatBusy) return;
+        setCombatBusy(true);
+        const { error } = await supabase.rpc('start_character_turn', { p_player_id: player.id, p_character_id: selectedCharacter.id });
+        if (error) setAttackRollError(error.message || 'Não foi possível iniciar o turno.');
+        else await reloadSelectedCharacter(selectedCharacter.id);
+        setCombatBusy(false);
+    };
+    const spendMovement = async () => {
+        if (!selectedCharacter || combatBusy) return;
+        setCombatBusy(true);
+        const { error } = await supabase.rpc('spend_character_movement', { p_player_id: player.id, p_character_id: selectedCharacter.id });
+        if (error) setAttackRollError(error.message || 'Não foi possível registrar o movimento.');
+        else await reloadSelectedCharacter(selectedCharacter.id);
+        setCombatBusy(false);
     };
     const addJourney = async (table: string) => { const configs: Record<string, [
         string,
@@ -532,10 +593,57 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
           <section><div className="trilha-section-heading"><span>02</span><h3 className="font-display">Habilidades</h3><i /></div><p className="trilha-section-note">As 48 habilidades permanecem visíveis para que a evolução do personagem possa ser acompanhada desde o início.</p><div className="grid lg:grid-cols-2 gap-4">{SKILL_GROUPS.map(g => <div key={g.name} className="trilha-skill-card"><h4 className="font-display">{g.name}</h4>{g.skills.map(sk => <div key={sk.name} className="trilha-stat-row"><span>{sk.name}<Tip><b>{sk.description}</b><br />{sk.examples}</Tip></span><span className="flex items-center gap-2"><Dots base={selectedCharacter.skills?.[sk.name] ?? 0} bonus={selectedCharacter.lineage_skill_bonuses?.[sk.name] ?? 0} bonusTitle="Bônus de linhagem"/></span></div>)}</div>)}</div></section>
           <div className="trilha-lock-note"><Lock className="w-4 h-4"/>Atributos, habilidades e progressão são alterados apenas pelas regras de evolução do personagem.</div>
         </div>}
-        {tab === 'combate' && <div className="space-y-6"><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">{[['PV', selectedCharacter.current_hp ?? maxHp(selectedCharacter), maxHp(selectedCharacter), 'current_hp'], ['PM', selectedCharacter.current_mp ?? maxMp(selectedCharacter), maxMp(selectedCharacter), 'current_mp']].map(([label, current, max, kind]) => <div key={String(label)} className="bg-shadow/50 border border-gold-dim rounded-xl p-4"><div className="flex justify-between"><span className="text-xs text-gold">{label}</span><b className="font-display text-gold-bright">{current} / {max}</b></div><div className="flex gap-2 mt-3"><button disabled={saving || Number(current) <= 0} onClick={() => adjustResource(kind as 'current_hp' | 'current_mp', -1)} className="flex-1 border border-gold-dim rounded py-1 disabled:opacity-30">−</button><button disabled={saving || Number(current) >= Number(max)} onClick={() => adjustResource(kind as 'current_hp' | 'current_mp', 1)} className="flex-1 border border-gold-dim rounded py-1 disabled:opacity-30">+</button></div></div>)}<div className="bg-shadow/50 border border-gold-dim rounded-xl p-4"><span className="text-xs text-gold">Fome · {hungerStatus(currentHunger, hungerMaximum)}</span><div className="font-display text-xl text-gold-bright mt-1">{currentHunger} / {hungerMaximum}</div></div><div className="bg-shadow/50 border border-gold-dim rounded-xl p-4"><span className="text-xs text-gold">Sede · {thirstStatus(currentThirst)}</span><div className="font-display text-xl text-gold-bright mt-1">{currentThirst} / 6</div></div></div><div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">{calcCards.slice(2).map(([label, value, tip]) => <div key={String(label)} className="bg-shadow/50 border border-gold-dim rounded-lg p-4"><div className="text-xs text-parchment-dim">{label}<Tip>{tip}</Tip></div><div className="font-display text-xl text-gold-bright mt-1">{value}</div></div>)}</div><section><h3 className="font-display text-gold mb-3 flex gap-2"><Sword className="w-5 h-5"/>Equipamento em uso</h3><div className="grid md:grid-cols-3 gap-3"><div className="bg-shadow/40 border border-gold-dim rounded-xl p-4"><div className="text-xs text-gold">Arma</div><b className="font-display text-gold-bright">{equipmentSummary?.weapon_name || 'Nenhuma'}</b>{equipmentSummary?.weapon_name && <><p className="text-xs text-parchment-dim mt-1">Dano efetivo: {equipmentSummary.weapon_effective_damage}</p>{equipmentSummary.weapon_is_proficient === false && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">Você ainda não é proficiente com essa arma.</p>}<button type="button" onClick={rollAttack} disabled={rollingAttack || equippedWeaponBroken} className="mt-3 w-full min-h-10 rounded-lg border border-gold bg-gradient-to-r from-blood/90 to-gold/80 px-3 py-2 font-display text-sm text-parchment shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"><Sword className="w-4 h-4"/>{equippedWeaponBroken ? 'Arma quebrada' : rollingAttack ? 'Rolando...' : 'Atacar'}</button>{attackRollError && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">{attackRollError}</p>}</>}</div><div className="bg-shadow/40 border border-gold-dim rounded-xl p-4"><div className="text-xs text-gold">Armadura</div><b className="font-display text-gold-bright">{equipmentSummary?.armor_name || 'Nenhuma'}</b>{equipmentSummary?.armor_name && <><p className="text-xs text-parchment-dim mt-1">Absorção efetiva: {armorAbsorption}{equipmentSummary.armor_evasion_penalty ? ` · Evasão −${equipmentSummary.armor_evasion_penalty}` : ''}{equipmentSummary.armor_movement_penalty ? ` · Movimento −${equipmentSummary.armor_movement_penalty} m` : ''}</p>{equipmentSummary.armor_is_proficient === false && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">Você ainda não é proficiente com esta armadura.</p>}</>}</div><div className="bg-shadow/40 border border-gold-dim rounded-xl p-4"><div className="text-xs text-gold">Escudo</div><b className="font-display text-gold-bright">{equipmentSummary?.shield_name || 'Nenhum'}</b>{equipmentSummary?.shield_name && <><p className="text-xs text-parchment-dim mt-1">Bônus efetivo de Bloqueio: +{equipmentSummary.shield_effective_bonus}{equipmentSummary.shield_evasion_penalty ? ` · Evasão −${equipmentSummary.shield_evasion_penalty}` : ''}{equipmentSummary.shield_movement_penalty ? ` · Movimento −${equipmentSummary.shield_movement_penalty} m` : ''}</p>{equipmentSummary.shield_is_proficient === false && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">Você ainda não é proficiente com este escudo.</p>}</>}</div></div></section><section><h3 className="font-display text-gold mb-3">Equipamentos de Combate disponíveis</h3>{combatItems.length === 0 ? <Empty>O Mestre ainda não adicionou equipamentos de combate a este personagem.</Empty> : <div className="grid sm:grid-cols-2 gap-3">{combatItems.map(i => { const slot = i.weapon_id ? 'weapon' : i.armor_id ? 'armor' : 'shield'; const equipped = i.equip_slot === slot; const durability = durabilityLabel(i); const broken = i.durability_current === 0; return <div key={i.id} className="bg-shadow/40 border border-gold-dim rounded-lg p-4 flex justify-between gap-3"><div><b className="text-gold-bright">{i.name}</b><p className="text-xs text-parchment-dim">{i.type} · ×{i.quantity}{durability ? ` · ${durability} ${i.durability_current}/${i.durability_max}` : ''}</p>{durability === 'Danificado' && <p className="text-[10px] text-gold mt-1">+1 dificuldade quando o item for essencial ao teste</p>}</div><button disabled={broken} onClick={() => setItemSlot(i, equipped ? null : slot)} className="text-xs border border-gold-dim rounded-lg px-3 py-2 text-gold disabled:opacity-30">{broken ? 'Quebrado' : equipped ? 'Desequipar' : 'Equipar'}</button></div>; })}</div>}</section><section><h3 className="font-display text-gold mb-3 flex gap-2"><Shield className="w-5 h-5"/>Condições & Efeitos</h3>{conditions.length === 0 && activeEffects.length === 0 ? <Empty /> : <div className="grid sm:grid-cols-2 gap-3">{conditions.map(c => <div key={c.id} className="bg-shadow/40 border border-gold-dim rounded-lg p-3"><b>{c.condition}</b><p className="text-xs">{renderCharacterText(c.notes, selectedCharacter)}</p></div>)}{activeEffects.map(e => <div key={e.id} className="bg-shadow/40 border border-gold-dim rounded-lg p-3"><b>{e.name}</b><p className="text-xs">{renderCharacterText(e.description, selectedCharacter)}</p>{e.is_permanent === false && e.remaining_minutes != null && <p className="text-[10px] text-gold mt-1">Restante: {formatDuration(e.remaining_minutes)}</p>}</div>)}</div>}</section></div>}
-        {tab === 'classes' && <ClassDiscoveryTree character={selectedCharacter} nodes={classNodes}/>}
-        {tab === 'catalogo' && <CatalogPage playerId={player.id} isMaster={masterMode || isMaster}/>}
-        {tab === 'regras' && <RulesPanel playerName={player.player_name || player.alcunha}/>}
+        {tab === 'combate' && <div className="space-y-6">
+          <section className="trilha-combat-turn rounded-xl border border-gold-dim bg-shadow/45 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div><p className="text-[10px] uppercase tracking-[.16em] text-gold/70">Recursos do turno</p><h3 className="font-display text-lg text-gold-bright">Ação · Movimento · Reação</h3></div>
+              <button type="button" onClick={startTurn} disabled={combatBusy} className="trilha-combat-turn-reset">Iniciar / renovar turno</button>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mt-3">
+              {[
+                ['Ação', selectedCharacter.combat_action_available !== false],
+                ['Movimento', selectedCharacter.combat_movement_available !== false],
+                ['Reação', selectedCharacter.combat_reaction_available !== false],
+              ].map(([label, available]) => <div key={String(label)} className={`trilha-combat-token ${available ? 'is-ready' : 'is-spent'}`}><span>{String(label)}</span><b>{available ? '●' : '○'}</b></div>)}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button type="button" onClick={spendMovement} disabled={combatBusy || selectedCharacter.combat_movement_available === false} className="trilha-combat-secondary-action">Usar Movimento</button>
+              <span className="text-[10px] text-parchment-dim self-center">A Reação retorna quando você inicia novamente o turno.</span>
+            </div>
+          </section>
+
+          {pendingDefenses.length > 0 && <section className="space-y-3">
+            {pendingDefenses.map(action => <div key={action.id} className="trilha-defense-prompt">
+              <div className="flex items-start gap-3"><Shield className="w-5 h-5 text-gold mt-0.5"/><div className="min-w-0"><p className="text-[10px] uppercase tracking-[.14em] text-gold/70">Ataque recebido</p><h3 className="font-display text-gold-bright">{action.attacker_name} ataca você</h3><p className="text-xs text-parchment-dim mt-1">{action.weapon_name} · escolha sua defesa.</p></div></div>
+              <div className="grid sm:grid-cols-3 gap-2 mt-4">
+                <button type="button" disabled={combatBusy || selectedCharacter.combat_reaction_available === false} onClick={() => defendCombat(action, 'evasion')} className="trilha-defense-action"><b>Evadir</b><span>Agilidade + Defesa − penalidades</span></button>
+                <button type="button" disabled={combatBusy || selectedCharacter.combat_reaction_available === false || !equipmentSummary?.shield_name} onClick={() => defendCombat(action, 'block')} className="trilha-defense-action"><b>Bloquear</b><span>{equipmentSummary?.shield_name ? `${blockAttribute} + Defesa + escudo` : 'Requer escudo equipado'}</span></button>
+                <button type="button" disabled={combatBusy} onClick={() => defendCombat(action, 'passive')} className="trilha-defense-action"><b>Defesa Passiva</b><span>{Math.floor(s(selectedCharacter, 'Defesa') / 2)} sucesso(s) automático(s)</span></button>
+              </div>
+              {selectedCharacter.combat_reaction_available === false && <p className="mt-2 text-xs text-gold">Sua Reação já foi usada: Evasão e Bloqueio estão indisponíveis; use Defesa Passiva.</p>}
+            </div>)}
+          </section>}
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {[['PV', selectedCharacter.current_hp ?? maxHp(selectedCharacter), maxHp(selectedCharacter), 'current_hp'], ['PM', selectedCharacter.current_mp ?? maxMp(selectedCharacter), maxMp(selectedCharacter), 'current_mp']].map(([label, current, max, kind]) => <div key={String(label)} className="bg-shadow/50 border border-gold-dim rounded-xl p-4"><div className="flex justify-between"><span className="text-xs text-gold">{label}</span><b className="font-display text-gold-bright">{current} / {max}</b></div><div className="flex gap-2 mt-3"><button disabled={saving || Number(current) <= 0} onClick={() => adjustResource(kind as 'current_hp' | 'current_mp', -1)} className="flex-1 border border-gold-dim rounded py-1 disabled:opacity-30">−</button><button disabled={saving || Number(current) >= Number(max)} onClick={() => adjustResource(kind as 'current_hp' | 'current_mp', 1)} className="flex-1 border border-gold-dim rounded py-1 disabled:opacity-30">+</button></div></div>)}
+            <div className="bg-shadow/50 border border-gold-dim rounded-xl p-4"><span className="text-xs text-gold">Fome · {hungerStatus(currentHunger, hungerMaximum)}</span><div className="font-display text-xl text-gold-bright mt-1">{currentHunger} / {hungerMaximum}</div></div>
+            <div className="bg-shadow/50 border border-gold-dim rounded-xl p-4"><span className="text-xs text-gold">Sede · {thirstStatus(currentThirst)}</span><div className="font-display text-xl text-gold-bright mt-1">{currentThirst} / 6</div></div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">{calcCards.slice(2).map(([label, value, tip]) => <div key={String(label)} className="bg-shadow/50 border border-gold-dim rounded-lg p-4"><div className="text-xs text-parchment-dim">{label}<Tip>{tip}</Tip></div><div className="font-display text-xl text-gold-bright mt-1">{value}</div></div>)}</div>
+
+          <section><h3 className="font-display text-gold mb-3 flex gap-2"><Sword className="w-5 h-5"/>Equipamento em uso</h3><div className="grid md:grid-cols-3 gap-3">
+            <div className="bg-shadow/40 border border-gold-dim rounded-xl p-4"><div className="text-xs text-gold">Arma</div><b className="font-display text-gold-bright">{equipmentSummary?.weapon_name || 'Nenhuma'}</b>{equipmentSummary?.weapon_name && <><p className="text-xs text-parchment-dim mt-1">Dano efetivo: {equipmentSummary.weapon_effective_damage}</p>{equipmentSummary.weapon_is_proficient === false && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">Uso não proficiente: o dano base já está reduzido pelo déficit.</p>}<label className="block mt-3 text-[10px] uppercase tracking-wide text-gold/80">Alvo<select value={selectedTargetId} onChange={e => setSelectedTargetId(e.target.value)} className="mt-1 w-full bg-shadow/70 border border-gold-dim rounded-lg px-2 py-2 text-xs text-parchment normal-case tracking-normal"><option value="">Selecione...</option>{combatTargets.map(target => <option key={target.id} value={target.id}>{target.name}</option>)}</select></label><button type="button" onClick={rollAttack} disabled={rollingAttack || equippedWeaponBroken || selectedCharacter.combat_action_available === false || !selectedTargetId} className="mt-3 w-full min-h-10 rounded-lg border border-gold bg-gradient-to-r from-blood/90 to-gold/80 px-3 py-2 font-display text-sm text-parchment shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"><Sword className="w-4 h-4"/>{equippedWeaponBroken ? 'Arma quebrada' : selectedCharacter.combat_action_available === false ? 'Ação já utilizada' : rollingAttack ? 'Rolando...' : 'Atacar'}</button>{attackRollError && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">{attackRollError}</p>}</>}</div>
+            <div className="bg-shadow/40 border border-gold-dim rounded-xl p-4"><div className="text-xs text-gold">Armadura</div><b className="font-display text-gold-bright">{equipmentSummary?.armor_name || 'Nenhuma'}</b>{equipmentSummary?.armor_name && <><p className="text-xs text-parchment-dim mt-1">Absorção efetiva: {armorAbsorption}{equipmentSummary.armor_evasion_penalty ? ` · Evasão −${equipmentSummary.armor_evasion_penalty}` : ''}{equipmentSummary.armor_movement_penalty ? ` · Movimento −${equipmentSummary.armor_movement_penalty} m` : ''}</p>{equipmentSummary.armor_is_proficient === false && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">Uso não proficiente: a absorção já está reduzida pelo déficit.</p>}</>}</div>
+            <div className="bg-shadow/40 border border-gold-dim rounded-xl p-4"><div className="text-xs text-gold">Escudo</div><b className="font-display text-gold-bright">{equipmentSummary?.shield_name || 'Nenhum'}</b>{equipmentSummary?.shield_name && <><p className="text-xs text-parchment-dim mt-1">Bônus efetivo de Bloqueio: +{equipmentSummary.shield_effective_bonus}{equipmentSummary.shield_evasion_penalty ? ` · Evasão −${equipmentSummary.shield_evasion_penalty}` : ''}{equipmentSummary.shield_movement_penalty ? ` · Movimento −${equipmentSummary.shield_movement_penalty} m` : ''}</p>{equipmentSummary.shield_is_proficient === false && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">Uso não proficiente: o bônus de Bloqueio já está reduzido pelo déficit.</p>}</>}</div>
+          </div></section>
+
+          <section><h3 className="font-display text-gold mb-3">Equipamentos de Combate disponíveis</h3>{combatItems.length === 0 ? <Empty>O Mestre ainda não adicionou equipamentos de combate a este personagem.</Empty> : <div className="grid sm:grid-cols-2 gap-3">{combatItems.map(i => { const slot = i.weapon_id ? 'weapon' : i.armor_id ? 'armor' : 'shield'; const equipped = i.equip_slot === slot; const durability = durabilityLabel(i); const broken = i.durability_current === 0; return <div key={i.id} className="bg-shadow/40 border border-gold-dim rounded-lg p-4 flex justify-between gap-3"><div><b className="text-gold-bright">{i.name}</b><p className="text-xs text-parchment-dim">{i.type} · ×{i.quantity}{durability ? ` · ${durability} ${i.durability_current}/${i.durability_max}` : ''}</p>{durability === 'Danificado' && <p className="text-[10px] text-gold mt-1">+1 dificuldade quando o item for essencial ao teste</p>}</div><button disabled={broken} onClick={() => setItemSlot(i, equipped ? null : slot)} className="text-xs border border-gold-dim rounded-lg px-3 py-2 text-gold disabled:opacity-30">{broken ? 'Quebrado' : equipped ? 'Desequipar' : 'Equipar'}</button></div>; })}</div>}</section>
+          <section><h3 className="font-display text-gold mb-3 flex gap-2"><Shield className="w-5 h-5"/>Condições & Efeitos</h3>{conditions.length === 0 && activeEffects.length === 0 ? <Empty /> : <div className="grid sm:grid-cols-2 gap-3">{conditions.map(c => <div key={c.id} className="bg-shadow/40 border border-gold-dim rounded-lg p-3"><b>{c.condition}</b><p className="text-xs">{renderCharacterText(c.notes, selectedCharacter)}</p></div>)}{activeEffects.map(e => <div key={e.id} className="bg-shadow/40 border border-gold-dim rounded-lg p-3"><b>{e.name}</b><p className="text-xs">{renderCharacterText(e.description, selectedCharacter)}</p>{e.is_permanent === false && e.remaining_minutes != null && <p className="text-[10px] text-gold mt-1">Restante: {formatDuration(e.remaining_minutes)}</p>}</div>)}</div>}</section>
+        </div>}
+        {tab === 'classes' && <ClassDiscoveryTree character={selectedCharacter} nodes={classNodes}/>} 
+        {tab === 'catalogo' && <CatalogPage playerId={player.id} isMaster={masterMode || isMaster}/>} 
+        {tab === 'regras' && <RulesPanel playerName={player.player_name || player.alcunha}/>} 
         {tab === 'inventario' && <InventoryPanel playerId={player.id} character={selectedCharacter} items={items} onConsume={consumeItem} onSetItemSlot={setItemSlot} onRefresh={async () => { await Promise.all([loadRelations(selectedCharacter.id), loadCombatEquipment(selectedCharacter.id)]); }}/>}
         {tab === 'historia' && <div>{!editingHistory ? <div className="flex justify-end mb-3"><button onClick={startHistory} className="text-sm text-gold flex gap-1"><Pencil className="w-4 h-4"/>Editar História</button></div> : <div className="flex justify-end gap-3 mb-3"><button onClick={() => setEditingHistory(false)} className="text-sm text-parchment-dim">Cancelar</button><button onClick={saveHistory} className="text-sm text-gold flex gap-1"><Save className="w-4 h-4"/>Salvar</button></div>}<div className="grid md:grid-cols-2 gap-4">{[['Apelido', 'nickname'], ['Gênero/Pronomes', 'gender'], ['Altura', 'height'], ['Peso', 'weight'], ['Origem', 'origin'], ['Ocupação anterior', 'previous_occupation'], ['Aparência', 'appearance'], ['Marcas distintivas', 'distinctive_marks'], ['Personalidade', 'personality'], ['Ideais / Convicções', 'ideals'], ['Motivação', 'motivation'], ['Vínculo importante', 'important_bond'], ['História breve', 'brief_history'], ['Características adicionais', 'additional_characteristics']].map(([label, key]) => <div key={key} className="bg-shadow/40 border border-gold-dim rounded-lg p-4"><div className="text-xs text-gold mb-1">{label}</div>{editingHistory ? <textarea value={historyDraft[key] || ''} onChange={e => setHistoryDraft(d => ({ ...d, [key]: e.target.value }))} rows={key.includes('history') || key === 'appearance' ? 4 : 2} className={field}/> : <p className="text-sm text-parchment-dim whitespace-pre-wrap">{String((selectedCharacter as unknown as Record<string, unknown>)[key] || '—')}</p>}</div>)}</div></div>}
         {tab === 'jornada' && <div className="grid md:grid-cols-2 gap-4">{[

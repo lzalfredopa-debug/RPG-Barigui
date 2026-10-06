@@ -126,6 +126,42 @@ export type CombatEquipmentSummary = {
   hand2_name: string | null;
 };
 
+
+export type CombatTarget = {
+  id: string;
+  name: string;
+};
+
+export type CombatAction = {
+  id: string;
+  attacker_player_id: string | null;
+  attacker_character_id: string;
+  attacker_name: string;
+  target_character_id: string;
+  target_name: string;
+  weapon_name: string;
+  attack_attribute: string;
+  attack_skill: string;
+  attack_pool: number;
+  attack_results: number[];
+  attack_explosion_count: number;
+  defense_kind: 'evasion' | 'block' | 'passive' | null;
+  defense_source: string | null;
+  defense_pool: number | null;
+  defense_results: number[] | null;
+  defense_explosion_count: number;
+  defense_passive_successes: number | null;
+  difficulty: number | null;
+  attack_successes: number | null;
+  defense_successes: number | null;
+  excess_successes: number | null;
+  damage_final: number | null;
+  target_hp_after: number | null;
+  status: 'awaiting_defense' | 'awaiting_master' | 'resolved' | 'void';
+  created_at: string;
+  updated_at: string;
+};
+
 export type ClassNode = {
   id: string;
   root_class: string;
@@ -195,6 +231,9 @@ export type Character = {
   current_mp: number | null;
   current_hunger?: number | null;
   current_thirst?: number | null;
+  combat_action_available?: boolean;
+  combat_movement_available?: boolean;
+  combat_reaction_available?: boolean;
   hunger_hours_remainder?: number;
   thirst_hours_remainder?: number;
   currency_obolos?: number;

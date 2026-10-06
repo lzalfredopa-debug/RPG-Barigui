@@ -22,7 +22,7 @@ export default function App() {
       <>
         <MasterPage player={currentPlayer} onLogout={() => { setCurrentPlayer(null); setView('login'); }} />
         <TableChat player={currentPlayer} />
-        <TrilhaRadio />
+        <TrilhaRadio player={currentPlayer} />
       </>
     );
   }
@@ -36,7 +36,7 @@ export default function App() {
           onCreated={() => setView('player')}
         />
         <TableChat player={currentPlayer} />
-        <TrilhaRadio />
+        <TrilhaRadio player={currentPlayer} />
       </>
     );
   }
@@ -49,7 +49,7 @@ export default function App() {
         onCreateCharacter={() => setView('character-creation')}
       />
       <TableChat player={currentPlayer} />
-        <TrilhaRadio />
+        <TrilhaRadio player={currentPlayer} />
     </>
   );
 }

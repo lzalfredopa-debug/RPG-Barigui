@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { LogOut, Scroll, MessageSquare, Lightbulb, Plus, User, Send, Loader2, Save, X, Lock, Info, Shield, Sword, Trash2, Pencil, ImagePlus, Check, Ban, BookOpen, UsersRound, Route, Package } from 'lucide-react';
+import { LogOut, Scroll, MessageSquare, Lightbulb, Plus, User, Send, Loader2, Save, X, Lock, Info, Shield, Sword, Trash2, Pencil, ImagePlus, Check, Ban, BookOpen, UsersRound, Route, Package, Brain } from 'lucide-react';
 import { supabase, type Player, type PersonalNote, type MasterMessage, type Character, type ClassNode, type CombatEquipmentSummary } from '@/lib/supabase';
 import { ATTRIBUTE_GROUPS, SKILL_GROUPS } from '@/components/CharacterCreation';
 import { renderCharacterText } from '@/lib/characterLanguage';
@@ -21,7 +21,7 @@ type PlayerPageProps = {
     onMasterEdit?: (character: Character) => void;
 };
 type Tab = 'ficha' | 'combate' | 'inventario' | 'historia' | 'jornada' | 'diario' | 'classes' | 'catalogo' | 'regras';
-type ReferenceView = 'regras' | 'povos' | 'classes' | 'itens' | null;
+type ReferenceView = 'regras' | 'povos' | 'classes' | 'atributos' | 'itens' | null;
 type DiaryEntry = {
     id: string;
     character_id: string;
@@ -217,8 +217,40 @@ function PublicClassesReference() {
   </div>;
 }
 
+function AttributeSkillsReference() {
+  return <div className="max-w-6xl mx-auto space-y-6 pb-10">
+    <div className="border-b border-gold-dim pb-4">
+      <p className="text-xs uppercase tracking-[0.25em] text-gold/70">Consulta do jogador</p>
+      <h2 className="font-display text-2xl sm:text-3xl text-gold-bright mt-1">Atributos e Habilidades</h2>
+      <p className="mt-2 text-sm text-parchment-dim">Atributos representam capacidades naturais do personagem; Habilidades representam treinamento, prática e conhecimento. Em um teste, o Mestre combina o Atributo e a Habilidade que melhor descrevem a forma como a ação está sendo realizada.</p>
+    </div>
+    <section>
+      <div className="flex items-center gap-2 mb-3"><Brain className="w-5 h-5 text-gold"/><h3 className="font-display text-xl text-gold-bright">Atributos</h3></div>
+      <div className="grid md:grid-cols-3 gap-4">{ATTRIBUTE_GROUPS.map(group => <article key={group.name} className="rounded-xl border border-gold-dim bg-gradient-card p-4">
+        <h4 className="font-display text-lg text-gold mb-3">{group.name}</h4>
+        <div className="space-y-3">{group.attributes.map(attribute => <div key={attribute.name} className="rounded-lg border border-gold-dim/60 bg-shadow/30 p-3">
+          <div className="font-display text-gold-bright">{attribute.name}</div>
+          <p className="mt-1 text-sm text-parchment-dim">{attribute.description}</p>
+          <p className="mt-2 text-xs text-gold/85"><b>Útil para:</b> {attribute.examples}</p>
+        </div>)}</div>
+      </article>)}</div>
+    </section>
+    <section>
+      <div className="flex items-center gap-2 mb-3"><BookOpen className="w-5 h-5 text-gold"/><h3 className="font-display text-xl text-gold-bright">Habilidades</h3></div>
+      <div className="grid lg:grid-cols-2 gap-4">{SKILL_GROUPS.map(group => <article key={group.name} className="rounded-xl border border-gold-dim bg-gradient-card p-4">
+        <h4 className="font-display text-lg text-gold mb-3">{group.name}</h4>
+        <div className="grid sm:grid-cols-2 gap-2">{group.skills.map(skill => <div key={skill.name} className="rounded-lg border border-gold-dim/50 bg-shadow/25 p-3">
+          <div className="font-display text-sm text-gold-bright">{skill.name}</div>
+          <p className="mt-1 text-xs leading-relaxed text-parchment-dim">{skill.description}</p>
+          <p className="mt-2 text-[11px] leading-relaxed text-gold/80"><b>Útil para:</b> {skill.examples}</p>
+        </div>)}</div>
+      </article>)}</div>
+    </section>
+  </div>;
+}
+
 function ReferenceOverlay({ view, onClose, player, races }: { view: Exclude<ReferenceView, null>; onClose: () => void; player: Player; races: RaceDefinition[] }) {
-  const title = view === 'regras' ? 'Regras' : view === 'povos' ? 'Povos e Linhagens' : view === 'classes' ? 'Classes e Subclasses' : 'Itens';
+  const title = view === 'regras' ? 'Regras' : view === 'povos' ? 'Povos e Linhagens' : view === 'classes' ? 'Classes e Subclasses' : view === 'atributos' ? 'Atributos e Habilidades' : 'Itens';
   return <div className="fixed inset-0 z-[65] bg-black/80 p-2 sm:p-5 flex items-center justify-center">
     <div className="w-full max-w-6xl h-[94vh] overflow-hidden rounded-2xl border border-gold bg-stone shadow-2xl flex flex-col">
       <div className="shrink-0 border-b border-gold-dim bg-shadow/80 px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
@@ -229,6 +261,7 @@ function ReferenceOverlay({ view, onClose, player, races }: { view: Exclude<Refe
         {view === 'regras' && <RulesPanel playerName={player.player_name || player.alcunha}/>} 
         {view === 'povos' && <AncestryReference races={races}/>} 
         {view === 'classes' && <PublicClassesReference/>}
+        {view === 'atributos' && <AttributeSkillsReference/>}
         {view === 'itens' && <CatalogPage playerId={player.id} isMaster={false}/>} 
       </div>
     </div>
@@ -459,11 +492,12 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
       <section className="trilha-player-reference">
         <div className="trilha-player-section-title"><BookOpen className="w-5 h-5"/><h2 className="font-display">Biblioteca do Jogador</h2><i /></div>
         <p className="text-sm text-parchment-dim mb-4">Consulte o sistema antes de escolher um personagem. Informações que dependem de descoberta continuam ocultas.</p>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           {[
             ['regras', 'Regras', BookOpen, 'Como testes, recursos e ações funcionam.'],
             ['povos', 'Povos e Linhagens', UsersRound, 'Culturas, linhagens e costumes de nomeação.'],
             ['classes', 'Classes e Subclasses', Route, 'Entenda a progressão sem revelar caminhos ocultos.'],
+            ['atributos', 'Atributos e Habilidades', Brain, 'Veja a utilidade de cada atributo e habilidade.'],
             ['itens', 'Itens', Package, 'Catálogo público de equipamentos e objetos.'],
           ].map(([id, label, Icon, description]) => { const C = Icon as typeof BookOpen; return <button key={String(id)} type="button" onClick={() => setReferenceView(id as Exclude<ReferenceView, null>)} className="group min-h-28 rounded-xl border border-gold-dim bg-gradient-card p-4 text-left hover:border-gold transition">
             <div className="flex items-center justify-between gap-2"><C className="w-5 h-5 text-gold"/><span className="text-gold/60 group-hover:text-gold">→</span></div>

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ChevronRight, Check, Info, Loader2, Lock } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Check, Info, Loader2, Lock, BookOpen, UsersRound, Route, Package, Brain, X } from 'lucide-react';
 import { supabase, type Player } from '@/lib/supabase';
 import { attributeChoices, lineageBenefitText, raceBenefitText, type RaceDefinition, type LineageDefinition } from '@/lib/ancestry';
+import { NAMING_CULTURES } from '@/lib/nameCultures';
+import CatalogPage from '@/components/CatalogPage';
 
 type CharacterCreationProps = {
   player: Player;
@@ -350,8 +352,55 @@ export const GENDER_OPTIONS = [
   { id: 'neutro', label: 'Não faz diferença' },
 ];
 
+type CreationReferenceView = 'regras' | 'povos' | 'classes' | 'atributos' | 'itens' | null;
+
+function CreationReferenceOverlay({ view, onClose, player, races }: { view: Exclude<CreationReferenceView, null>; onClose: () => void; player: Player; races: Race[] }) {
+  const titles: Record<Exclude<CreationReferenceView, null>, string> = {
+    regras: 'Regras', povos: 'Povos e Linhagens', classes: 'Classes e Subclasses', atributos: 'Atributos e Habilidades', itens: 'Itens',
+  };
+  const card = 'rounded-xl border border-gold-dim bg-gradient-card p-4';
+  return <div className="fixed inset-0 z-[70] bg-black/80 p-2 sm:p-5 flex items-center justify-center">
+    <div className="w-full max-w-6xl h-[94vh] overflow-hidden rounded-2xl border border-gold bg-stone shadow-2xl flex flex-col">
+      <div className="shrink-0 border-b border-gold-dim bg-shadow/80 px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+        <div><p className="text-[10px] uppercase tracking-[.2em] text-gold/70">Consulta durante a criação</p><h2 className="font-display text-xl text-gold-bright">{titles[view]}</h2></div>
+        <button type="button" onClick={onClose} className="w-10 h-10 inline-flex items-center justify-center rounded-lg border border-gold-dim text-gold hover:border-gold" aria-label="Fechar consulta"><X className="w-5 h-5"/></button>
+      </div>
+      <div className="overflow-y-auto flex-1 p-4 sm:p-6">
+        {view === 'regras' && <div className="max-w-4xl mx-auto space-y-4">
+          <div className={card}><h3 className="font-display text-lg text-gold-bright">Testes</h3><p className="mt-2 text-sm text-parchment-dim">Atributo + Habilidade define a quantidade de d10. Cada resultado maior que a Dificuldade gera 1 sucesso; 1 anula um sucesso e 10 gera um novo d10 explosivo.</p></div>
+          <div className="grid md:grid-cols-2 gap-4"><div className={card}><h3 className="font-display text-lg text-gold-bright">Fome e Sede</h3><p className="mt-2 text-sm text-parchment-dim">Fome perde 1 ponto a cada 8 horas; Sede perde 1 a cada 6 horas. 400 g de alimento recuperam 1 Fome e 250 ml de água recuperam 1 Sede.</p></div><div className={card}><h3 className="font-display text-lg text-gold-bright">Progressão</h3><p className="mt-2 text-sm text-parchment-dim">O personagem começa como Aprendiz. Classes e especializações são descobertas durante a trajetória e não precisam ser escolhidas na criação.</p></div></div>
+          <div className={card}><h3 className="font-display text-lg text-gold-bright">Combinação livre</h3><p className="mt-2 text-sm text-parchment-dim">O Mestre escolhe o Atributo + Habilidade conforme a maneira como você descreve a ação. A mesma tarefa pode usar combinações diferentes em situações diferentes.</p></div>
+        </div>}
+
+        {view === 'povos' && <div className="max-w-5xl mx-auto space-y-4">{races.map(race => {
+          const key = String(race.id || '').toLowerCase();
+          const naming = NAMING_CULTURES[key];
+          return <article key={race.id || race.name} className={card}>
+            <div className="flex flex-col md:flex-row gap-4"><div className="md:w-40 shrink-0">{race.image ? <img src={race.image} alt={race.name} className="w-full rounded-lg border border-gold-dim"/> : <div className="aspect-square rounded-lg border border-gold-dim bg-shadow/30 flex items-center justify-center"><UsersRound className="w-10 h-10 text-gold/50"/></div>}</div><div className="min-w-0 flex-1"><h3 className="font-display text-xl text-gold-bright">{race.name}</h3><p className="mt-2 text-sm text-parchment-dim">{race.description || 'Descrição ainda não registrada.'}</p><p className="mt-2 text-xs text-gold">{raceBenefitText(race as any)}</p>{naming && <div className="mt-4 rounded-lg border border-gold-dim/60 bg-shadow/25 p-3"><h4 className="font-display text-gold">{naming.title}</h4><p className="mt-1 text-xs text-parchment-dim">{naming.description}</p><p className="mt-2 text-xs text-gold/80"><b>Exemplos:</b> {naming.examples.join(', ')}</p><p className="mt-2 text-xs italic text-parchment-dim">{naming.applied}</p></div>}<div className="mt-4 grid sm:grid-cols-3 gap-2">{race.lineages.map(lineage => <div key={lineage.name} className="rounded-lg border border-gold-dim/50 bg-shadow/25 p-3"><h4 className="font-display text-sm text-gold-bright">{lineage.name}</h4><p className="mt-1 text-xs text-parchment-dim">{lineage.description}</p><p className="mt-2 text-[11px] text-gold/80">{lineageBenefitText(lineage as any)}</p></div>)}</div></div></div>
+          </article>;
+        })}</div>}
+
+        {view === 'classes' && <div className="max-w-4xl mx-auto space-y-4">
+          <div className={card}><div className="flex gap-3"><Lock className="w-5 h-5 text-gold shrink-0"/><div><h3 className="font-display text-xl text-gold-bright">Caminhos são descobertos</h3><p className="mt-2 text-sm text-parchment-dim">Durante a criação você não escolhe uma classe. Atributos, habilidades, decisões e experiências farão caminhos surgirem durante a campanha. Nomes e requisitos ainda não revelados permanecem ocultos.</p></div></div></div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">{[['Aprendiz','1–4'],['Iniciante','5–8'],['Competente','9–12'],['Proficiente','13–16'],['Especialista','17–20']].map(([name,levels], index) => <div key={name} className={card}><p className="text-[10px] uppercase tracking-wider text-gold/70">Etapa {index+1}</p><h3 className="font-display text-gold-bright mt-1">{name}</h3><p className="text-xs text-parchment-dim mt-1">Níveis {levels}</p>{index>0 && <p className="mt-3 text-[11px] text-gold/75 flex items-center gap-1"><Lock className="w-3 h-3"/>Conteúdo oculto</p>}</div>)}</div>
+        </div>}
+
+        {view === 'atributos' && <div className="max-w-6xl mx-auto space-y-6">
+          <div><h3 className="font-display text-xl text-gold-bright">Atributos</h3><p className="mt-1 text-sm text-parchment-dim">Representam capacidades naturais. Veja abaixo em que cada um costuma ser útil.</p></div>
+          <div className="grid md:grid-cols-3 gap-4">{ATTRIBUTE_GROUPS.map(group => <section key={group.name} className={card}><h4 className="font-display text-gold mb-3">{group.name}</h4><div className="space-y-3">{group.attributes.map(attribute => <div key={attribute.name} className="rounded-lg border border-gold-dim/50 bg-shadow/25 p-3"><h5 className="font-display text-gold-bright">{attribute.name}</h5><p className="mt-1 text-xs text-parchment-dim">{attribute.description}</p><p className="mt-2 text-[11px] text-gold/80"><b>Útil para:</b> {attribute.examples}</p></div>)}</div></section>)}</div>
+          <div><h3 className="font-display text-xl text-gold-bright">Habilidades</h3><p className="mt-1 text-sm text-parchment-dim">Representam prática, conhecimento ou treinamento.</p></div>
+          <div className="grid lg:grid-cols-2 gap-4">{SKILL_GROUPS.map(group => <section key={group.name} className={card}><h4 className="font-display text-gold mb-3">{group.name}</h4><div className="grid sm:grid-cols-2 gap-2">{group.skills.map(skill => <div key={skill.name} className="rounded-lg border border-gold-dim/50 bg-shadow/25 p-3"><h5 className="font-display text-sm text-gold-bright">{skill.name}</h5><p className="mt-1 text-xs text-parchment-dim">{skill.description}</p><p className="mt-2 text-[11px] text-gold/80"><b>Útil para:</b> {skill.examples}</p></div>)}</div></section>)}</div>
+        </div>}
+
+        {view === 'itens' && <CatalogPage playerId={player.id} isMaster={false}/>} 
+      </div>
+    </div>
+  </div>;
+}
+
 export default function CharacterCreation({ player, onBack, onCreated, consumeCharacterAllowance = true }: CharacterCreationProps) {
   const [currentStep, setCurrentStep] = useState(1);
+  const [referenceView, setReferenceView] = useState<CreationReferenceView>(null);
   const [raceOptions, setRaceOptions] = useState<Race[]>(RACES);
   const [racialAttribute, setRacialAttribute] = useState('');
   const [lineageSkill1, setLineageSkill1] = useState('');
@@ -573,6 +622,18 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
               )}
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Consulta rápida durante a criação */}
+      <div className="max-w-3xl mx-auto w-full px-4 sm:px-6 pb-2">
+        <div className="rounded-xl border border-gold-dim bg-shadow/35 p-3">
+          <div className="flex items-center gap-2 mb-2"><BookOpen className="w-4 h-4 text-gold"/><span className="font-display text-sm text-gold-bright">Consulta rápida</span><span className="text-[10px] text-parchment-dim">sem sair da criação</span></div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {[
+              ['regras','Regras',BookOpen], ['povos','Povos',UsersRound], ['classes','Classes',Route], ['atributos','Atributos e Habilidades',Brain], ['itens','Itens',Package],
+            ].map(([id,label,Icon]) => { const C = Icon as typeof BookOpen; return <button key={String(id)} type="button" onClick={() => setReferenceView(id as Exclude<CreationReferenceView, null>)} className="shrink-0 inline-flex items-center gap-2 rounded-lg border border-gold-dim bg-gradient-card px-3 py-2 text-xs text-parchment-dim hover:border-gold hover:text-gold-bright transition"><C className="w-3.5 h-3.5 text-gold"/>{String(label)}</button>; })}
+          </div>
         </div>
       </div>
 
@@ -997,6 +1058,8 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
           </button>
         </div>
       </footer>
+
+      {referenceView && <CreationReferenceOverlay view={referenceView} onClose={() => setReferenceView(null)} player={player} races={raceOptions} />}
 
       {confirmOpen && (
         <div className="fixed inset-0 z-50 bg-shadow/85 backdrop-blur-sm flex items-center justify-center p-4">

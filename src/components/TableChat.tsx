@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Ban, Check, Dice5, MessageCircle, Minus, Plus, Send, Star, Sword, Trash2, Users, X } from 'lucide-react';
 import { supabase, type Player } from '@/lib/supabase';
 
@@ -80,41 +80,111 @@ function decisionText(decision: MasterDecision | null | undefined) {
   return 'Aguardando decisão do Mestre';
 }
 
-function ActionRollOverlay({ message }: { message: ChatMessage }) {
+const DICE_BOX_THREEJS_CDN = 'https://cdn.jsdelivr.net/npm/@3d-dice/dice-box-threejs@0.0.12/+esm';
+
+type DiceBoxThreeInstance = {
+  initialize: () => Promise<unknown>;
+  roll: (notation: string) => Promise<unknown>;
+};
+
+type DiceBoxThreeConstructor = new (selector: string, config?: Record<string, unknown>) => DiceBoxThreeInstance;
+
+function ActionRollOverlay({ message, onComplete }: { message: ChatMessage; onComplete: () => void }) {
   const results = message.roll_results || [];
-  const initialCount = Math.max(0, Number(message.roll_pool || 0));
+  const sceneId = `trilha-dice-3d-${message.id.replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const [status, setStatus] = useState<'loading' | 'rolling' | 'fallback'>('loading');
+
+  useEffect(() => {
+    if (results.length === 0) {
+      const timer = window.setTimeout(onComplete, 900);
+      return () => window.clearTimeout(timer);
+    }
+
+    let cancelled = false;
+    let finishTimer: number | null = null;
+    let startTimer: number | null = null;
+
+    async function runThreeDice() {
+      try {
+        const diceModule = await import(/* @vite-ignore */ DICE_BOX_THREEJS_CDN) as {
+          default?: DiceBoxThreeConstructor;
+          DiceBox?: DiceBoxThreeConstructor;
+        };
+        if (cancelled) return;
+
+        const DiceBox = diceModule.default || diceModule.DiceBox;
+        if (!DiceBox) throw new Error('DiceBox 3D não foi carregado.');
+
+        const box = new DiceBox(`#${sceneId}`, {
+          assetPath: 'https://cdn.jsdelivr.net/npm/@3d-dice/dice-box-threejs@0.0.12/public/',
+          sounds: false,
+          shadows: true,
+          theme_colorset: 'bronze',
+          theme_texture: '',
+          theme_material: 'metal',
+          gravity_multiplier: 420,
+          light_intensity: 0.78,
+          baseScale: 82,
+          strength: 1.15,
+        });
+
+        await box.initialize();
+        if (cancelled) return;
+
+        setStatus('rolling');
+        const notation = `${results.length}d10@${results.join(',')}`;
+        await box.roll(notation);
+        if (cancelled) return;
+
+        finishTimer = window.setTimeout(onComplete, 1350);
+      } catch (error) {
+        console.warn('TRILHA: não foi possível carregar a animação 3D de dados.', error);
+        if (cancelled) return;
+        setStatus('fallback');
+        finishTimer = window.setTimeout(onComplete, 2300);
+      }
+    }
+
+    // Aguarda o elemento receber suas dimensões antes da biblioteca criar o renderer.
+    startTimer = window.setTimeout(runThreeDice, 80);
+
+    return () => {
+      cancelled = true;
+      if (startTimer !== null) window.clearTimeout(startTimer);
+      if (finishTimer !== null) window.clearTimeout(finishTimer);
+      const scene = document.getElementById(sceneId);
+      if (scene) scene.replaceChildren();
+    };
+  }, [message.id, onComplete, results, sceneId]);
 
   return (
-    <div className="trilha-roll-overlay" aria-live="polite" aria-label={`Rolagem de ${message.character_name || message.player_name}`}>
-      <div className="trilha-roll-overlay-content">
+    <div className="trilha-roll-overlay trilha-roll-overlay-3d" aria-live="polite" aria-label={`Rolagem de ${message.character_name || message.player_name}`}>
+      <div className="trilha-roll-overlay-content trilha-roll-overlay-content-3d">
         <div className="trilha-roll-overlay-title">
-          <Sword className="w-5 h-5" />
+          <Sword className="w-4 h-4" />
           <span><b>{message.character_name || message.player_name}</b> · {message.action_name || 'Ação'}</span>
           {message.action_source && <small>{message.action_source}</small>}
         </div>
-        <div className="trilha-roll-overlay-dice">
-          {results.map((result, index) => {
-            const explosion = index >= initialCount;
-            const offset = ((index * 37) % 140) - 70;
-            const rotation = ((index * 73) % 150) - 75;
-            const style = {
-              '--die-index': index,
-              '--die-x': `${offset}px`,
-              '--die-rot': `${rotation}deg`,
-            } as React.CSSProperties;
-            return (
-              <span
-                key={`${message.id}-overlay-${index}`}
-                className={`trilha-falling-die ${result === 10 ? 'is-ten' : ''} ${result === 1 ? 'is-one' : ''} ${explosion ? 'is-explosion' : ''}`}
-                style={style}
-                title={explosion ? 'Dado explosivo' : undefined}
-              >
-                {result}
-                {explosion && <i>+</i>}
-              </span>
-            );
-          })}
+
+        <div className="trilha-dice3d-shell" aria-label={`${results.length} dados de dez lados`}>
+          <div id={sceneId} className="trilha-dice3d-stage" />
+
+          {status === 'loading' && (
+            <div className="trilha-dice3d-loading" aria-hidden="true">
+              <Dice5 className="w-5 h-5" />
+              <span>Preparando dados…</span>
+            </div>
+          )}
+
+          {status === 'fallback' && (
+            <div className="trilha-dice3d-fallback">
+              {results.map((result, index) => (
+                <span key={`${message.id}-fallback-${index}`} className={result === 10 ? 'is-ten' : result === 1 ? 'is-one' : ''}>{result}</span>
+              ))}
+            </div>
+          )}
         </div>
+
         <p className="trilha-roll-overlay-note">
           {message.roll_explosion_count ? `${message.roll_explosion_count} dado(s) explosivo(s) · ` : ''}resultado registrado no Chat da Mesa
         </p>
@@ -143,6 +213,7 @@ export default function TableChat({ player }: { player: Player }) {
   const [animatedRoll, setAnimatedRoll] = useState<ChatMessage | null>(null);
   const animatedIds = useRef(new Set<string>());
   const listRef = useRef<HTMLDivElement>(null);
+  const finishRollAnimation = useCallback(() => setAnimatedRoll(null), []);
 
   useEffect(() => {
     openRef.current = open;
@@ -157,8 +228,8 @@ export default function TableChat({ player }: { player: Player }) {
 
   useEffect(() => {
     if (!animatedRoll) return;
-    const totalDice = Math.max(1, animatedRoll.roll_results?.length || 1);
-    const timeout = window.setTimeout(() => setAnimatedRoll(null), Math.min(4300, 1900 + totalDice * 115));
+    // Rede de segurança caso o renderer 3D seja interrompido pelo navegador.
+    const timeout = window.setTimeout(() => setAnimatedRoll(null), 9000);
     return () => window.clearTimeout(timeout);
   }, [animatedRoll]);
 
@@ -350,7 +421,7 @@ export default function TableChat({ player }: { player: Player }) {
 
   return (
     <>
-      {animatedRoll && <ActionRollOverlay message={animatedRoll} />}
+      {animatedRoll && <ActionRollOverlay message={animatedRoll} onComplete={finishRollAnimation} />}
 
       {!open && (
         <button className="trilha-chat-launcher" onClick={() => setOpen(true)} aria-label="Abrir Chat da Mesa">

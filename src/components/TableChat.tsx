@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Dice5, MessageCircle, Minus, Plus, Send, Star, Trash2, Users, X } from 'lucide-react';
+import { Ban, Check, Dice5, MessageCircle, Minus, Plus, Send, Star, Sword, Trash2, Users, X } from 'lucide-react';
 import { supabase, type Player } from '@/lib/supabase';
+
+type MasterDecision = 'pending' | 'success' | 'failure' | 'void';
 
 type ChatMessage = {
   id: string;
@@ -12,6 +14,18 @@ type ChatMessage = {
   roll_notation: string | null;
   roll_results: number[] | null;
   roll_total: number | null;
+  roll_kind?: 'free' | 'action' | null;
+  character_id?: string | null;
+  character_name?: string | null;
+  action_name?: string | null;
+  action_source?: string | null;
+  action_attribute?: string | null;
+  action_skill?: string | null;
+  roll_pool?: number | null;
+  roll_explosion_count?: number | null;
+  master_decision?: MasterDecision | null;
+  master_decision_by?: string | null;
+  master_decision_at?: string | null;
   is_highlighted: boolean;
   created_at: string;
 };
@@ -59,6 +73,56 @@ function parseRollCommand(value: string) {
   return { quantity, sides };
 }
 
+function decisionText(decision: MasterDecision | null | undefined) {
+  if (decision === 'success') return 'Sucesso · definido pelo Mestre';
+  if (decision === 'failure') return 'Fracasso · definido pelo Mestre';
+  if (decision === 'void') return 'Rolagem anulada pelo Mestre';
+  return 'Aguardando decisão do Mestre';
+}
+
+function ActionRollOverlay({ message }: { message: ChatMessage }) {
+  const results = message.roll_results || [];
+  const initialCount = Math.max(0, Number(message.roll_pool || 0));
+
+  return (
+    <div className="trilha-roll-overlay" aria-live="polite" aria-label={`Rolagem de ${message.character_name || message.player_name}`}>
+      <div className="trilha-roll-overlay-content">
+        <div className="trilha-roll-overlay-title">
+          <Sword className="w-5 h-5" />
+          <span><b>{message.character_name || message.player_name}</b> · {message.action_name || 'Ação'}</span>
+          {message.action_source && <small>{message.action_source}</small>}
+        </div>
+        <div className="trilha-roll-overlay-dice">
+          {results.map((result, index) => {
+            const explosion = index >= initialCount;
+            const offset = ((index * 37) % 140) - 70;
+            const rotation = ((index * 73) % 150) - 75;
+            const style = {
+              '--die-index': index,
+              '--die-x': `${offset}px`,
+              '--die-rot': `${rotation}deg`,
+            } as React.CSSProperties;
+            return (
+              <span
+                key={`${message.id}-overlay-${index}`}
+                className={`trilha-falling-die ${result === 10 ? 'is-ten' : ''} ${result === 1 ? 'is-one' : ''} ${explosion ? 'is-explosion' : ''}`}
+                style={style}
+                title={explosion ? 'Dado explosivo' : undefined}
+              >
+                {result}
+                {explosion && <i>+</i>}
+              </span>
+            );
+          })}
+        </div>
+        <p className="trilha-roll-overlay-note">
+          {message.roll_explosion_count ? `${message.roll_explosion_count} dado(s) explosivo(s) · ` : ''}resultado registrado no Chat da Mesa
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function TableChat({ player }: { player: Player }) {
   const isMaster = player.player_identifier === 'Mestre';
   const displayName = player.player_name?.trim() || player.alcunha;
@@ -74,12 +138,35 @@ export default function TableChat({ player }: { player: Player }) {
   const [diceOpen, setDiceOpen] = useState(false);
   const [diceQuantity, setDiceQuantity] = useState(1);
   const [diceSides, setDiceSides] = useState<number>(10);
+  const [decisionBusy, setDecisionBusy] = useState<string | null>(null);
+  const [animationQueue, setAnimationQueue] = useState<ChatMessage[]>([]);
+  const [animatedRoll, setAnimatedRoll] = useState<ChatMessage | null>(null);
+  const animatedIds = useRef(new Set<string>());
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     openRef.current = open;
     if (open) setUnread(0);
   }, [open]);
+
+  useEffect(() => {
+    if (animatedRoll || animationQueue.length === 0) return;
+    setAnimatedRoll(animationQueue[0]);
+    setAnimationQueue((current) => current.slice(1));
+  }, [animatedRoll, animationQueue]);
+
+  useEffect(() => {
+    if (!animatedRoll) return;
+    const totalDice = Math.max(1, animatedRoll.roll_results?.length || 1);
+    const timeout = window.setTimeout(() => setAnimatedRoll(null), Math.min(4300, 1900 + totalDice * 115));
+    return () => window.clearTimeout(timeout);
+  }, [animatedRoll]);
+
+  const queueActionAnimation = (message: ChatMessage) => {
+    if (message.roll_kind !== 'action' || animatedIds.current.has(message.id)) return;
+    animatedIds.current.add(message.id);
+    setAnimationQueue((current) => [...current, message].slice(-6));
+  };
 
   const onlineSorted = useMemo(() => {
     const unique = new Map<string, PresencePayload>();
@@ -136,6 +223,7 @@ export default function TableChat({ player }: { player: Player }) {
           if (current.some((item) => item.id === incoming.id)) return current;
           return [...current, incoming].slice(-CHAT_LIMIT);
         });
+        queueActionAnimation(incoming);
         if (!openRef.current && incoming.player_id !== player.id) setUnread((value) => value + 1);
         scrollToBottom();
       })
@@ -231,6 +319,19 @@ export default function TableChat({ player }: { player: Player }) {
     }
   }
 
+  async function decideActionRoll(message: ChatMessage, decision: Exclude<MasterDecision, 'pending'>) {
+    if (!isMaster || decisionBusy) return;
+    setDecisionBusy(message.id);
+    setError('');
+    const { error: decisionError } = await supabase.rpc('decide_action_roll', {
+      p_player_id: player.id,
+      p_message_id: message.id,
+      p_decision: decision,
+    });
+    if (decisionError) setError(decisionError.message || 'Não foi possível registrar a decisão do Mestre.');
+    setDecisionBusy(null);
+  }
+
   async function toggleHighlight(message: ChatMessage) {
     if (!isMaster) return;
     const { error: updateError } = await supabase
@@ -249,6 +350,8 @@ export default function TableChat({ player }: { player: Player }) {
 
   return (
     <>
+      {animatedRoll && <ActionRollOverlay message={animatedRoll} />}
+
       {!open && (
         <button className="trilha-chat-launcher" onClick={() => setOpen(true)} aria-label="Abrir Chat da Mesa">
           <MessageCircle className="w-5 h-5" />
@@ -290,8 +393,11 @@ export default function TableChat({ player }: { player: Player }) {
               const own = message.player_id === player.id;
               const authorIsMaster = message.player_identifier === 'Mestre';
               const roll = message.message_type === 'roll';
+              const actionRoll = roll && message.roll_kind === 'action';
+              const initialCount = Math.max(0, Number(message.roll_pool || 0));
+              const decision = (message.master_decision || 'pending') as MasterDecision;
               return (
-                <article key={message.id} className={`trilha-chat-message ${own ? 'is-own' : ''} ${message.is_highlighted ? 'is-highlighted' : ''} ${roll ? 'is-roll' : ''}`}>
+                <article key={message.id} className={`trilha-chat-message ${own ? 'is-own' : ''} ${message.is_highlighted ? 'is-highlighted' : ''} ${roll ? 'is-roll' : ''} ${actionRoll ? 'is-action-roll' : ''}`}>
                   {message.is_highlighted && <div className="trilha-chat-highlight-label"><Star className="w-3 h-3" /> Destaque do Mestre</div>}
                   <div className="trilha-chat-message-head">
                     <b className={authorIsMaster ? 'is-master' : ''}>{message.player_name}{authorIsMaster ? ' · Mestre' : ''}</b>
@@ -309,13 +415,38 @@ export default function TableChat({ player }: { player: Player }) {
                   </div>
 
                   {roll ? (
-                    <div className="trilha-chat-roll">
-                      <div className="trilha-chat-roll-title"><Dice5 className="w-4 h-4" /> rolou <b>{message.roll_notation}</b></div>
-                      <div className="trilha-chat-roll-results">
-                        {(message.roll_results || []).map((result, index) => <span key={`${message.id}-${index}`}>{result}</span>)}
+                    actionRoll ? (
+                      <div className="trilha-chat-action-roll">
+                        <div className="trilha-chat-action-title"><Sword className="w-4 h-4" /><b>{message.character_name || message.player_name}</b> {message.action_name?.toLowerCase() || 'realiza uma ação'}{message.action_source ? <> com <b>{message.action_source}</b></> : null}</div>
+                        <div className="trilha-chat-action-pool">
+                          {message.action_attribute && message.action_skill ? `${message.action_attribute} + ${message.action_skill} · ` : ''}<b>{message.roll_notation || `${message.roll_pool || 0}d10`}</b>
+                        </div>
+                        <div className="trilha-chat-roll-results">
+                          {(message.roll_results || []).map((result, index) => (
+                            <span key={`${message.id}-${index}`} className={`${result === 10 ? 'is-ten' : ''} ${result === 1 ? 'is-one' : ''} ${index >= initialCount ? 'is-explosion' : ''}`} title={index >= initialCount ? 'Dado explosivo' : undefined}>
+                              {result}{index >= initialCount ? <sup>+</sup> : null}
+                            </span>
+                          ))}
+                        </div>
+                        {Number(message.roll_explosion_count || 0) > 0 && <div className="trilha-chat-action-explosion">10 explosivo: +{message.roll_explosion_count}d10</div>}
+                        <div className={`trilha-chat-decision is-${decision}`}>{decisionText(decision)}</div>
+                        {isMaster && (
+                          <div className="trilha-chat-decision-actions" aria-label="Decisão do Mestre">
+                            <button disabled={decisionBusy === message.id} className={decision === 'success' ? 'is-selected' : ''} onClick={() => decideActionRoll(message, 'success')}><Check className="w-3.5 h-3.5" /> Sucesso</button>
+                            <button disabled={decisionBusy === message.id} className={decision === 'failure' ? 'is-selected' : ''} onClick={() => decideActionRoll(message, 'failure')}><X className="w-3.5 h-3.5" /> Fracasso</button>
+                            <button disabled={decisionBusy === message.id} className={decision === 'void' ? 'is-selected' : ''} onClick={() => decideActionRoll(message, 'void')}><Ban className="w-3.5 h-3.5" /> Anular</button>
+                          </div>
+                        )}
                       </div>
-                      <div className="trilha-chat-roll-total">Total <b>{message.roll_total ?? 0}</b></div>
-                    </div>
+                    ) : (
+                      <div className="trilha-chat-roll">
+                        <div className="trilha-chat-roll-title"><Dice5 className="w-4 h-4" /> rolou <b>{message.roll_notation}</b></div>
+                        <div className="trilha-chat-roll-results">
+                          {(message.roll_results || []).map((result, index) => <span key={`${message.id}-${index}`}>{result}</span>)}
+                        </div>
+                        <div className="trilha-chat-roll-total">Total <b>{message.roll_total ?? 0}</b></div>
+                      </div>
+                    )
                   ) : (
                     <p>{message.content}</p>
                   )}

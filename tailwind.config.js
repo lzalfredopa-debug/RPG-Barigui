@@ -24,9 +24,10 @@ export default {
         shadow: '#1a1208',
         stone: {
           DEFAULT: '#3d3528',
-          light: '#5a4d3a',
+          light: '#5f5340',
         },
         forest: '#2d4a2d',
+        khaki: '#9d8e70',
       },
     },
   },

@@ -229,6 +229,8 @@ export type Character = {
   level: number;
   class_name: string | null;
   specialization: string | null;
+  v15_attribute_points_spent?: number;
+  v15_skill_points_spent?: number;
 
   // Atributos e Habilidades
   attributes: Record<string, number>;

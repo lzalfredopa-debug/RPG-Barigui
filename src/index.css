@@ -15,7 +15,9 @@
     --color-blood-dark: #6b1414;
     --color-shadow: #1a1208;
     --color-stone: #3d3528;
-    --color-stone-light: #5a4d3a;
+    --color-stone-light: #5f5340;
+    --color-khaki-muted: #9d8e70;
+    --color-copper-text: #8b2f23;
     --color-forest: #2d4a2d;
   }
 
@@ -70,7 +72,13 @@
   }
 
   .bg-stone-light {
-    background-color: #5a4d3a;
+    background-color: #5f5340;
+    color: #e0c25c;
+  }
+
+  .bg-khaki {
+    background-color: #9d8e70;
+    color: #8b2f23;
   }
 
   .bg-blood {
@@ -2647,3 +2655,84 @@
 @media (max-width: 560px) {
   .trilha-radio-launcher { width: 46px; padding: 0; border-radius: 50%; }
 }
+
+
+/* ============================================================
+   TAREFA 0108 — contraste de superfícies
+   #9d8e70 / cáqui / oliva desbotado -> cobre/vermelho
+   #5f5340 -> amarelo/dourado
+   ============================================================ */
+.bg-stone-light,
+.bg-\[\#5f5340\],
+.trilha-surface-deep-khaki {
+  color:#e0c25c !important;
+}
+.bg-stone-light .text-parchment,
+.bg-stone-light .text-parchment-dim,
+.bg-stone-light .text-gold,
+.bg-stone-light .text-gold-bright,
+.bg-\[\#5f5340\] .text-parchment,
+.bg-\[\#5f5340\] .text-parchment-dim,
+.bg-\[\#5f5340\] .text-gold,
+.bg-\[\#5f5340\] .text-gold-bright,
+.trilha-surface-deep-khaki .text-parchment,
+.trilha-surface-deep-khaki .text-parchment-dim,
+.trilha-surface-deep-khaki .text-gold,
+.trilha-surface-deep-khaki .text-gold-bright {
+  color:#e0c25c !important;
+}
+
+.bg-khaki,
+.bg-\[\#9d8e70\],
+.trilha-surface-khaki {
+  color:#8b2f23 !important;
+}
+.bg-khaki .text-parchment,
+.bg-khaki .text-parchment-dim,
+.bg-khaki .text-gold,
+.bg-khaki .text-gold-bright,
+.bg-\[\#9d8e70\] .text-parchment,
+.bg-\[\#9d8e70\] .text-parchment-dim,
+.bg-\[\#9d8e70\] .text-gold,
+.bg-\[\#9d8e70\] .text-gold-bright,
+.trilha-surface-khaki .text-parchment,
+.trilha-surface-khaki .text-parchment-dim,
+.trilha-surface-khaki .text-gold,
+.trilha-surface-khaki .text-gold-bright {
+  color:#8b2f23 !important;
+}
+
+/* Rádio: biblioteca ligada a Storage/radio-trilha/musicas */
+.trilha-radio-library {
+  margin-top:10px;
+  padding-top:9px;
+  border-top:1px solid rgba(212,164,74,.18);
+  display:grid;
+  gap:7px;
+}
+.trilha-radio-library-copy {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#d8bc70;
+}
+.trilha-radio-library-copy span { display:flex; min-width:0; flex-direction:column; gap:1px; }
+.trilha-radio-library-copy b { font-family:'Cinzel',serif; font-size:9px; letter-spacing:.08em; text-transform:uppercase; }
+.trilha-radio-library-copy small { color:#8f8067; font-size:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.trilha-radio-upload {
+  min-height:31px;
+  padding:6px 9px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  border:1px solid rgba(212,164,74,.44);
+  border-radius:6px;
+  color:#efd481;
+  background:rgba(139,47,35,.14);
+  font-size:9px;
+  cursor:pointer;
+}
+.trilha-radio-upload:hover { border-color:rgba(224,194,92,.72); background:rgba(139,47,35,.22); }
+.trilha-radio-upload.is-disabled { opacity:.5; cursor:wait; }
+.trilha-radio-upload-message { margin:0; color:#a99a7e; font-size:8px; line-height:1.35; }

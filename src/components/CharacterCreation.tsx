@@ -93,10 +93,10 @@ const allAttributeNames = ATTRIBUTE_GROUPS.flatMap((group) => group.attributes.m
 const allSkillNames = SKILL_GROUPS.flatMap((group) => group.skills.map((skill) => skill.name));
 
 export const GENDER_OPTIONS = [
-  { id: 'ele', label: 'Ele / Dele' },
-  { id: 'ela', label: 'Ela / Dela' },
-  { id: 'elu', label: 'Elu / Delu' },
-  { id: 'neutro', label: 'Não faz diferença' },
+  { id: 'ela', label: 'Ela/Dela' },
+  { id: 'ele', label: 'Ele/Dele' },
+  { id: 'elu', label: 'Linguagem neutra' },
+  { id: 'neutro', label: 'Prefiro não responder' },
 ];
 
 type CreationReferenceView = 'regras' | 'povos' | 'classes' | 'atributos' | 'itens' | null;
@@ -128,7 +128,7 @@ function CreationReferenceOverlay({ view, onClose, player, races }: { view: Excl
         })}</div>}
 
         {view === 'classes' && <div className="max-w-4xl mx-auto space-y-4">
-          <div className={card}><div className="flex gap-3"><Route className="w-5 h-5 text-gold shrink-0"/><div><h3 className="font-display text-xl text-gold-bright">Aprendiz e caminhos iniciais</h3><p className="mt-2 text-sm text-parchment-dim">Nos níveis 1–3, o maior Atributo define o título Aprendiz de X. Empates formam um Aprendiz Versátil. A partir do nível 4, cada Atributo oferece cinco classes iniciais; o requisito padrão é Atributo 2 + Habilidade 1.</p></div></div></div>
+          <div className={card}><div className="flex gap-3"><Route className="w-5 h-5 text-gold shrink-0"/><div><h3 className="font-display text-xl text-gold-bright">Aprendiz e caminhos iniciais</h3><p className="mt-2 text-sm text-parchment-dim">Nos níveis 1–3, o maior Atributo define o título Aprendiz de X. Empates formam um Aprendiz Versátil. No nível 2 o personagem recebe +2 pontos de Habilidade; no nível 3 recebe +1 ponto de Atributo e +1 ponto de Habilidade. A primeira ramificação aparece quando um Atributo chega a 3 pontos. A classe inicial pode ser escolhida a partir do nível 4 com Atributo 3 + Habilidade 2.</p></div></div></div>
           <div className="grid sm:grid-cols-3 gap-3"><div className={card}><p className="text-[10px] uppercase tracking-wider text-gold/70">Níveis 1–3</p><h3 className="font-display text-gold-bright mt-1">Aprendiz</h3><p className="text-xs text-parchment-dim mt-1">Título definido pelo maior Atributo.</p></div><div className={card}><p className="text-[10px] uppercase tracking-wider text-gold/70">A partir do nível 4</p><h3 className="font-display text-gold-bright mt-1">60 caminhos iniciais</h3><p className="text-xs text-parchment-dim mt-1">Cinco possibilidades ligadas a cada Atributo.</p></div><div className={card}><p className="text-[10px] uppercase tracking-wider text-gold/70">Futuro</p><h3 className="font-display text-gold-bright mt-1">Árvore avançada</h3><p className="text-xs text-parchment-dim mt-1">Será desenvolvida depois, sem antecipar títulos superiores.</p></div></div>
         </div>}
 
@@ -465,10 +465,10 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
             {/* Gênero e pronomes */}
             <div className="space-y-2">
               <label className="font-display text-sm font-500 text-gold-bright tracking-wide">
-                Gênero e pronomes
+                Como você prefere que se refiram ao personagem?
               </label>
               <p className="text-parchment-dim/60 text-xs font-body">
-                Como o personagem se identifica.
+                Escolha a forma de tratamento usada pelos textos da ficha.
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
                 {GENDER_OPTIONS.map((option) => (
@@ -725,7 +725,7 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                     <p><span className="text-parchment-dim">Nome:</span> <span className="text-parchment">{name}</span></p>
                     <p><span className="text-parchment-dim">Apelido:</span> <span className="text-parchment">{nickname || '—'}</span></p>
                     <p><span className="text-parchment-dim">Idade:</span> <span className="text-parchment">{age}</span></p>
-                    <p><span className="text-parchment-dim">Gênero e pronomes:</span> <span className="text-parchment">{genderLabel}</span></p>
+                    <p><span className="text-parchment-dim">Como se referem ao personagem:</span> <span className="text-parchment">{genderLabel}</span></p>
                     <p><span className="text-parchment-dim">Nível:</span> <span className="text-parchment">1</span></p>
                     <p><span className="text-parchment-dim">Estágio:</span> <span className="text-gold-bright">{apprentice}</span></p>
                     <p><span className="text-parchment-dim">Classe:</span> <span className="text-parchment">—</span></p>

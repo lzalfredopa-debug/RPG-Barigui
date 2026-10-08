@@ -134,7 +134,7 @@ function RulesPanel({ playerName }: {
 
     <section className={card}><h3 className={title}>⚠️ Condições</h3><p className="text-sm text-parchment-dim">Personagens podem ser afetados por Condições, como Caído, Atordoado, Envenenado, Agarrado ou Inconsciente. Cada Condição possui efeitos e duração próprios, apresentados quando ela for aplicada.</p></section>
 
-    <section className={card}><h3 className={title}>⭐ Progressão</h3><div className="grid sm:grid-cols-3 gap-2 text-center text-sm"><div className="bg-stone/40 rounded-lg p-3"><div className="text-gold-bright font-display">1–3</div><div className="text-parchment-dim text-xs mt-1">Aprendiz</div></div><div className="bg-stone/40 rounded-lg p-3"><div className="text-gold-bright font-display">4+</div><div className="text-parchment-dim text-xs mt-1">Classe inicial</div></div><div className="bg-stone/40 rounded-lg p-3"><div className="text-gold-bright font-display">60</div><div className="text-parchment-dim text-xs mt-1">caminhos iniciais</div></div></div><p className="text-sm text-parchment-dim mt-4">Nos níveis 1–3, o maior Atributo define o título <b className="text-parchment">Aprendiz de X</b>. Empates formam um <b className="text-parchment">Aprendiz Versátil</b>. A partir do nível 4, cada Atributo abre cinco caminhos iniciais; o requisito padrão é Atributo 2 + Habilidade 1.</p></section>
+    <section className={card}><h3 className={title}>⭐ Progressão</h3><div className="grid sm:grid-cols-3 gap-2 text-center text-sm"><div className="bg-stone/40 rounded-lg p-3"><div className="text-gold-bright font-display">1–3</div><div className="text-parchment-dim text-xs mt-1">Aprendiz</div></div><div className="bg-stone/40 rounded-lg p-3"><div className="text-gold-bright font-display">4+</div><div className="text-parchment-dim text-xs mt-1">Classe inicial</div></div><div className="bg-stone/40 rounded-lg p-3"><div className="text-gold-bright font-display">60</div><div className="text-parchment-dim text-xs mt-1">caminhos iniciais</div></div></div><p className="text-sm text-parchment-dim mt-4">Nos níveis 1–3, o maior Atributo define o título <b className="text-parchment">Aprendiz de X</b>. No nível 2 o personagem recebe <b className="text-parchment">+2 pontos de Habilidade</b>; no nível 3 recebe <b className="text-parchment">+1 Atributo e +1 Habilidade</b>. A primeira ramificação surge quando um Atributo chega a <b className="text-parchment">3</b>; a classe inicial exige Atributo 3 + Habilidade 2 e só pode ser escolhida a partir do nível 4.</p></section>
 
     <section className={card}><h3 className={title}>🧩 Atributos e Habilidades</h3><p className="text-sm text-parchment-dim">Atributos representam capacidades do personagem; Habilidades representam aquilo que aprendeu ou treinou. O Mestre combina o Atributo + Habilidade adequados à ação. A combinação pode mudar conforme a forma como a ação é realizada.</p></section>
 
@@ -203,7 +203,7 @@ function PublicClassesReference() {
       <div className="grid md:grid-cols-[1fr_auto] gap-5 items-start">
         <div>
           <div className="flex items-center gap-2"><Route className="w-5 h-5 text-gold"/><h3 className="font-display text-xl text-gold-bright">Do Aprendiz à primeira classe</h3></div>
-          <p className="mt-2 text-sm leading-relaxed text-parchment-dim">No nível 4, cada Atributo dominante oferece cinco caminhos iniciais. O requisito padrão é <b className="text-parchment">Atributo 2 + Habilidade 1</b>. Um Aprendiz Versátil pode acessar os caminhos de todos os Atributos empatados no maior valor.</p>
+          <p className="mt-2 text-sm leading-relaxed text-parchment-dim">Ao atingir <b className="text-parchment">3 pontos em um Atributo</b>, sua primeira ramificação é revelada com cinco caminhos. Eles continuam visíveis para planejamento. A partir do nível 4, um caminho pode ser escolhido quando o personagem também tiver <b className="text-parchment">Habilidade 2</b> no requisito daquela classe.</p>
         </div>
         <div className="grid grid-cols-3 gap-2 text-center text-xs">
           <div className="rounded-lg border border-gold-dim bg-shadow/30 px-3 py-2"><b className="block font-display text-lg text-gold-bright">12</b>Atributos</div>
@@ -222,7 +222,7 @@ function PublicClassesReference() {
       <section className="rounded-xl border border-gold-dim bg-shadow/35 p-4">
         <p className="text-[10px] uppercase tracking-[.18em] text-gold/70">A partir do nível 4</p>
         <h3 className="font-display text-lg text-gold-bright">Classe inicial</h3>
-        <p className="mt-2 text-sm text-parchment-dim">Os caminhos ligados aos maiores Atributos ficam visíveis na ficha. Caminhos avançados ainda serão desenvolvidos e não fazem parte desta versão.</p>
+        <p className="mt-2 text-sm text-parchment-dim">As ramificações aparecem quando um Atributo chega a 3 pontos; os cinco caminhos daquele ramo ficam visíveis na ficha. Caminhos avançados ainda serão desenvolvidos e não fazem parte desta versão.</p>
       </section>
     </div>
 
@@ -559,7 +559,7 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
           {[
             ['regras', 'Regras', BookOpen, 'Como testes, recursos e ações funcionam.'],
             ['povos', 'Povos e Vertentes', UsersRound, 'Culturas, linhagens e costumes de nomeação.'],
-            ['classes', 'Progressão', Route, 'Veja seu título de Aprendiz e os caminhos iniciais ligados aos maiores Atributos.'],
+            ['classes', 'Progressão', Route, 'Veja seu título de Aprendiz, seus pontos de progressão e as ramificações reveladas ao atingir Atributo 3.'],
             ['atributos', 'Atributos e Habilidades', Brain, 'Veja a utilidade de cada atributo e habilidade.'],
             ['itens', 'Itens', Package, 'Catálogo público de equipamentos e objetos.'],
           ].map(([id, label, Icon, description]) => { const C = Icon as typeof BookOpen; return <button key={String(id)} type="button" onClick={() => setReferenceView(id as Exclude<ReferenceView, null>)} className="group min-h-28 rounded-xl border border-gold-dim bg-gradient-card p-4 text-left hover:border-gold transition">

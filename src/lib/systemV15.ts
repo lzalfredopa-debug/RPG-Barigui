@@ -165,8 +165,8 @@ export const INITIAL_CLASS_PATHS: InitialClassPath[] = CLASS_PATH_SOURCE.map(([p
   name,
   primaryAttribute,
   requiredSkill,
-  requiredAttributeMin: 2,
-  requiredSkillMin: 1,
+  requiredAttributeMin: 3,
+  requiredSkillMin: 2,
   sortOrder: index + 1,
 }));
 
@@ -185,14 +185,28 @@ export function availableApprenticeAttributes(attributes: Record<string, number>
   return getHighestAttributes(attributes);
 }
 
+export function openedClassAttributes(attributes: Record<string, number>): AttributeName[] {
+  return ATTRIBUTES.filter(name => Number(attributes?.[name] ?? 0) >= 3);
+}
+
 export function classPathMeetsRequirements(path: InitialClassPath, attributes: Record<string, number>, skills: Record<string, number>): boolean {
   return Number(attributes?.[path.primaryAttribute] ?? 0) >= path.requiredAttributeMin
     && Number(skills?.[path.requiredSkill] ?? 0) >= path.requiredSkillMin;
 }
 
 export function visibleClassPaths(attributes: Record<string, number>): InitialClassPath[] {
-  const allowed = new Set(getHighestAttributes(attributes));
-  return INITIAL_CLASS_PATHS.filter(path => allowed.has(path.primaryAttribute));
+  const opened = new Set(openedClassAttributes(attributes));
+  return INITIAL_CLASS_PATHS.filter(path => opened.has(path.primaryAttribute));
+}
+
+export function earnedV15AttributePoints(level: number): number {
+  return level >= 3 ? 1 : 0;
+}
+
+export function earnedV15SkillPoints(level: number): number {
+  if (level >= 3) return 3;
+  if (level >= 2) return 2;
+  return 0;
 }
 
 export function normalizeAttributes(value?: Record<string, number> | null): Record<string, number> {

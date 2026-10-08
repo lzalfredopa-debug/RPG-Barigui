@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Play, Radio, SkipForward, Square, Volume2, VolumeX, X } from 'lucide-react';
+import { FolderOpen, Play, Radio, SkipForward, Square, Upload, Volume2, VolumeX, X } from 'lucide-react';
 import { supabase, type Player } from '@/lib/supabase';
 
 const RADIO_BUCKET = 'radio-trilha';
+const RADIO_FOLDER = 'musicas';
 const RADIO_EPOCH_MS = Date.UTC(2026, 0, 1, 0, 0, 0);
 const VOLUME_KEY = 'trilha-radio-volume';
 const AUDIO_EXTENSIONS = /\.(mp3|ogg|wav|m4a|aac)$/i;
@@ -64,6 +65,8 @@ export default function TrilhaRadio({ player }: { player: Player }) {
   const [stopped, setStopped] = useState(false);
   const [skipOffset, setSkipOffset] = useState(0);
   const [skipping, setSkipping] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState('');
 
   const totalDuration = useMemo(() => tracks.reduce((sum, track) => sum + track.duration, 0), [tracks]);
 
@@ -77,30 +80,25 @@ export default function TrilhaRadio({ player }: { player: Player }) {
     try { localStorage.setItem(VOLUME_KEY, String(volume)); } catch { /* opcional */ }
   }, [volume]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function loadPlaylist() {
-      setLoading(true);
-      setError('');
-      const { data, error: listError } = await supabase.storage.from(RADIO_BUCKET).list('', { limit: 200, sortBy: { column: 'name', order: 'asc' } });
-      if (cancelled) return;
-      if (listError) { setError('A Rádio TRILHA ainda não está disponível.'); setLoading(false); return; }
-      const files = (data || []).filter((file) => AUDIO_EXTENSIONS.test(file.name));
-      if (files.length === 0) { setTracks([]); setLoading(false); return; }
-      const resolved = await Promise.all(files.map(async (file): Promise<RadioTrack | null> => {
-        const path = file.name;
-        const { data: publicData } = supabase.storage.from(RADIO_BUCKET).getPublicUrl(path);
-        try { return { name: displayTrackName(file.name), path, url: publicData.publicUrl, duration: await probeDuration(publicData.publicUrl) }; }
-        catch { return null; }
-      }));
-      if (cancelled) return;
-      const playable = resolved.filter((track): track is RadioTrack => Boolean(track));
-      setTracks(playable); setLoading(false);
-      if (playable.length === 0) setError('Nenhuma faixa de áudio pôde ser carregada.');
-    }
-    loadPlaylist();
-    return () => { cancelled = true; };
+  const loadPlaylist = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    const { data, error: listError } = await supabase.storage.from(RADIO_BUCKET).list(RADIO_FOLDER, { limit: 200, sortBy: { column: 'name', order: 'asc' } });
+    if (listError) { setError('A pasta de músicas da Rádio TRILHA ainda não está disponível.'); setLoading(false); return; }
+    const files = (data || []).filter((file) => AUDIO_EXTENSIONS.test(file.name));
+    if (files.length === 0) { setTracks([]); setLoading(false); return; }
+    const resolved = await Promise.all(files.map(async (file): Promise<RadioTrack | null> => {
+      const path = `${RADIO_FOLDER}/${file.name}`;
+      const { data: publicData } = supabase.storage.from(RADIO_BUCKET).getPublicUrl(path);
+      try { return { name: displayTrackName(file.name), path, url: publicData.publicUrl, duration: await probeDuration(publicData.publicUrl) }; }
+      catch { return null; }
+    }));
+    const playable = resolved.filter((track): track is RadioTrack => Boolean(track));
+    setTracks(playable); setLoading(false);
+    if (playable.length === 0 && files.length > 0) setError('Nenhuma faixa de áudio pôde ser carregada.');
   }, []);
+
+  useEffect(() => { void loadPlaylist(); }, [loadPlaylist]);
 
   useEffect(() => {
     let cancelled = false;
@@ -204,6 +202,34 @@ export default function TrilhaRadio({ player }: { player: Player }) {
     setSkipping(false);
   };
 
+
+  const uploadTracks = async (fileList: FileList | null) => {
+    if (!isMaster || !fileList?.length || uploading) return;
+    const files = Array.from(fileList).filter((file) => AUDIO_EXTENSIONS.test(file.name));
+    if (!files.length) { setUploadMessage('Selecione arquivos de áudio compatíveis.'); return; }
+    setUploading(true);
+    setUploadMessage('');
+    setError('');
+    let sent = 0;
+    for (const file of files) {
+      if (file.size > 30 * 1024 * 1024) { setError(`A faixa ${file.name} ultrapassa 30 MB.`); continue; }
+      const safeName = file.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9._ -]+/g, '').replace(/\s+/g, ' ').trim();
+      const path = `${RADIO_FOLDER}/${safeName || `faixa-${Date.now()}.mp3`}`;
+      const { error: uploadError } = await supabase.storage.from(RADIO_BUCKET).upload(path, file, {
+        cacheControl: '3600',
+        contentType: file.type || undefined,
+        upsert: true,
+      });
+      if (uploadError) setError(uploadError.message || `Não foi possível enviar ${file.name}.`);
+      else sent += 1;
+    }
+    if (sent > 0) {
+      setUploadMessage(`${sent} faixa${sent === 1 ? '' : 's'} enviada${sent === 1 ? '' : 's'} para /${RADIO_FOLDER}.`);
+      await loadPlaylist();
+    }
+    setUploading(false);
+  };
+
   const currentTrack = activeIndex >= 0 ? tracks[activeIndex] : null;
   const silent = volume <= 0.001;
 
@@ -225,6 +251,13 @@ export default function TrilhaRadio({ player }: { player: Player }) {
               {isMaster && <button type="button" onClick={skipForEveryone} disabled={skipping || !currentTrack} title="Pular a faixa para toda a mesa"><SkipForward className="w-3.5 h-3.5" /> {skipping ? 'Pulando...' : 'Pular música para todos'}</button>}
             </div>
           </div>
+
+
+          {isMaster && <div className="trilha-radio-library">
+            <div className="trilha-radio-library-copy"><FolderOpen className="w-4 h-4" /><span><b>Biblioteca da Rádio</b><small>Storage · {RADIO_BUCKET}/{RADIO_FOLDER}</small></span></div>
+            <label className={`trilha-radio-upload ${uploading ? 'is-disabled' : ''}`}><Upload className="w-3.5 h-3.5" />{uploading ? 'Enviando...' : 'Enviar músicas'}<input type="file" accept="audio/*,.mp3,.ogg,.wav,.m4a,.aac" multiple className="hidden" disabled={uploading} onChange={(event) => { void uploadTracks(event.target.files); event.currentTarget.value = ''; }} /></label>
+            {uploadMessage && <p className="trilha-radio-upload-message">{uploadMessage}</p>}
+          </div>}
 
           <label className="trilha-radio-volume" title={`Volume ${Math.round(volume * 100)}%`}>
             {silent ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}

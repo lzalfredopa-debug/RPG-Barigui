@@ -3,6 +3,7 @@ export type LineageDefinition = {
   race_id: string;
   name: string;
   description: string;
+  tagline?: string;
   image_url: string;
   // Campos legados permanecem no banco apenas por compatibilidade da TRILHA 1.
   // Na TRILHA 1.5 não concedem bônus mecânicos.
@@ -14,6 +15,7 @@ export type RaceDefinition = {
   id: string;
   name: string;
   description: string;
+  tagline?: string;
   image_url: string;
   // Campos legados permanecem no banco apenas por compatibilidade.
   // Povo e Vertente são escolhas narrativas/culturais na TRILHA 1.5.

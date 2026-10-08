@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { LogOut, Scroll, MessageSquare, Lightbulb, Plus, User, Send, Loader2, Save, X, Lock, Info, Shield, Sword, Trash2, Pencil, ImagePlus, Check, Ban, BookOpen, UsersRound, Route, Package, Brain } from 'lucide-react';
-import { supabase, type Player, type PersonalNote, type MasterMessage, type Character, type CombatEquipmentSummary, type CombatTarget, type CombatAction } from '@/lib/supabase';
+import { supabase, type Player, type PersonalNote, type MasterMessage, type PlayerMessage, type Character, type CombatEquipmentSummary, type CombatTarget, type CombatAction } from '@/lib/supabase';
 import { ATTRIBUTE_GROUPS, SKILL_GROUPS, apprenticeTitle, visibleClassPaths, classPathMeetsRequirements } from '@/lib/systemV15';
 import { renderCharacterText } from '@/lib/characterLanguage';
 import { attributeValue as v, skillValue as s, characterMaxHp as maxHp, characterMaxMp as maxMp, characterHungerMax as hungerMax } from '@/lib/characterRules';
@@ -164,6 +164,7 @@ function AncestryReference({ races }: { races: RaceDefinition[] }) {
             <div>
               <p className="text-[10px] uppercase tracking-[.2em] text-gold/70">Povo</p>
               <h3 className="font-display text-2xl text-gold-bright">{race.name}</h3>
+              <p className="mt-1 text-xs text-gold">{race.tagline || 'Povo narrativo e cultural'}</p>
               <p className="mt-2 text-sm leading-relaxed text-parchment-dim whitespace-pre-line">{race.description || 'Descrição ainda não registrada.'}</p>
               <div className="mt-3 inline-flex rounded-full border border-gold-dim bg-shadow/35 px-3 py-1 text-xs text-gold">Identidade cultural · sem bônus mecânico</div>
             </div>
@@ -179,8 +180,8 @@ function AncestryReference({ races }: { races: RaceDefinition[] }) {
               <div className="grid sm:grid-cols-3 gap-3">{race.lineages.map(lineage => <div key={lineage.id} className="rounded-xl border border-gold-dim/70 bg-shadow/35 p-3">
                 {lineage.image_url && <img src={lineage.image_url} alt={lineage.name} className="w-full aspect-[4/3] object-cover rounded-lg border border-gold-dim mb-3"/>}
                 <h5 className="font-display text-gold-bright">{lineage.name}</h5>
+                <p className="mt-1 text-[11px] text-gold/80">{lineage.tagline || 'Vertente narrativa e cultural'}</p>
                 <p className="mt-1 text-xs leading-relaxed text-parchment-dim">{lineage.description || 'Descrição ainda não registrada.'}</p>
-                <p className="mt-2 text-[11px] text-parchment-dim">Vertente narrativa e cultural.</p>
               </div>)}</div>
             </section>
           </div>
@@ -285,7 +286,7 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
     const isMaster = player.player_identifier === 'Mestre';
     const [characters, setCharacters] = useState<Character[]>([]), [charactersLoading, setCharactersLoading] = useState(true), [selectedCharacter, setSelectedCharacter] = useState<Character | null>(masterCharacter || null), [tab, setTab] = useState<Tab>('ficha');
     const [notes, setNotes] = useState<PersonalNote[]>([]), [notesContent, setNotesContent] = useState(''), [notesLoading, setNotesLoading] = useState(false), [notesSaving, setNotesSaving] = useState(false), [notesSaved, setNotesSaved] = useState(false);
-    const [masterMessages, setMasterMessages] = useState<MasterMessage[]>([]), [suggestionOpen, setSuggestionOpen] = useState(false), [suggestionText, setSuggestionText] = useState(''), [suggestionSending, setSuggestionSending] = useState(false), [suggestionSent, setSuggestionSent] = useState(false);
+    const [masterMessages, setMasterMessages] = useState<MasterMessage[]>([]), [playerMessages, setPlayerMessages] = useState<PlayerMessage[]>([]), [recadoText, setRecadoText] = useState(''), [recadoSending, setRecadoSending] = useState(false), [suggestionOpen, setSuggestionOpen] = useState(false), [suggestionText, setSuggestionText] = useState(''), [suggestionSending, setSuggestionSending] = useState(false), [suggestionSent, setSuggestionSent] = useState(false);
     const [items, setItems] = useState<Item[]>([]), [conditions, setConditions] = useState<Condition[]>([]), [effects, setEffects] = useState<Effect[]>([]), [contacts, setContacts] = useState<Contact[]>([]), [factions, setFactions] = useState<Faction[]>([]), [reputations, setReputations] = useState<Reputation[]>([]), [objectives, setObjectives] = useState<Objective[]>([]), [events, setEvents] = useState<Event[]>([]), [diary, setDiary] = useState<DiaryEntry[]>([]);
     const [diaryTitle, setDiaryTitle] = useState(''), [diaryContent, setDiaryContent] = useState(''), [diarySession, setDiarySession] = useState(''), [diarySaving, setDiarySaving] = useState(false);
     const [editingHistory, setEditingHistory] = useState(false), [historyDraft, setHistoryDraft] = useState<Record<string, string>>({}), [saving, setSaving] = useState(false), [uploading, setUploading] = useState(false);
@@ -302,7 +303,7 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
     } setCharactersLoading(true); const { data } = await supabase.from('characters').select('*').eq('player_id', player.id).order('created_at', { ascending: true }); setCharacters((data || []) as Character[]); setCharactersLoading(false); }, [player.id, masterMode]);
     const loadNotes = useCallback(async () => { setNotesLoading(true); const { data } = await supabase.from('personal_notes').select('*').eq('player_id', player.id).order('updated_at', { ascending: false }); setNotes(data || []); if (data?.length)
         setNotesContent(data[0].content); setNotesLoading(false); }, [player.id]);
-    const loadMasterMessages = useCallback(async () => { const { data } = await supabase.from('master_messages').select('*').eq('player_id', player.id).order('created_at', { ascending: false }); setMasterMessages(data || []); }, [player.id]);
+    const loadMasterMessages = useCallback(async () => { const [received, sent] = await Promise.all([supabase.from('master_messages').select('*').eq('player_id', player.id).order('created_at', { ascending: false }), supabase.from('player_messages').select('*').eq('player_id', player.id).order('created_at', { ascending: false })]); setMasterMessages((received.data || []) as MasterMessage[]); setPlayerMessages((sent.data || []) as PlayerMessage[]); }, [player.id]);
     const loadMasterData = useCallback(async () => { if (!isMaster)
         return; const [p, c] = await Promise.all([supabase.from('players').select('*').order('player_name'), supabase.from('characters').select('*').order('created_at')]); setAllPlayers((p.data || []) as Player[]); setAllCharacters((c.data || []) as Character[]); }, [isMaster]);
     useEffect(() => { loadCharacters(); loadNotes(); loadMasterMessages(); loadMasterData(); }, [loadCharacters, loadNotes, loadMasterMessages, loadMasterData]);
@@ -498,6 +499,15 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
         if (data)
             setNotes([data]);
     } setNotesSaved(true); setTimeout(() => setNotesSaved(false), 2000); setNotesSaving(false); };
+    const handleSendRecado = async () => {
+        const content = recadoText.trim();
+        if (!content || recadoSending) return;
+        setRecadoSending(true);
+        const { error } = await supabase.from('player_messages').insert({ player_id: player.id, content });
+        if (error) alert(`Não foi possível enviar o recado: ${error.message}`);
+        else { setRecadoText(''); await loadMasterMessages(); }
+        setRecadoSending(false);
+    };
     const handleSendSuggestion = async () => { if (!suggestionText.trim() || suggestionSending)
         return; setSuggestionSending(true); await supabase.from('suggestions').insert({ player_id: player.id, content: suggestionText.trim() }); setSuggestionText(''); setSuggestionSent(true); setTimeout(() => { setSuggestionSent(false); setSuggestionOpen(false); }, 1500); setSuggestionSending(false); };
     const authorizePlayer = async (p: Player, allowed: boolean) => { await supabase.from('players').update({ character_creation_allowed: allowed }).eq('id', p.id); await loadMasterData(); };
@@ -564,7 +574,21 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
       {isMaster && <><div className="divider-gold"/><section><h2 className="font-display text-xl text-gold-bright mb-4">Painel do Mestre</h2><div className="grid lg:grid-cols-2 gap-4"><div className="bg-gradient-card border border-gold-dim rounded-xl p-5"><h3 className="font-display text-gold mb-3">Autorizar novo personagem</h3><div className="space-y-2">{allPlayers.filter(p => p.id !== player.id).map(p => <div key={p.id} className="flex items-center justify-between bg-shadow/40 rounded-lg p-3"><span className="text-sm">{p.player_name || p.alcunha}</span><button onClick={() => authorizePlayer(p, !p.character_creation_allowed)} className="text-xs text-gold flex gap-1">{p.character_creation_allowed ? <><Ban className="w-4 h-4"/>Revogar</> : <><Check className="w-4 h-4"/>Autorizar</>}</button></div>)}</div></div><div className="bg-gradient-card border border-gold-dim rounded-xl p-5"><h3 className="font-display text-gold mb-3">Status dos personagens</h3><div className="space-y-2">{allCharacters.map(c => <div key={c.id} className="flex items-center justify-between gap-3 bg-shadow/40 rounded-lg p-3"><span className="text-sm">{c.name}</span><select value={c.status || 'vivo'} onChange={e => changeStatus(c, e.target.value as Character['status'])} className="bg-shadow border border-gold-dim rounded px-2 py-1 text-xs text-parchment"><option value="vivo">Vivo</option><option value="morto">Morto</option><option value="desaparecido">Desaparecido</option></select></div>)}</div></div></div></section></>}
 
       <div className="divider-gold"/><section><div className="flex items-center gap-3 mb-4"><Scroll className="w-5 h-5 text-gold"/><h2 className="font-display text-xl text-gold-bright">Anotações Pessoais</h2></div><div className="trilha-player-paper border border-gold-dim rounded-xl p-4 sm:p-6 shadow-gold">{notesLoading ? <Loader2 className="w-6 h-6 text-gold animate-spin mx-auto"/> : <><textarea value={notesContent} onChange={e => setNotesContent(e.target.value)} rows={5} className={`${field} resize-y`} placeholder="Escreva seus lembretes aqui..."/><div className="flex justify-end mt-3"><button onClick={handleSaveNotes} disabled={notesSaving} className="flex gap-2 text-sm text-gold"><Save className="w-4 h-4"/>{notesSaved ? 'Salvo!' : 'Salvar'}</button></div></>}</div></section>
-      <div className="divider-gold"/><section><div className="flex items-center gap-3 mb-4"><MessageSquare className="w-5 h-5 text-gold"/><h2 className="font-display text-xl text-gold-bright">Recados do Mestre</h2></div><div className="trilha-player-paper border border-gold-dim rounded-xl p-6 shadow-gold">{masterMessages.length === 0 ? <Empty>Nenhum recado no momento.</Empty> : masterMessages.map(m => <div key={m.id} className="bg-shadow/40 border border-gold-dim rounded-lg p-4 mb-2"><p className="text-sm whitespace-pre-wrap">{m.content}</p></div>)}</div></section>
+      <div className="divider-gold"/><section>
+        <div className="flex items-center gap-3 mb-4"><MessageSquare className="w-5 h-5 text-gold"/><h2 className="font-display text-xl text-gold-bright">Recados</h2></div>
+        <div className="grid lg:grid-cols-2 gap-4">
+          <div className="trilha-player-paper border border-gold-dim rounded-xl p-5 shadow-gold">
+            <h3 className="font-display text-gold-bright mb-3">Recebidos do Mestre</h3>
+            {masterMessages.length === 0 ? <Empty>Nenhum recado recebido.</Empty> : masterMessages.map(m => <div key={m.id} className="bg-shadow/40 border border-gold-dim rounded-lg p-4 mb-2"><p className="text-sm whitespace-pre-wrap">{m.content}</p><p className="mt-2 text-[10px] text-parchment-dim">{new Date(m.created_at).toLocaleString('pt-BR')}</p></div>)}
+          </div>
+          <div className="trilha-player-paper border border-gold-dim rounded-xl p-5 shadow-gold">
+            <h3 className="font-display text-gold-bright mb-3">Enviar ao Mestre</h3>
+            <textarea value={recadoText} onChange={e => setRecadoText(e.target.value)} rows={3} maxLength={2000} className={`${field} resize-y`} placeholder="Escreva um recado para o Mestre..."/>
+            <button onClick={handleSendRecado} disabled={recadoSending || !recadoText.trim()} className="mt-3 flex gap-2 bg-gradient-gold text-stone px-4 py-2 rounded-lg disabled:opacity-40"><Send className="w-4 h-4"/>{recadoSending ? 'Enviando...' : 'Enviar recado'}</button>
+            <div className="mt-5 border-t border-gold-dim/40 pt-4"><h4 className="font-display text-sm text-gold mb-2">Enviados</h4>{playerMessages.length === 0 ? <Empty>Nenhum recado enviado.</Empty> : playerMessages.map(m => <div key={m.id} className="bg-shadow/30 border border-gold-dim/60 rounded-lg p-3 mb-2"><p className="text-sm whitespace-pre-wrap">{m.content}</p><p className="mt-2 text-[10px] text-parchment-dim">{new Date(m.created_at).toLocaleString('pt-BR')}</p></div>)}</div>
+          </div>
+        </div>
+      </section>
       <div className="divider-gold"/><section>{!suggestionOpen ? <button onClick={() => setSuggestionOpen(true)} className="flex gap-2 text-parchment-dim/60 hover:text-gold text-sm"><Lightbulb className="w-4 h-4"/>Enviar sugestão</button> : <div className="trilha-player-paper border border-gold-dim rounded-xl p-5"><div className="flex justify-between"><h3 className="font-display text-gold">Enviar Sugestão</h3><button onClick={() => setSuggestionOpen(false)}><X className="w-4 h-4"/></button></div>{suggestionSent ? <p className="text-gold mt-3">Sugestão enviada.</p> : <><textarea value={suggestionText} onChange={e => setSuggestionText(e.target.value)} rows={4} className={`${field} mt-3`}/><button onClick={handleSendSuggestion} disabled={suggestionSending || !suggestionText.trim()} className="mt-3 flex gap-2 bg-gradient-gold text-stone px-4 py-2 rounded-lg"><Send className="w-4 h-4"/>Enviar</button></>}</div>}</section>
     </main>
     </>}

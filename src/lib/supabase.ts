@@ -29,6 +29,13 @@ export type MasterMessage = {
   created_at: string;
 };
 
+export type PlayerMessage = {
+  id: string;
+  player_id: string;
+  content: string;
+  created_at: string;
+};
+
 export type Suggestion = {
   id: string;
   player_id: string;

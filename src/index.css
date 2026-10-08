@@ -1442,11 +1442,33 @@
 .trilha-chat-send:disabled { opacity: .4; cursor: not-allowed; }
 
 @media (max-width: 560px) {
-  .trilha-chat-launcher { right: 10px; bottom: 10px; padding: 0 13px; }
-  .trilha-chat-window { right: 6px; bottom: 6px; width: calc(100vw - 12px); height: min(760px, calc(100vh - 12px)); border-radius: 13px; }
-  .trilha-chat-message { width: 92%; }
-  .trilha-chat-message.is-highlighted { width: 96%; }
+  .trilha-chat-launcher { right: 10px; bottom: 10px; min-height: 42px; padding: 0 13px; }
+  .trilha-chat-window {
+    right: 8px;
+    bottom: 8px;
+    width: calc(100vw - 16px);
+    height: min(72dvh, 560px);
+    max-height: calc(100dvh - 16px);
+    border-radius: 13px;
+  }
+  .trilha-chat-header { min-height: 58px; padding: 10px 11px 9px 13px; }
+  .trilha-chat-header h2 { font-size: 14px; }
+  .trilha-chat-presence { padding: 7px 10px 8px; }
+  .trilha-chat-online-list { margin-top: 5px; }
+  .trilha-chat-messages { padding: 10px 9px; gap: 7px; }
+  .trilha-chat-message { width: 94%; max-width: 94%; padding: 8px 9px; }
+  .trilha-chat-message.is-highlighted { width: 97%; max-width: 97%; }
+  .trilha-chat-message > p { font-size: 11px; }
+  .trilha-chat-dice-panel { margin: 0 8px 7px; padding: 8px; }
   .trilha-chat-dice-types { grid-template-columns: repeat(4, 1fr); }
+  .trilha-chat-composer { padding: 8px; grid-template-columns: 36px minmax(0,1fr) 36px; gap: 6px; }
+  .trilha-chat-dice-toggle, .trilha-chat-send { width: 36px; height: 36px; }
+  .trilha-chat-composer textarea { min-height: 36px; max-height: 76px; font-size: 12px; }
+}
+
+@media (max-width: 560px) and (orientation: landscape) {
+  .trilha-chat-window { height: min(86dvh, 430px); }
+  .trilha-chat-presence { display: none; }
 }
 
 /* ─────────────────────────────────────────────────────────────

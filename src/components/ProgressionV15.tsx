@@ -18,7 +18,7 @@ type Props = {
 };
 
 function Requirement({ ok, children }: { ok: boolean; children: React.ReactNode }) {
-  return <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] ${ok ? 'border-forest/60 bg-forest/20 text-parchment' : 'border-gold-dim bg-shadow/30 text-parchment-dim'}`}>{ok ? <Check className="w-3 h-3" /> : <Lock className="w-3 h-3" />}{children}</span>;
+  return <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] ${ok ? 'border-[#78915f] bg-[#263020] text-[#f0e2bd]' : 'border-[#8a704a] bg-[#171411] text-[#d9c8a5]'}`}>{ok ? <Check className="w-3 h-3" /> : <Lock className="w-3 h-3" />}{children}</span>;
 }
 
 export default function ProgressionV15({ character, actorPlayerId, canManage = false, onCharacterChange }: Props) {
@@ -48,14 +48,14 @@ export default function ProgressionV15({ character, actorPlayerId, canManage = f
   };
 
   return <div className="space-y-4">
-    <section className="rounded-xl border border-gold-dim bg-gradient-card p-4 sm:p-5">
+    <section className="rounded-xl border border-[#9b7134] bg-[#211b16] p-4 sm:p-5 shadow-lg">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-[10px] uppercase tracking-[.2em] text-gold/70">Progressão TRILHA 1.5</p>
           <h2 className="mt-1 font-display text-xl text-gold-bright flex items-center gap-2"><Sparkles className="w-5 h-5" />{chosen || title}</h2>
           <p className="mt-2 text-sm text-parchment-dim">Nível {character.level} · {character.level <= 3 ? 'Aprendiz' : chosen ? 'Classe inicial' : 'Pronto para escolher uma classe inicial'}</p>
         </div>
-        <div className="rounded-lg border border-gold-dim bg-shadow/35 px-3 py-2 text-right">
+        <div className="rounded-lg border border-[#806237] bg-[#15120f] px-3 py-2 text-right">
           <div className="text-[10px] uppercase tracking-[.16em] text-gold/70">Ramos disponíveis</div>
           <div className="mt-1 text-sm text-parchment">{roots.join(' · ')}</div>
         </div>
@@ -71,17 +71,17 @@ export default function ProgressionV15({ character, actorPlayerId, canManage = f
           const eligible = classPathMeetsRequirements(path, character.attributes || {}, character.skills || {});
           const selected = chosen === path.name;
           const levelReady = character.level >= 4;
-          return <article key={path.id} className={`rounded-lg border p-4 ${selected ? 'border-gold bg-gold/10' : 'border-gold-dim bg-shadow/25'}`}>
+          return <article key={path.id} className={`rounded-lg border p-4 shadow-sm ${selected ? 'border-[#d8ad4e] bg-[#4b261e]' : 'border-[#80633b] bg-[#211c17]'}`}>
             <div className="flex items-start justify-between gap-3">
-              <div><h3 className="font-display text-gold-bright">{path.name}</h3><p className="text-xs text-parchment-dim mt-1">Ramo de {path.primaryAttribute}</p></div>
-              {selected && <span className="rounded-full border border-gold bg-gold/15 px-2 py-1 text-[10px] uppercase tracking-wider text-gold-bright">Atual</span>}
+              <div><h3 className="font-display text-[#f1d687]">{path.name}</h3><p className="text-xs text-[#d2c09d] mt-1">Ramo de {path.primaryAttribute}</p></div>
+              {selected && <span className="rounded-full border border-[#e0b655] bg-[#24170f] px-2 py-1 text-[10px] uppercase tracking-wider text-[#f3d97f]">Atual</span>}
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               <Requirement ok={attr >= path.requiredAttributeMin}>{path.primaryAttribute} {attr}/{path.requiredAttributeMin}</Requirement>
               <Requirement ok={skill >= path.requiredSkillMin}>{path.requiredSkill} {skill}/{path.requiredSkillMin}</Requirement>
             </div>
-            {!levelReady && <p className="mt-3 text-[11px] text-parchment-dim">A escolha de classe inicial começa no nível 4. Até lá, os caminhos ficam visíveis para planejamento.</p>}
-            {canManage && !selected && <button type="button" onClick={() => choose(path)} disabled={!eligible || !levelReady || !!saving} className="mt-3 w-full rounded-lg border border-gold-dim bg-shadow/40 px-3 py-2 text-xs text-gold hover:border-gold disabled:opacity-35 disabled:cursor-not-allowed flex items-center justify-center gap-2"><Route className="w-3.5 h-3.5" />{saving === path.id ? 'Salvando...' : 'Definir como classe inicial'}</button>}
+            {!levelReady && <p className="mt-3 text-[11px] text-[#d9c9a9]">A escolha de classe inicial começa no nível 4. Até lá, os caminhos ficam visíveis para planejamento.</p>}
+            {canManage && !selected && <button type="button" onClick={() => choose(path)} disabled={!eligible || !levelReady || !!saving} className="mt-3 w-full rounded-lg border border-[#9b7134] bg-[#171411] px-3 py-2 text-xs text-[#e6c467] hover:border-[#d4a94e] hover:text-[#f4dc92] disabled:opacity-35 disabled:cursor-not-allowed flex items-center justify-center gap-2"><Route className="w-3.5 h-3.5" />{saving === path.id ? 'Salvando...' : 'Definir como classe inicial'}</button>}
           </article>;
         })}
       </div>

@@ -23,8 +23,8 @@ const STEPS = [
 
 
 
-type Lineage = { id?: string; race_id?: string; name: string; description: string; image: string; skill_group_1?: string; skill_group_2?: string };
-type Race = { id?: string; name: string; description?: string; image?: string; attribute_mode?: RaceDefinition['attribute_mode']; fixed_attribute?: string|null; lineages: Lineage[] };
+type Lineage = { id?: string; race_id?: string; name: string; description: string; tagline?: string; image: string; skill_group_1?: string; skill_group_2?: string };
+type Race = { id?: string; name: string; description?: string; tagline?: string; image?: string; attribute_mode?: RaceDefinition['attribute_mode']; fixed_attribute?: string|null; lineages: Lineage[] };
 
 export const RACES: Race[] = [
   { id: 'humanos', name: 'Humanos', lineages: [
@@ -123,7 +123,7 @@ function CreationReferenceOverlay({ view, onClose, player, races }: { view: Excl
           const key = String(race.id || '').toLowerCase();
           const naming = NAMING_CULTURES[key];
           return <article key={race.id || race.name} className={card}>
-            <div className="flex flex-col md:flex-row gap-4"><div className="md:w-40 shrink-0">{race.image ? <img src={race.image} alt={race.name} className="w-full rounded-lg border border-gold-dim"/> : <div className="aspect-square rounded-lg border border-gold-dim bg-shadow/30 flex items-center justify-center"><UsersRound className="w-10 h-10 text-gold/50"/></div>}</div><div className="min-w-0 flex-1"><h3 className="font-display text-xl text-gold-bright">{race.name}</h3><p className="mt-2 text-sm text-parchment-dim">{race.description || 'Descrição ainda não registrada.'}</p><p className="mt-2 text-xs text-gold">Povo e Vertente definem identidade e cultura; não concedem bônus mecânicos automáticos.</p>{naming && <div className="mt-4 rounded-lg border border-gold-dim/60 bg-shadow/25 p-3"><h4 className="font-display text-gold">{naming.title}</h4><p className="mt-1 text-xs text-parchment-dim">{naming.description}</p><p className="mt-2 text-xs text-gold/80"><b>Exemplos:</b> {naming.examples.join(', ')}</p><p className="mt-2 text-xs italic text-parchment-dim">{naming.applied}</p></div>}<div className="mt-4 grid sm:grid-cols-3 gap-2">{race.lineages.map(lineage => <div key={lineage.name} className="rounded-lg border border-gold-dim/50 bg-shadow/25 p-3"><h4 className="font-display text-sm text-gold-bright">{lineage.name}</h4><p className="mt-1 text-xs text-parchment-dim">{lineage.description}</p><p className="mt-2 text-[11px] text-parchment-dim">Vertente narrativa e cultural.</p></div>)}</div></div></div>
+            <div className="flex flex-col md:flex-row gap-4"><div className="md:w-40 shrink-0">{race.image ? <img src={race.image} alt={race.name} className="w-full rounded-lg border border-gold-dim"/> : <div className="aspect-square rounded-lg border border-gold-dim bg-shadow/30 flex items-center justify-center"><UsersRound className="w-10 h-10 text-gold/50"/></div>}</div><div className="min-w-0 flex-1"><h3 className="font-display text-xl text-gold-bright">{race.name}</h3><p className="mt-1 text-xs text-gold">{race.tagline || 'Povo narrativo e cultural'}</p><p className="mt-2 text-sm text-parchment-dim">{race.description || 'Descrição ainda não registrada.'}</p><p className="mt-2 text-xs text-gold/80">Povo e Vertente definem identidade e cultura; não concedem bônus mecânicos automáticos.</p>{naming && <div className="mt-4 rounded-lg border border-gold-dim/60 bg-shadow/25 p-3"><h4 className="font-display text-gold">{naming.title}</h4><p className="mt-1 text-xs text-parchment-dim">{naming.description}</p><p className="mt-2 text-xs text-gold/80"><b>Exemplos:</b> {naming.examples.join(', ')}</p><p className="mt-2 text-xs italic text-parchment-dim">{naming.applied}</p></div>}<div className="mt-4 grid sm:grid-cols-3 gap-2">{race.lineages.map(lineage => <div key={lineage.name} className="rounded-lg border border-gold-dim/50 bg-shadow/25 p-3"><h4 className="font-display text-sm text-gold-bright">{lineage.name}</h4><p className="mt-1 text-[11px] text-gold/80">{lineage.tagline || 'Vertente narrativa e cultural'}</p><p className="mt-1 text-xs text-parchment-dim">{lineage.description}</p></div>)}</div></div></div>
           </article>;
         })}</div>}
 
@@ -383,7 +383,7 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
       </div>
 
       {/* Body */}
-      <main className="max-w-3xl mx-auto w-full px-4 sm:px-6 flex-1 py-4">
+      <main className={`${currentStep === 3 ? 'max-w-6xl' : 'max-w-3xl'} mx-auto w-full px-4 sm:px-6 flex-1 py-4`}>
         <div className="bg-gradient-card border border-gold-dim rounded-xl p-6 sm:p-10 shadow-gold animate-fade-in-up">
           {currentStep === 1 && (
             <>
@@ -545,7 +545,8 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                           : 'bg-shadow/60 text-parchment-dim border-gold-dim hover:border-gold/60 hover:text-parchment'
                       }`}
                     >
-                      {item.name}
+                      <span className="block">{item.name}</span>
+                      <span className={`block mt-1 font-body text-[10px] leading-tight ${race === item.name ? 'text-stone/75' : 'text-parchment-dim/70'}`}>{item.tagline || 'Povo narrativo e cultural'}</span>
                     </button>
                   ))}
                 </div>
@@ -586,7 +587,7 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                         </span>
                         <span className="block mt-3 pt-2.5 border-t border-gold-dim/40">
                           <span className="block text-[9px] uppercase tracking-[.14em] text-gold/60 mb-1">Vertente</span>
-                          <span className="block font-body text-[11px] leading-relaxed text-parchment-dim">Referência cultural e narrativa.</span>
+                          <span className="block font-body text-[11px] leading-relaxed text-parchment-dim">{item.tagline || 'Vertente narrativa e cultural'}</span>
                         </span>
                       </button>
                     ))}
@@ -601,8 +602,8 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                 </label>
                 {isHybrid && <div className="mt-4 rounded-xl border border-gold-dim bg-shadow/25 p-4 space-y-4">
                   <div><h4 className="font-display text-gold-bright">Segundo Povo</h4><p className="mt-1 text-xs text-parchment-dim">Escolha um Povo diferente do primeiro. A combinação é narrativa e não altera Atributos ou Habilidades.</p></div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{raceOptions.filter(item => item.name !== race).map(item => <button key={item.name} type="button" onClick={() => { setSecondaryRace(item.name); setSecondaryLineage(''); }} className={`min-h-12 rounded-lg border px-3 py-2 text-sm ${secondaryRace === item.name ? 'border-gold bg-gold/15 text-gold-bright' : 'border-gold-dim bg-shadow/40 text-parchment-dim'}`}>{item.name}</button>)}</div>
-                  {selectedSecondaryRace && <div><h4 className="font-display text-sm text-gold mb-3">Vertente de {selectedSecondaryRace.name}</h4><div className="grid sm:grid-cols-3 gap-2">{selectedSecondaryRace.lineages.map(item => <button key={item.name} type="button" onClick={() => setSecondaryLineage(item.name)} className={`rounded-lg border p-3 text-left ${secondaryLineage === item.name ? 'border-gold bg-gold/15' : 'border-gold-dim bg-shadow/40'}`}><b className="font-display text-sm text-gold-bright">{item.name}</b><p className="mt-1 text-[11px] text-parchment-dim">{item.description}</p></button>)}</div></div>}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{raceOptions.filter(item => item.name !== race).map(item => <button key={item.name} type="button" onClick={() => { setSecondaryRace(item.name); setSecondaryLineage(''); }} className={`min-h-12 rounded-lg border px-3 py-2 text-sm ${secondaryRace === item.name ? 'border-gold bg-gold/15 text-gold-bright' : 'border-gold-dim bg-shadow/40 text-parchment-dim'}`}><span className="block">{item.name}</span><span className="block mt-1 text-[10px] opacity-70">{item.tagline || 'Povo narrativo e cultural'}</span></button>)}</div>
+                  {selectedSecondaryRace && <div><h4 className="font-display text-sm text-gold mb-3">Vertente de {selectedSecondaryRace.name}</h4><div className="grid sm:grid-cols-3 gap-2">{selectedSecondaryRace.lineages.map(item => <button key={item.name} type="button" onClick={() => setSecondaryLineage(item.name)} className={`rounded-lg border p-3 text-left ${secondaryLineage === item.name ? 'border-gold bg-gold/15' : 'border-gold-dim bg-shadow/40'}`}><b className="font-display text-sm text-gold-bright">{item.name}</b><p className="mt-1 text-[10px] text-gold/70">{item.tagline || 'Vertente narrativa e cultural'}</p><p className="mt-1 text-[11px] text-parchment-dim">{item.description}</p></button>)}</div></div>}
                 </div>}
               </div>
             </section>
@@ -670,7 +671,7 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                 <p className="font-body text-xs text-parchment-dim/70">Custo progressivo: 1º ponto custa 1 · 2º ponto custa +2.</p>
               </div>
               <p className="mb-6 text-xs text-parchment-dim">As Habilidades são definidas apenas pelos pontos investidos. Povo e Vertente permanecem narrativos.</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {SKILL_GROUPS.map((group) => (
                   <section key={group.name} className="bg-shadow/40 border border-gold-dim rounded-xl p-4">
                     <h3 className="font-display text-base text-gold mb-4 min-h-10">{group.name}</h3>

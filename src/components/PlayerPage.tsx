@@ -322,7 +322,7 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
     }
     else
         setEquipmentSummary(((data || [])[0] || null) as CombatEquipmentSummary | null); }, []);
-    const loadCombatTargets = useCallback(async (id: string) => { const { data, error } = await supabase.rpc('get_combat_targets', { p_character_id: id }); if (error) {
+    const loadCombatTargets = useCallback(async (id: string) => { const { data, error } = await supabase.rpc('get_combat_targets_v15', { p_character_id: id }); if (error) {
         console.error(error);
         setCombatTargets([]);
         return;
@@ -356,10 +356,14 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
             })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'combat_actions', filter: `attacker_character_id=eq.${id}` }, () => {
                 reloadSelectedCharacter(id);
+                loadCombatTargets(id);
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'combat_enemies' }, () => {
+                loadCombatTargets(id);
             })
             .subscribe();
         return () => { supabase.removeChannel(channel); };
-    }, [selectedCharacter?.id, loadPendingDefenses, reloadSelectedCharacter]);
+    }, [selectedCharacter?.id, loadPendingDefenses, reloadSelectedCharacter, loadCombatTargets]);
     const patchCharacter = async (patch: Partial<Character>) => { if (!selectedCharacter)
         return; setSaving(true); let query = supabase.from('characters').update(patch).eq('id', selectedCharacter.id); if (!masterMode)
         query = query.eq('player_id', player.id); const { data, error } = await query.select().single(); if (error)
@@ -436,7 +440,8 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
         if (!selectedTargetId) { setAttackRollError('Selecione um alvo antes de atacar.'); return; }
         setAttackRollError('');
         setRollingAttack(true);
-        const { error } = await supabase.rpc('roll_character_attack', { p_player_id: player.id, p_character_id: selectedCharacter.id, p_target_character_id: selectedTargetId });
+        const target = combatTargets.find(t => t.id === selectedTargetId);
+        const { error } = await supabase.rpc('roll_character_attack_target', { p_player_id: player.id, p_character_id: selectedCharacter.id, p_target_type: target?.target_type || 'character', p_target_id: selectedTargetId });
         if (error) setAttackRollError(error.message || 'Não foi possível realizar o ataque.');
         else await reloadSelectedCharacter(selectedCharacter.id);
         setRollingAttack(false);
@@ -648,7 +653,7 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">{calcCards.slice(2).map(([label, value, tip]) => <div key={String(label)} className="bg-shadow/50 border border-gold-dim rounded-lg p-4"><div className="text-xs text-parchment-dim">{label}<Tip>{tip}</Tip></div><div className="font-display text-xl text-gold-bright mt-1">{value}</div></div>)}</div>
 
           <section><h3 className="font-display text-gold mb-3 flex gap-2"><Sword className="w-5 h-5"/>Equipamento em uso</h3><div className="grid md:grid-cols-3 gap-3">
-            <div className="bg-shadow/40 border border-gold-dim rounded-xl p-4"><div className="text-xs text-gold">Arma</div><b className="font-display text-gold-bright">{equipmentSummary?.weapon_name || 'Nenhuma'}</b>{equipmentSummary?.weapon_name && <><p className="text-xs text-parchment-dim mt-1">Dano efetivo: {equipmentSummary.weapon_effective_damage}</p>{equipmentSummary.weapon_is_proficient === false && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">Uso não proficiente: o dano base já está reduzido pelo déficit.</p>}<label className="block mt-3 text-[10px] uppercase tracking-wide text-gold/80">Alvo<select value={selectedTargetId} onChange={e => setSelectedTargetId(e.target.value)} className="mt-1 w-full bg-shadow/70 border border-gold-dim rounded-lg px-2 py-2 text-xs text-parchment normal-case tracking-normal"><option value="">Selecione...</option>{combatTargets.map(target => <option key={target.id} value={target.id}>{target.name}</option>)}</select></label><button type="button" onClick={rollAttack} disabled={rollingAttack || equippedWeaponBroken || selectedCharacter.combat_action_available === false || !selectedTargetId} className="mt-3 w-full min-h-10 rounded-lg border border-gold bg-gradient-to-r from-blood/90 to-gold/80 px-3 py-2 font-display text-sm text-parchment shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"><Sword className="w-4 h-4"/>{equippedWeaponBroken ? 'Arma quebrada' : selectedCharacter.combat_action_available === false ? 'Ação já utilizada' : rollingAttack ? 'Rolando...' : 'Atacar'}</button>{attackRollError && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">{attackRollError}</p>}</>}</div>
+            <div className="bg-shadow/40 border border-gold-dim rounded-xl p-4"><div className="text-xs text-gold">Arma</div><b className="font-display text-gold-bright">{equipmentSummary?.weapon_name || 'Nenhuma'}</b>{equipmentSummary?.weapon_name && <><p className="text-xs text-parchment-dim mt-1">Dano efetivo: {equipmentSummary.weapon_effective_damage}</p>{equipmentSummary.weapon_is_proficient === false && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">Uso não proficiente: o dano base já está reduzido pelo déficit.</p>}<label className="block mt-3 text-[10px] uppercase tracking-wide text-gold/80">Alvo<select value={selectedTargetId} onChange={e => setSelectedTargetId(e.target.value)} className="mt-1 w-full bg-shadow/70 border border-gold-dim rounded-lg px-2 py-2 text-xs text-parchment normal-case tracking-normal"><option value="">Selecione...</option>{combatTargets.map(target => <option key={`${target.target_type || 'character'}-${target.id}`} value={target.id}>{target.name}{target.target_type === 'enemy' && target.state ? ` · ${target.state}` : ''}</option>)}</select></label><button type="button" onClick={rollAttack} disabled={rollingAttack || equippedWeaponBroken || selectedCharacter.combat_action_available === false || !selectedTargetId} className="mt-3 w-full min-h-10 rounded-lg border border-gold bg-gradient-to-r from-blood/90 to-gold/80 px-3 py-2 font-display text-sm text-parchment shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"><Sword className="w-4 h-4"/>{equippedWeaponBroken ? 'Arma quebrada' : selectedCharacter.combat_action_available === false ? 'Ação já utilizada' : rollingAttack ? 'Rolando...' : 'Atacar'}</button>{attackRollError && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">{attackRollError}</p>}</>}</div>
             <div className="bg-shadow/40 border border-gold-dim rounded-xl p-4"><div className="text-xs text-gold">Armadura</div><b className="font-display text-gold-bright">{equipmentSummary?.armor_name || 'Nenhuma'}</b>{equipmentSummary?.armor_name && <><p className="text-xs text-parchment-dim mt-1">Absorção efetiva: {armorAbsorption}{equipmentSummary.armor_evasion_penalty ? ` · Evasão −${equipmentSummary.armor_evasion_penalty}` : ''}{equipmentSummary.armor_movement_penalty ? ` · Movimento −${equipmentSummary.armor_movement_penalty} m` : ''}</p>{equipmentSummary.armor_is_proficient === false && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">Uso não proficiente: a absorção já está reduzida pelo déficit.</p>}</>}</div>
             <div className="bg-shadow/40 border border-gold-dim rounded-xl p-4"><div className="text-xs text-gold">Escudo</div><b className="font-display text-gold-bright">{equipmentSummary?.shield_name || 'Nenhum'}</b>{equipmentSummary?.shield_name && <><p className="text-xs text-parchment-dim mt-1">Bônus efetivo de Bloqueio: +{equipmentSummary.shield_effective_bonus}{equipmentSummary.shield_evasion_penalty ? ` · Evasão −${equipmentSummary.shield_evasion_penalty}` : ''}{equipmentSummary.shield_movement_penalty ? ` · Movimento −${equipmentSummary.shield_movement_penalty} m` : ''}</p>{equipmentSummary.shield_is_proficient === false && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">Uso não proficiente: o bônus de Bloqueio já está reduzido pelo déficit.</p>}</>}</div>
           </div></section>

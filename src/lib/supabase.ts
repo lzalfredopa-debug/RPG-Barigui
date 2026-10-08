@@ -137,14 +137,18 @@ export type CombatEquipmentSummary = {
 export type CombatTarget = {
   id: string;
   name: string;
+  target_type?: 'character' | 'enemy';
+  state?: string | null;
 };
 
 export type CombatAction = {
   id: string;
   attacker_player_id: string | null;
-  attacker_character_id: string;
+  attacker_character_id: string | null;
+  attacker_enemy_id?: string | null;
   attacker_name: string;
-  target_character_id: string;
+  target_character_id: string | null;
+  target_enemy_id?: string | null;
   target_name: string;
   weapon_name: string;
   attack_attribute: string;

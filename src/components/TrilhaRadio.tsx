@@ -59,7 +59,8 @@ export default function TrilhaRadio({ player }: { player: Player }) {
   const [loading, setLoading] = useState(true);
   const [waitingInteraction, setWaitingInteraction] = useState(false);
   const [error, setError] = useState('');
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(() => { try { return localStorage.getItem('trilha:radio:open') === '1'; } catch { return false; } });
+  useEffect(() => { try { localStorage.setItem('trilha:radio:open', isOpen ? '1' : '0'); } catch { /* opcional */ } }, [isOpen]);
   const [stopped, setStopped] = useState(false);
   const [skipOffset, setSkipOffset] = useState(0);
   const [skipping, setSkipping] = useState(false);
@@ -214,7 +215,7 @@ export default function TrilhaRadio({ player }: { player: Player }) {
           <div className="trilha-radio-head">
             <span className={`trilha-radio-signal ${currentTrack && !waitingInteraction && !stopped ? 'is-live' : ''}`}><Radio className="w-4 h-4" /></span>
             <div className="trilha-radio-copy"><strong>Rádio TRILHA</strong><span>{loading && 'Preparando a transmissão...'}{!loading && tracks.length === 0 && !error && 'Nenhuma faixa na programação.'}{!loading && stopped && 'Parada neste navegador.'}{!loading && !stopped && waitingInteraction && 'A rádio começa na sua primeira interação.'}{!loading && !stopped && !waitingInteraction && currentTrack && currentTrack.name}{!loading && !stopped && !waitingInteraction && !currentTrack && tracks.length > 0 && 'Sintonizando...'}{error && error}</span></div>
-            <button type="button" className="trilha-radio-close" onClick={() => setIsOpen(false)} aria-label="Fechar Rádio TRILHA" title="Fechar rádio"><X className="w-4 h-4" /></button>
+            <button type="button" className="trilha-radio-close" onClick={() => setIsOpen(false)} aria-label="Minimizar Rádio TRILHA" title="Minimizar rádio"><X className="w-4 h-4" /></button>
           </div>
 
           <div className="trilha-radio-control-block">
@@ -232,7 +233,7 @@ export default function TrilhaRadio({ player }: { player: Player }) {
           </label>
         </aside>
       ) : (
-        <button type="button" className={`trilha-radio-launcher ${currentTrack && !waitingInteraction && !stopped ? 'is-live' : ''}`} onClick={() => setIsOpen(true)} aria-label="Abrir Rádio TRILHA" title="Abrir Rádio TRILHA"><Radio className="w-5 h-5" /></button>
+        <button type="button" className={`trilha-radio-launcher ${currentTrack && !waitingInteraction && !stopped ? 'is-live' : ''}`} onClick={() => setIsOpen(true)} aria-label="Abrir Rádio TRILHA" title="Abrir Rádio TRILHA"><Radio className="w-5 h-5" /><span className="hidden sm:inline">Rádio</span>{currentTrack && !stopped && <span className="hidden lg:inline trilha-radio-launcher-track">· {currentTrack.name}</span>}</button>
       )}
     </>
   );

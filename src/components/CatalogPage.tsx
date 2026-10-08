@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Package, Pencil, Plus, RefreshCw, Save, Search, Shield, Shirt, Sword, Trash2, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Package, Pencil, Plus, RefreshCw, Save, Search, Shield, Shirt, Sword, Trash2, X } from 'lucide-react';
 import {
   supabase,
   type ArmorMaster,
@@ -55,6 +55,10 @@ export default function CatalogPage({ playerId, isMaster = false }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editor, setEditor] = useState<Editor>(null);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(localStorage.getItem('trilha:catalog:groups') || '{}'); } catch { return {}; }
+  });
+  useEffect(() => { try { localStorage.setItem('trilha:catalog:groups', JSON.stringify(openGroups)); } catch { /* preferência local opcional */ } }, [openGroups]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -182,13 +186,13 @@ export default function CatalogPage({ playerId, isMaster = false }: Props) {
     </div>
     <div className="flex flex-wrap gap-2">{classButtons.map(([key, label, Icon]) => <button key={key} onClick={() => setActive(key)} className={`${btn} trilha-ui-segment ${active === key ? 'is-active' : ''}`}><Icon className="w-4 h-4"/>{label} <span className="text-[10px] opacity-70">{lists[key].length}</span></button>)}</div>
     <label className="trilha-catalog-search relative block max-w-lg"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gold/60"/><input className={`${input} pl-9`} value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar nome ou subclasse..."/></label>
-    {loading ? <p className="text-parchment-dim">Carregando catálogo...</p> : groups.length === 0 ? <p className="text-parchment-dim">Nenhum item encontrado.</p> : <div className="space-y-5">{groups.map(group => <section key={group.name} className="trilha-catalog-group rounded-xl border border-gold-dim bg-gradient-card overflow-hidden"><div className="px-4 py-3 border-b border-gold-dim bg-shadow/45 flex justify-between"><div><h3 className="font-display text-lg text-gold-bright">{group.name}</h3><p className="text-xs text-parchment-dim">{group.items.length} item(ns)</p></div></div><div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 p-3">{group.items.map(item => {
+    {loading ? <p className="text-parchment-dim">Carregando catálogo...</p> : groups.length === 0 ? <p className="text-parchment-dim">Nenhum item encontrado.</p> : <div className="space-y-3">{groups.map(group => { const groupKey = `${active}:${group.name}`; const isOpen = openGroups[groupKey] !== false; return <section key={group.name} className="trilha-catalog-group rounded-xl border border-gold-dim bg-gradient-card overflow-hidden"><button type="button" onClick={() => setOpenGroups(current => ({ ...current, [groupKey]: !isOpen }))} className="w-full px-4 py-3 bg-shadow/45 flex justify-between items-center text-left"><div className="flex items-center gap-2">{isOpen ? <ChevronDown className="w-4 h-4 text-gold"/> : <ChevronRight className="w-4 h-4 text-gold"/>}<div><h3 className="font-display text-lg text-gold-bright">{group.name}</h3><p className="text-xs text-parchment-dim">{group.items.length} item(ns)</p></div></div></button>{isOpen && <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 p-3">{group.items.map(item => {
       const weight = 'weight_kg' in item ? item.weight_kg : null;
       const durability = 'durability_max' in item ? item.durability_max : null;
       const amount = active === 'common' ? formatAmount((item as ItemCatalogPublic).default_amount, (item as ItemCatalogPublic).unit) : null;
       return <article key={item.id} className="trilha-catalog-item rounded-lg border border-gold-dim/60 bg-shadow/35 p-4"><div className="flex justify-between gap-3"><div className="min-w-0"><b className="text-gold-bright">{item.name}</b><p className="text-xs text-parchment-dim mt-1">{weight == null ? '⚠ Peso não definido' : `${Number(weight).toLocaleString('pt-BR',{maximumFractionDigits:2})} kg`}{durability ? ` · Durabilidade ${durability}` : ''}{amount ? ` · ${amount}` : ''}</p></div>{isMaster && <div className="flex gap-2 shrink-0"><button className="trilha-icon-button" onClick={() => openEdit(item)} title="Editar"><Pencil className="w-4 h-4"/></button><button className="trilha-icon-button is-danger" onClick={() => remove(item)} title="Remover"><Trash2 className="w-4 h-4"/></button></div>}</div>
       {active === 'common' && <CommonSummary item={item as ItemCatalogPublic}/>} {isMaster && active === 'weapons' && <WeaponSummary item={item as WeaponPublic & Partial<WeaponMaster>}/>} {isMaster && active === 'armors' && <ArmorSummary item={item as ArmorPublic & Partial<ArmorMaster>}/>} {isMaster && active === 'shields' && <ShieldSummary item={item as ShieldPublic & Partial<ShieldMaster>}/>}</article>;
-    })}</div></section>)}</div>}
+    })}</div>}</section>; })}</div>}
     {editor && isMaster && <EditorModal editor={editor} saving={saving} setField={setField} onSave={save} onClose={() => setEditor(null)} commonCategories={[...new Set(common.map(x => x.category)), 'Itens variados']}/>} 
   </div>;
 }

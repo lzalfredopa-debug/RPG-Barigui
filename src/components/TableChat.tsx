@@ -261,7 +261,8 @@ function ActionRollOverlay({ animation, onComplete }: { animation: RollAnimation
 export default function TableChat({ player }: { player: Player }) {
   const isMaster = player.player_identifier === 'Mestre';
   const displayName = player.player_name?.trim() || player.alcunha;
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(() => { try { return localStorage.getItem('trilha:chat:open') === '1'; } catch { return false; } });
+  useEffect(() => { try { localStorage.setItem('trilha:chat:open', open ? '1' : '0'); } catch { /* opcional */ } }, [open]);
   const openRef = useRef(false);
   const atBottomRef = useRef(true);
   const initialScrollDoneRef = useRef(false);
@@ -603,7 +604,7 @@ export default function TableChat({ player }: { player: Player }) {
         <aside className="trilha-chat-window" aria-label="Chat da Mesa">
           <header className="trilha-chat-header">
             <div><p className="trilha-chat-eyebrow">TRILHA · comunicação da mesa</p><h2><MessageCircle className="w-4 h-4" /> Chat da Mesa</h2></div>
-            <button className="trilha-chat-icon-button" onClick={() => setOpen(false)} title="Fechar"><X className="w-4 h-4" /></button>
+            <button className="trilha-chat-icon-button" onClick={() => setOpen(false)} title="Minimizar"><X className="w-4 h-4" /></button>
           </header>
 
           <section className="trilha-chat-presence">

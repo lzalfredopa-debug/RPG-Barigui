@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, ChevronRight, Check, Info, Loader2, Lock, BookOpen, UsersRound, Route, Package, Brain, X } from 'lucide-react';
 import { supabase, type Player } from '@/lib/supabase';
-import { attributeChoices, lineageBenefitText, raceBenefitText, type RaceDefinition, type LineageDefinition } from '@/lib/ancestry';
+import { type RaceDefinition } from '@/lib/ancestry';
 import { NAMING_CULTURES } from '@/lib/nameCultures';
 import CatalogPage from '@/components/CatalogPage';
+import { ATTRIBUTE_GROUPS, SKILL_GROUPS, apprenticeTitle } from '@/lib/systemV15';
+import CollapsibleSection from '@/components/CollapsibleSection';
 
 type CharacterCreationProps = {
   player: Player;
@@ -60,7 +62,7 @@ export const RACES: Race[] = [
     { name: 'Abissais', image: '/images/linhagens/tiferinos-abissal.png', description: 'Traços assimétricos, chifres irregulares e manifestações de uma herança ligada ao caos e à transformação.' },
     { name: 'Umbráticos', image: '/images/linhagens/tiferinos-umbratico.png', description: 'Cores escuras ou desbotadas, olhos contrastantes e sombras que parecem acompanhar seus movimentos com atraso.' },
   ]},
-  { id: 'povo-fungico', name: 'Povo Fúngico', lineages: [
+  { id: 'povo-fungico', name: 'Fúngicos', lineages: [
     { name: 'Micelares', image: '/images/linhagens/povo-fungico-micelar.png', description: 'Corpos fibrosos, semelhantes a raízes entrelaçadas, capazes de perceber sinais através de redes de fungos.' },
     { name: 'Chapeleiros', image: '/images/linhagens/povo-fungico-chapeleiro.png', description: 'Chapéus de cogumelo de diferentes formatos e cores; produzem pequenos conjuntos de esporos.' },
     { name: 'Luminescentes', image: '/images/linhagens/povo-fungico-luminescente.png', description: 'Partes do corpo emitem luz, usada para iluminar suavemente e transmitir sinais.' },
@@ -70,7 +72,7 @@ export const RACES: Race[] = [
     { name: 'Cromáticos', image: '/images/linhagens/draconatos-cromatico.png', description: 'Escamas de cores intensas e bem definidas.' },
     { name: 'Gemáticos', image: '/images/linhagens/draconatos-gematico.png', description: 'Escamas cristalinas ou facetadas, semelhantes a pedras preciosas.' },
   ]},
-  { id: 'povo-fera', name: 'Povo Fera', lineages: [
+  { id: 'povo-fera', name: 'Feras', lineages: [
     { name: 'Felinos', image: '/images/linhagens/povo-fera-felino.png', description: 'Traços de gatos, linces, onças ou leões, com garras retráteis e equilíbrio apurado.' },
     { name: 'Canídeos', image: '/images/linhagens/povo-fera-canideo.png', description: 'Traços de lobos, cães ou raposas, com olfato desenvolvido e orelhas expressivas.' },
     { name: 'Avianos', image: '/images/linhagens/povo-fera-aviano.png', description: 'Penas, bicos e características de diferentes aves. O formato das asas e sua utilidade ainda serão definidos.' },
@@ -79,262 +81,7 @@ export const RACES: Race[] = [
 
 
 
-type AttributeDefinition = {
-  name: string;
-  description: string;
-  examples: string;
-};
-
-type AttributeGroup = {
-  name: string;
-  attributes: AttributeDefinition[];
-};
-
-export const ATTRIBUTE_GROUPS: AttributeGroup[] = [
-  {
-    name: 'Físicos',
-    attributes: [
-      { name: 'Força', description: 'Potência e força muscular.', examples: 'Erguer, empurrar, quebrar e golpear.' },
-      { name: 'Vigor', description: 'Resistência e capacidade física.', examples: 'Suportar esforço, dor, venenos e cansaço.' },
-      { name: 'Agilidade', description: 'Rapidez e controle do corpo.', examples: 'Esquivar, saltar, equilibrar-se e mover-se.' },
-      { name: 'Destreza', description: 'Precisão e coordenação manual.', examples: 'Mirar, manipular objetos e executar movimentos delicados.' },
-    ],
-  },
-  {
-    name: 'Mentais',
-    attributes: [
-      { name: 'Inteligência', description: 'Conhecimento e capacidade de aprender.', examples: 'Estudo, memória e conhecimento técnico.' },
-      { name: 'Raciocínio', description: 'Lógica e capacidade de solucionar problemas.', examples: 'Deduzir, calcular, investigar e improvisar soluções.' },
-      { name: 'Sabedoria', description: 'Julgamento e compreensão adquirida.', examples: 'Bom senso, experiência e interpretação de situações.' },
-      { name: 'Percepção', description: 'Atenção e capacidade de notar o ambiente.', examples: 'Observar, ouvir, procurar e detectar mudanças.' },
-    ],
-  },
-  {
-    name: 'Sociais',
-    attributes: [
-      { name: 'Carisma', description: 'Capacidade de cativar e conquistar.', examples: 'Persuadir, entreter e inspirar simpatia.' },
-      { name: 'Presença', description: 'Impacto e força da personalidade.', examples: 'Intimidar, liderar, impor-se e chamar atenção.' },
-      { name: 'Manipulação', description: 'Capacidade de influenciar de forma indireta.', examples: 'Blefar, enganar, dissimular e conduzir alguém.' },
-      { name: 'Empatia', description: 'Capacidade de compreender outras pessoas.', examples: 'Perceber emoções, intenções e criar conexão.' },
-    ],
-  },
-];
-
-export const SKILL_GROUPS = [
-  {
-    name: 'Marcial',
-    skills: [{ name: 'Tática', description: 'Capacidade de analisar e coordenar ações durante conflitos.', examples: 'Posicionamento, formações, coordenar aliados e explorar terreno.' }, { name: 'Cavalaria', description: 'Habilidade para montar e controlar animais, inclusive em situações de conflito.', examples: 'Cavalgar, controlar montaria, manobrar e combater montado.' }, { name: 'Esgrima', description: 'Técnica no uso preciso de armas brancas empunhadas.', examples: 'Espadas, sabres, floretes e aparar golpes.' }, { name: 'Luta', description: 'Capacidade de combater utilizando o próprio corpo.', examples: 'Socos, chutes, agarrões e imobilizações.' }, { name: 'Vigilância', description: 'Capacidade de manter atenção ativa diante de possíveis ameaças.', examples: 'Montar guarda, perceber aproximações e notar emboscadas.' }, { name: 'Proteção', description: 'Capacidade de defender outras pessoas contra perigos e ataques.', examples: 'Interceptar ataques, cobrir aliado, escoltar e proteger posição.' }, { name: 'Defesa', description: 'Técnica para evitar ou neutralizar ataques direcionados a si.', examples: 'Bloquear, aparar e assumir postura defensiva.' }, { name: 'Armaduras', description: 'Conhecimento e prática no uso de equipamentos de proteção.', examples: 'Vestir corretamente, movimentar-se com armadura e reconhecer proteções.' }, { name: 'Escaramuça', description: 'Capacidade de lutar com mobilidade e constante reposicionamento.', examples: 'Atacar e recuar, flanquear e realizar combate móvel.' }, { name: 'Tiro', description: 'Técnica para atingir alvos utilizando armas de ataque à distância.', examples: 'Arco, besta, armas de projétil e mirar.' }, { name: 'Emboscada', description: 'Capacidade de preparar e executar ataques aproveitando surpresa e posição.', examples: 'Preparar tocaia, escolher posição e atacar de surpresa.' }, { name: 'Atletismo', description: 'Capacidade física aplicada a atividades que exigem esforço e coordenação.', examples: 'Correr, escalar, nadar e saltar.' }],
-  },
-  {
-    name: 'Campo & Ofício',
-    skills: [{ name: 'Rastreamento', description: 'Capacidade de identificar e seguir sinais deixados pela passagem de seres ou veículos.', examples: 'Pegadas, rastros, direção e sinais de passagem.' }, { name: 'Condução', description: 'Capacidade de controlar veículos, carroças e outros meios de transporte.', examples: 'Carroças, carruagens, trenós e manobras.' }, { name: 'Furtividade', description: 'Capacidade de agir e se deslocar evitando ser percebido.', examples: 'Esconder-se, mover-se silenciosamente e infiltrar-se.' }, { name: 'Arrombamento', description: 'Conhecimento de fechaduras e mecanismos utilizados para restringir acesso.', examples: 'Abrir fechaduras, identificar mecanismos e contornar trancas.' }, { name: 'Prestidigitação', description: 'Habilidade manual para realizar movimentos rápidos, precisos ou discretos.', examples: 'Esconder objetos, truques de mãos e pequenos furtos.' }, { name: 'Metalurgia', description: 'Conhecimento sobre metais e técnicas utilizadas para trabalhá-los.', examples: 'Forjar, reparar, avaliar metais e fabricar peças.' }, { name: 'Construção', description: 'Conhecimento prático para criar e reparar estruturas e objetos.', examples: 'Carpintaria, estruturas, reparos e avaliar construções.' }, { name: 'Mecânica', description: 'Conhecimento sobre mecanismos, engrenagens e dispositivos físicos.', examples: 'Reparar mecanismos, montar dispositivos e identificar falhas.' }, { name: 'Alquimia', description: 'Conhecimento sobre substâncias, suas propriedades e suas combinações.', examples: 'Preparar compostos, identificar substâncias e reagentes.' }, { name: 'Sobrevivência', description: 'Capacidade de obter recursos e permanecer seguro em ambientes naturais.', examples: 'Conseguir alimento, abrigo, água e reconhecer perigos naturais.' }, { name: 'Exploração', description: 'Capacidade de investigar e atravessar lugares desconhecidos.', examples: 'Explorar ruínas, cavernas, mapear áreas e encontrar passagens.' }, { name: 'Navegação', description: 'Capacidade de determinar posição, direção e trajetos.', examples: 'Mapas, bússola, estrelas e planejar rotas.' }],
-  },
-  {
-    name: 'Sociedade, Cultura & Expressão',
-    skills: [{ name: 'Escrita', description: 'Capacidade de comunicar ideias e informações por meio de textos.', examples: 'Cartas, relatos, documentos e registros.' }, { name: 'Enganação', description: 'Capacidade de fazer outras pessoas acreditarem em informações falsas ou incompletas.', examples: 'Mentir, inventar histórias e disfarçar intenções.' }, { name: 'Trapaça', description: 'Capacidade de manipular regras, situações ou procedimentos em benefício próprio.', examples: 'Fraudar jogos, aplicar golpes e explorar brechas.' }, { name: 'Jornadas', description: 'Conhecimento adquirido por viagens, povos e experiências em diferentes lugares.', examples: 'Costumes regionais, rotas conhecidas e histórias de viagem.' }, { name: 'Poética', description: 'Capacidade de criar e transmitir ideias através da linguagem artística e narrativa.', examples: 'Poemas, histórias, versos e composição narrativa.' }, { name: 'Interpretação', description: 'Capacidade de representar personagens, emoções ou identidades.', examples: 'Atuação, imitação e disfarce comportamental.' }, { name: 'Música', description: 'Conhecimento e prática de expressão musical.', examples: 'Cantar, tocar instrumentos, compor e reconhecer melodias.' }, { name: 'Artes Visuais', description: 'Capacidade de criar e compreender obras expressas visualmente.', examples: 'Pintura, desenho, escultura e ilustração.' }, { name: 'Etiqueta', description: 'Conhecimento das normas sociais e comportamentos esperados em diferentes ambientes.', examples: 'Cerimônias, protocolos, costumes e formalidades.' }, { name: 'Mediação', description: 'Capacidade de facilitar entendimento entre pessoas ou grupos em desacordo.', examples: 'Conciliar disputas, encontrar acordos e reduzir conflitos.' }, { name: 'Oratória', description: 'Capacidade de transmitir ideias de forma clara e convincente diante de outras pessoas.', examples: 'Discursos, debates, apresentações e falar para multidões.' }, { name: 'Negociação', description: 'Capacidade de alcançar acordos através da troca de propostas e concessões.', examples: 'Barganhar, negociar contratos, preços e condições.' }],
-  },
-  {
-    name: 'Conhecimento & Doutrina',
-    skills: [{ name: 'Comércio', description: 'Conhecimento sobre compra, venda e circulação de bens e serviços.', examples: 'Avaliar mercadorias, reconhecer mercados, preços e rotas comerciais.' }, { name: 'Finanças', description: 'Conhecimento sobre dinheiro, patrimônio, crédito e operações financeiras.', examples: 'Calcular juros, avaliar dívidas e administrar recursos.' }, { name: 'Administração', description: 'Capacidade de organizar recursos, pessoas e atividades para alcançar um objetivo.', examples: 'Planejamento, logística, gestão de equipes e organização.' }, { name: 'Estratégia', description: 'Capacidade de elaborar planos de longo prazo considerando recursos, objetivos e adversários.', examples: 'Campanhas, planejamento militar e antecipar consequências.' }, { name: 'Disciplina Marcial', description: 'Conhecimento de tradições, princípios e práticas formais relacionadas ao combate.', examples: 'Doutrinas militares, treinamento e códigos marciais.' }, { name: 'Elementalismo', description: 'Conhecimento sobre forças e manifestações associadas aos elementos.', examples: 'Fogo, água, terra, ar e fenômenos elementais.' }, { name: 'Arcanismo', description: 'Conhecimento teórico sobre magia e fenômenos arcanos.', examples: 'Reconhecer magia, símbolos arcanos e teorias mágicas.' }, { name: 'Ritualismo', description: 'Conhecimento sobre preparação, estrutura e execução de rituais.', examples: 'Círculos, componentes, cerimônias mágicas e identificar rituais.' }, { name: 'Manipulação Arcana', description: 'Conhecimento prático sobre como controlar e modificar manifestações mágicas.', examples: 'Conduzir energia, alterar efeitos e estabilizar fenômenos arcanos.' }, { name: 'Teologia', description: 'Conhecimento sobre divindades, religiões, crenças e suas tradições.', examples: 'Cultos, textos sagrados, símbolos religiosos e dogmas.' }, { name: 'Medicina', description: 'Conhecimento sobre o corpo, ferimentos, doenças e formas de tratamento.', examples: 'Diagnosticar, tratar ferimentos, anatomia e primeiros socorros.' }, { name: 'Espiritualismo', description: 'Conhecimento sobre espíritos e fenômenos relacionados ao mundo espiritual.', examples: 'Reconhecer manifestações, tradições espirituais, entidades e contato espiritual.' }],
-  },
-] as const;
-const SKILL_DESCRIPTIONS: Record<string, { description: string; examples: string }> = {
-  'Tática': {
-    description: 'Capacidade de analisar e coordenar ações durante conflitos.',
-    examples: 'Posicionamento, formações, coordenar aliados e explorar terreno.',
-  },
-  'Cavalaria': {
-    description: 'Habilidade para montar e controlar animais, inclusive em situações de conflito.',
-    examples: 'Cavalgar, controlar montaria, manobrar e combater montado.',
-  },
-  'Esgrima': {
-    description: 'Técnica no uso preciso de armas brancas empunhadas.',
-    examples: 'Espadas, sabres, floretes e aparar golpes.',
-  },
-  'Luta': {
-    description: 'Capacidade de combater utilizando o próprio corpo.',
-    examples: 'Socos, chutes, agarrões e imobilizações.',
-  },
-  'Vigilância': {
-    description: 'Capacidade de manter atenção ativa diante de possíveis ameaças.',
-    examples: 'Montar guarda, perceber aproximações e notar emboscadas.',
-  },
-  'Proteção': {
-    description: 'Capacidade de defender outras pessoas contra perigos e ataques.',
-    examples: 'Interceptar ataques, cobrir aliado, escoltar e proteger posição.',
-  },
-  'Defesa': {
-    description: 'Técnica para evitar ou neutralizar ataques direcionados a si.',
-    examples: 'Bloquear, aparar e assumir postura defensiva.',
-  },
-  'Armaduras': {
-    description: 'Conhecimento e prática no uso de equipamentos de proteção.',
-    examples: 'Vestir corretamente, movimentar-se com armadura e reconhecer proteções.',
-  },
-  'Escaramuça': {
-    description: 'Capacidade de lutar com mobilidade e constante reposicionamento.',
-    examples: 'Atacar e recuar, flanquear e realizar combate móvel.',
-  },
-  'Tiro': {
-    description: 'Técnica para atingir alvos utilizando armas de ataque à distância.',
-    examples: 'Arco, besta, armas de projétil e mirar.',
-  },
-  'Emboscada': {
-    description: 'Capacidade de preparar e executar ataques aproveitando surpresa e posição.',
-    examples: 'Preparar tocaia, escolher posição e atacar de surpresa.',
-  },
-  'Atletismo': {
-    description: 'Capacidade física aplicada a atividades que exigem esforço e coordenação.',
-    examples: 'Correr, escalar, nadar e saltar.',
-  },
-
-  'Rastreamento': {
-    description: 'Capacidade de identificar e seguir sinais deixados pela passagem de seres ou veículos.',
-    examples: 'Pegadas, rastros, direção e sinais de passagem.',
-  },
-  'Condução': {
-    description: 'Capacidade de controlar veículos, carroças e outros meios de transporte.',
-    examples: 'Carroças, carruagens, trenós e manobras.',
-  },
-  'Furtividade': {
-    description: 'Capacidade de agir e se deslocar evitando ser percebido.',
-    examples: 'Esconder-se, mover-se silenciosamente e infiltrar-se.',
-  },
-  'Arrombamento': {
-    description: 'Conhecimento de fechaduras e mecanismos utilizados para restringir acesso.',
-    examples: 'Abrir fechaduras, identificar mecanismos e contornar trancas.',
-  },
-  'Prestidigitação': {
-    description: 'Habilidade manual para realizar movimentos rápidos, precisos ou discretos.',
-    examples: 'Esconder objetos, truques de mãos e pequenos furtos.',
-  },
-  'Metalurgia': {
-    description: 'Conhecimento sobre metais e técnicas utilizadas para trabalhá-los.',
-    examples: 'Forjar, reparar, avaliar metais e fabricar peças.',
-  },
-  'Construção': {
-    description: 'Conhecimento prático para criar e reparar estruturas e objetos.',
-    examples: 'Carpintaria, estruturas, reparos e avaliar construções.',
-  },
-  'Mecânica': {
-    description: 'Conhecimento sobre mecanismos, engrenagens e dispositivos físicos.',
-    examples: 'Reparar mecanismos, montar dispositivos e identificar falhas.',
-  },
-  'Alquimia': {
-    description: 'Conhecimento sobre substâncias, suas propriedades e suas combinações.',
-    examples: 'Preparar compostos, identificar substâncias e reagentes.',
-  },
-  'Sobrevivência': {
-    description: 'Capacidade de obter recursos e permanecer seguro em ambientes naturais.',
-    examples: 'Conseguir alimento, abrigo, água e reconhecer perigos naturais.',
-  },
-  'Exploração': {
-    description: 'Capacidade de investigar e atravessar lugares desconhecidos.',
-    examples: 'Explorar ruínas, cavernas, mapear áreas e encontrar passagens.',
-  },
-  'Navegação': {
-    description: 'Capacidade de determinar posição, direção e trajetos.',
-    examples: 'Mapas, bússola, estrelas e planejar rotas.',
-  },
-
-  'Escrita': {
-    description: 'Capacidade de comunicar ideias e informações por meio de textos.',
-    examples: 'Cartas, relatos, documentos e registros.',
-  },
-  'Enganação': {
-    description: 'Capacidade de fazer outras pessoas acreditarem em informações falsas ou incompletas.',
-    examples: 'Mentir, inventar histórias e disfarçar intenções.',
-  },
-  'Trapaça': {
-    description: 'Capacidade de manipular regras, situações ou procedimentos em benefício próprio.',
-    examples: 'Fraudar jogos, aplicar golpes e explorar brechas.',
-  },
-  'Jornadas': {
-    description: 'Conhecimento adquirido por viagens, povos e experiências em diferentes lugares.',
-    examples: 'Costumes regionais, rotas conhecidas e histórias de viagem.',
-  },
-  'Poética': {
-    description: 'Capacidade de criar e transmitir ideias através da linguagem artística e narrativa.',
-    examples: 'Poemas, histórias, versos e composição narrativa.',
-  },
-  'Interpretação': {
-    description: 'Capacidade de representar personagens, emoções ou identidades.',
-    examples: 'Atuação, imitação e disfarce comportamental.',
-  },
-  'Música': {
-    description: 'Conhecimento e prática de expressão musical.',
-    examples: 'Cantar, tocar instrumentos, compor e reconhecer melodias.',
-  },
-  'Artes Visuais': {
-    description: 'Capacidade de criar e compreender obras expressas visualmente.',
-    examples: 'Pintura, desenho, escultura e ilustração.',
-  },
-  'Etiqueta': {
-    description: 'Conhecimento das normas sociais e comportamentos esperados em diferentes ambientes.',
-    examples: 'Cerimônias, protocolos, costumes e formalidades.',
-  },
-  'Mediação': {
-    description: 'Capacidade de facilitar entendimento entre pessoas ou grupos em desacordo.',
-    examples: 'Conciliar disputas, encontrar acordos e reduzir conflitos.',
-  },
-  'Oratória': {
-    description: 'Capacidade de transmitir ideias de forma clara e convincente diante de outras pessoas.',
-    examples: 'Discursos, debates, apresentações e falar para multidões.',
-  },
-  'Negociação': {
-    description: 'Capacidade de alcançar acordos através da troca de propostas e concessões.',
-    examples: 'Barganhar, negociar contratos, preços e condições.',
-  },
-
-  'Comércio': {
-    description: 'Conhecimento sobre compra, venda e circulação de bens e serviços.',
-    examples: 'Avaliar mercadorias, reconhecer mercados, preços e rotas comerciais.',
-  },
-  'Finanças': {
-    description: 'Conhecimento sobre dinheiro, patrimônio, crédito e operações financeiras.',
-    examples: 'Calcular juros, avaliar dívidas e administrar recursos.',
-  },
-  'Administração': {
-    description: 'Capacidade de organizar recursos, pessoas e atividades para alcançar um objetivo.',
-    examples: 'Planejamento, logística, gestão de equipes e organização.',
-  },
-  'Estratégia': {
-    description: 'Capacidade de elaborar planos de longo prazo considerando recursos, objetivos e adversários.',
-    examples: 'Campanhas, planejamento militar e antecipar consequências.',
-  },
-  'Disciplina Marcial': {
-    description: 'Conhecimento de tradições, princípios e práticas formais relacionadas ao combate.',
-    examples: 'Doutrinas militares, treinamento e códigos marciais.',
-  },
-  'Elementalismo': {
-    description: 'Conhecimento sobre forças e manifestações associadas aos elementos.',
-    examples: 'Fogo, água, terra, ar e fenômenos elementais.',
-  },
-  'Arcanismo': {
-    description: 'Conhecimento teórico sobre magia e fenômenos arcanos.',
-    examples: 'Reconhecer magia, símbolos arcanos e teorias mágicas.',
-  },
-  'Ritualismo': {
-    description: 'Conhecimento sobre preparação, estrutura e execução de rituais.',
-    examples: 'Círculos, componentes, cerimônias mágicas e identificar rituais.',
-  },
-  'Manipulação Arcana': {
-    description: 'Conhecimento prático sobre como controlar e modificar manifestações mágicas.',
-    examples: 'Conduzir energia, alterar efeitos e estabilizar fenômenos arcanos.',
-  },
-  'Teologia': {
-    description: 'Conhecimento sobre divindades, religiões, crenças e suas tradições.',
-    examples: 'Cultos, textos sagrados, símbolos religiosos e dogmas.',
-  },
-  'Medicina': {
-    description: 'Conhecimento sobre o corpo, ferimentos, doenças e formas de tratamento.',
-    examples: 'Diagnosticar, tratar ferimentos, anatomia e primeiros socorros.',
-  },
-  'Espiritualismo': {
-    description: 'Conhecimento sobre espíritos e fenômenos relacionados ao mundo espiritual.',
-    examples: 'Reconhecer manifestações, tradições espirituais, entidades e contato espiritual.',
-  },
-};
+export { ATTRIBUTE_GROUPS, SKILL_GROUPS } from '@/lib/systemV15';
 
 const ATTRIBUTE_INITIAL_POINTS = 1;
 const ATTRIBUTE_BONUS_POINTS = 4;
@@ -356,7 +103,7 @@ type CreationReferenceView = 'regras' | 'povos' | 'classes' | 'atributos' | 'ite
 
 function CreationReferenceOverlay({ view, onClose, player, races }: { view: Exclude<CreationReferenceView, null>; onClose: () => void; player: Player; races: Race[] }) {
   const titles: Record<Exclude<CreationReferenceView, null>, string> = {
-    regras: 'Regras', povos: 'Povos e Linhagens', classes: 'Classes e Subclasses', atributos: 'Atributos e Habilidades', itens: 'Itens',
+    regras: 'Regras', povos: 'Povos e Vertentes', classes: 'Progressão', atributos: 'Atributos e Habilidades', itens: 'Itens',
   };
   const card = 'rounded-xl border border-gold-dim bg-gradient-card p-4';
   return <div className="fixed inset-0 z-[70] bg-black/80 p-2 sm:p-5 flex items-center justify-center">
@@ -376,13 +123,13 @@ function CreationReferenceOverlay({ view, onClose, player, races }: { view: Excl
           const key = String(race.id || '').toLowerCase();
           const naming = NAMING_CULTURES[key];
           return <article key={race.id || race.name} className={card}>
-            <div className="flex flex-col md:flex-row gap-4"><div className="md:w-40 shrink-0">{race.image ? <img src={race.image} alt={race.name} className="w-full rounded-lg border border-gold-dim"/> : <div className="aspect-square rounded-lg border border-gold-dim bg-shadow/30 flex items-center justify-center"><UsersRound className="w-10 h-10 text-gold/50"/></div>}</div><div className="min-w-0 flex-1"><h3 className="font-display text-xl text-gold-bright">{race.name}</h3><p className="mt-2 text-sm text-parchment-dim">{race.description || 'Descrição ainda não registrada.'}</p><p className="mt-2 text-xs text-gold">{raceBenefitText(race as any)}</p>{naming && <div className="mt-4 rounded-lg border border-gold-dim/60 bg-shadow/25 p-3"><h4 className="font-display text-gold">{naming.title}</h4><p className="mt-1 text-xs text-parchment-dim">{naming.description}</p><p className="mt-2 text-xs text-gold/80"><b>Exemplos:</b> {naming.examples.join(', ')}</p><p className="mt-2 text-xs italic text-parchment-dim">{naming.applied}</p></div>}<div className="mt-4 grid sm:grid-cols-3 gap-2">{race.lineages.map(lineage => <div key={lineage.name} className="rounded-lg border border-gold-dim/50 bg-shadow/25 p-3"><h4 className="font-display text-sm text-gold-bright">{lineage.name}</h4><p className="mt-1 text-xs text-parchment-dim">{lineage.description}</p><p className="mt-2 text-[11px] text-gold/80">{lineageBenefitText(lineage as any)}</p></div>)}</div></div></div>
+            <div className="flex flex-col md:flex-row gap-4"><div className="md:w-40 shrink-0">{race.image ? <img src={race.image} alt={race.name} className="w-full rounded-lg border border-gold-dim"/> : <div className="aspect-square rounded-lg border border-gold-dim bg-shadow/30 flex items-center justify-center"><UsersRound className="w-10 h-10 text-gold/50"/></div>}</div><div className="min-w-0 flex-1"><h3 className="font-display text-xl text-gold-bright">{race.name}</h3><p className="mt-2 text-sm text-parchment-dim">{race.description || 'Descrição ainda não registrada.'}</p><p className="mt-2 text-xs text-gold">Povo e Vertente definem identidade e cultura; não concedem bônus mecânicos automáticos.</p>{naming && <div className="mt-4 rounded-lg border border-gold-dim/60 bg-shadow/25 p-3"><h4 className="font-display text-gold">{naming.title}</h4><p className="mt-1 text-xs text-parchment-dim">{naming.description}</p><p className="mt-2 text-xs text-gold/80"><b>Exemplos:</b> {naming.examples.join(', ')}</p><p className="mt-2 text-xs italic text-parchment-dim">{naming.applied}</p></div>}<div className="mt-4 grid sm:grid-cols-3 gap-2">{race.lineages.map(lineage => <div key={lineage.name} className="rounded-lg border border-gold-dim/50 bg-shadow/25 p-3"><h4 className="font-display text-sm text-gold-bright">{lineage.name}</h4><p className="mt-1 text-xs text-parchment-dim">{lineage.description}</p><p className="mt-2 text-[11px] text-parchment-dim">Vertente narrativa e cultural.</p></div>)}</div></div></div>
           </article>;
         })}</div>}
 
         {view === 'classes' && <div className="max-w-4xl mx-auto space-y-4">
-          <div className={card}><div className="flex gap-3"><Lock className="w-5 h-5 text-gold shrink-0"/><div><h3 className="font-display text-xl text-gold-bright">Caminhos são descobertos</h3><p className="mt-2 text-sm text-parchment-dim">Durante a criação você não escolhe uma classe. Atributos, habilidades, decisões e experiências farão caminhos surgirem durante a campanha. Nomes e requisitos ainda não revelados permanecem ocultos.</p></div></div></div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">{[['Aprendiz','1–4'],['Iniciante','5–8'],['Competente','9–12'],['Proficiente','13–16'],['Especialista','17–20']].map(([name,levels], index) => <div key={name} className={card}><p className="text-[10px] uppercase tracking-wider text-gold/70">Etapa {index+1}</p><h3 className="font-display text-gold-bright mt-1">{name}</h3><p className="text-xs text-parchment-dim mt-1">Níveis {levels}</p>{index>0 && <p className="mt-3 text-[11px] text-gold/75 flex items-center gap-1"><Lock className="w-3 h-3"/>Conteúdo oculto</p>}</div>)}</div>
+          <div className={card}><div className="flex gap-3"><Route className="w-5 h-5 text-gold shrink-0"/><div><h3 className="font-display text-xl text-gold-bright">Aprendiz e caminhos iniciais</h3><p className="mt-2 text-sm text-parchment-dim">Nos níveis 1–3, o maior Atributo define o título Aprendiz de X. Empates formam um Aprendiz Versátil. A partir do nível 4, cada Atributo oferece cinco classes iniciais; o requisito padrão é Atributo 2 + Habilidade 1.</p></div></div></div>
+          <div className="grid sm:grid-cols-3 gap-3"><div className={card}><p className="text-[10px] uppercase tracking-wider text-gold/70">Níveis 1–3</p><h3 className="font-display text-gold-bright mt-1">Aprendiz</h3><p className="text-xs text-parchment-dim mt-1">Título definido pelo maior Atributo.</p></div><div className={card}><p className="text-[10px] uppercase tracking-wider text-gold/70">A partir do nível 4</p><h3 className="font-display text-gold-bright mt-1">60 caminhos iniciais</h3><p className="text-xs text-parchment-dim mt-1">Cinco possibilidades ligadas a cada Atributo.</p></div><div className={card}><p className="text-[10px] uppercase tracking-wider text-gold/70">Futuro</p><h3 className="font-display text-gold-bright mt-1">Árvore avançada</h3><p className="text-xs text-parchment-dim mt-1">Será desenvolvida depois, sem antecipar títulos superiores.</p></div></div>
         </div>}
 
         {view === 'atributos' && <div className="max-w-6xl mx-auto space-y-6">
@@ -402,9 +149,9 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
   const [currentStep, setCurrentStep] = useState(1);
   const [referenceView, setReferenceView] = useState<CreationReferenceView>(null);
   const [raceOptions, setRaceOptions] = useState<Race[]>(RACES);
-  const [racialAttribute, setRacialAttribute] = useState('');
-  const [lineageSkill1, setLineageSkill1] = useState('');
-  const [lineageSkill2, setLineageSkill2] = useState('');
+  const [isHybrid, setIsHybrid] = useState(false);
+  const [secondaryRace, setSecondaryRace] = useState('');
+  const [secondaryLineage, setSecondaryLineage] = useState('');
 
   const [name, setName] = useState('');
   const [nickname, setNickname] = useState('');
@@ -444,7 +191,11 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
   }, []);
 
   const selectedRace = raceOptions.find((item) => item.name === race);
-  const isFormValid = name.trim() !== '' && age.trim() !== '' && race !== '' && lineage !== '';
+  const selectedSecondaryRace = raceOptions.find((item) => item.name === secondaryRace);
+  const selectedLineage = selectedRace?.lineages.find((item) => item.name === lineage);
+  const selectedSecondaryLineage = selectedSecondaryRace?.lineages.find((item) => item.name === secondaryLineage);
+  const hybridValid = !isHybrid || (!!secondaryRace && !!secondaryLineage && secondaryRace !== race);
+  const isFormValid = name.trim() !== '' && age.trim() !== '' && race !== '' && lineage !== '' && hybridValid;
   const attributePointsSpent = Object.values(attributes).reduce((total, value) => total + (value - ATTRIBUTE_INITIAL_POINTS), 0);
   const attributePointsRemaining = ATTRIBUTE_BONUS_POINTS - attributePointsSpent;
   const skillPointsSpent = Object.values(skills).reduce((total, rank) => total + (rank * (rank + 1)) / 2, 0);
@@ -469,19 +220,10 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
   };
 
   const genderLabel = GENDER_OPTIONS.find((option) => option.id === gender)?.label || 'Não informado';
-  const selectedLineage = selectedRace?.lineages.find((item) => item.name === lineage);
-  const raceMode = selectedRace?.attribute_mode || ({Humanos:'any',Elfos:'mental',Anões:'fixed',Orcs:'fixed',Pequeninos:'fixed',Goblins:'fixed',Tiferinos:'social','Povo Fúngico':'fixed',Draconatos:'fixed','Povo Fera':'physical'} as any)[race] || 'fixed';
-  const fixedRaceAttribute = selectedRace?.fixed_attribute || ({Anões:'Vigor',Orcs:'Força',Pequeninos:'Agilidade',Goblins:'Destreza','Povo Fúngico':'Sabedoria',Draconatos:'Presença'} as any)[race] || '';
-  const appliedRacialAttribute = raceMode === 'fixed' ? fixedRaceAttribute : racialAttribute;
-  const effectiveAttributes: Record<string, number> = {...attributes, ...(appliedRacialAttribute ? {[appliedRacialAttribute]:(attributes[appliedRacialAttribute]??1)+1} : {})};
-  const effectiveSkills: Record<string, number> = {...skills};
-  if(lineageSkill1) effectiveSkills[lineageSkill1]=(effectiveSkills[lineageSkill1]??0)+1;
-  if(lineageSkill2) effectiveSkills[lineageSkill2]=(effectiveSkills[lineageSkill2]??0)+1;
+  const effectiveAttributes: Record<string, number> = { ...attributes };
+  const effectiveSkills: Record<string, number> = { ...skills };
   const selectedSkills = Object.entries(effectiveSkills).filter(([, rank]) => rank > 0);
-  const lineageGroup1=selectedLineage?.skill_group_1||''; const lineageGroup2=selectedLineage?.skill_group_2||'';
-  const skillsForGroup=(groupName:string)=>SKILL_GROUPS.find(g=>g.name===groupName)?.skills.map(s=>s.name)||[];
-  const racialChoiceValid = raceMode==='fixed' ? !!fixedRaceAttribute : !!racialAttribute;
-  const lineageChoicesValid = !!lineageSkill1 && !!lineageSkill2 && lineageSkill1!==lineageSkill2;
+  const apprentice = apprenticeTitle(attributes);
 
   const handleFinalize = async () => {
     if (saving) return;
@@ -497,6 +239,9 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
         gender: gender || null,
         race,
         lineage,
+        is_hybrid: isHybrid,
+        secondary_race: isHybrid ? secondaryRace : null,
+        secondary_lineage: isHybrid ? secondaryLineage : null,
         height: height.trim() || null,
         weight: weight.trim() || null,
         appearance: appearance.trim() || null,
@@ -516,14 +261,14 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
         current_hp: 15 + ((effectiveAttributes['Vigor'] ?? 1) * 5),
         current_mp: (() => {
           const mental = Math.max(...['Inteligência', 'Raciocínio', 'Sabedoria', 'Percepção'].map((key) => effectiveAttributes[key] ?? 0));
-          const mystical = Math.max(...['Elementalismo', 'Arcanismo', 'Ritualismo', 'Manipulação Arcana', 'Teologia', 'Espiritualismo'].map((key) => effectiveSkills[key] ?? 0));
+          const mystical = Math.max(...['Arcanismo', 'Ocultismo', 'Teologia'].map((key) => effectiveSkills[key] ?? 0));
           return mystical > 0 ? 5 + mental * 2 + mystical * 2 + 1 : 0;
         })(),
-        // Mantém os pontos distribuídos separados dos bônus de ancestralidade.
         attributes,
         skills,
-        racial_attribute_bonus: appliedRacialAttribute ? {[appliedRacialAttribute]:1} : {},
-        lineage_skill_bonuses: Object.fromEntries([lineageSkill1,lineageSkill2].filter(Boolean).map(x=>[x,1])),
+        // Povo e Vertente são narrativos na TRILHA 1.5: não concedem bônus mecânicos.
+        racial_attribute_bonus: {},
+        lineage_skill_bonuses: {},
       });
 
       if (error) throw error;
@@ -542,8 +287,8 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
 
  const canContinue =
     (currentStep === 1 && isFormValid) ||
-    (currentStep === 2 && attributePointsRemaining === 0 && racialChoiceValid) ||
-    (currentStep === 3 && skillPointsRemaining === 0 && lineageChoicesValid) ||
+    (currentStep === 2 && attributePointsRemaining === 0) ||
+    (currentStep === 3 && skillPointsRemaining === 0) ||
     currentStep === 4;
 
   const goBack = () => {
@@ -564,7 +309,7 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
     if (raceName !== race) {
       setRace(raceName);
       setLineage('');
-      setRacialAttribute(''); setLineageSkill1(''); setLineageSkill2('');
+      if (secondaryRace === raceName) { setSecondaryRace(''); setSecondaryLineage(''); }
     }
   };
 
@@ -776,17 +521,17 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
               ))}
             </div>
 
-            {/* Raça e Linhagem */}
+            {/* Povo e Vertente */}
             <div className="divider-gold my-8" />
             <section className="space-y-6">
               <div>
-                <h3 className="font-display text-lg text-gold tracking-wide mb-2">Raça e Linhagem</h3>
+                <h3 className="font-display text-lg text-gold tracking-wide mb-2">Povo e Vertente</h3>
                 <p className="text-parchment-dim/70 text-sm font-body">Escolha a ancestralidade do seu personagem.</p>
               </div>
 
               <div className="space-y-3">
                 <div className="font-display text-sm font-500 text-gold-bright tracking-wide">
-                  Raça <span className="text-blood">*</span>
+                  Povo <span className="text-blood">*</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {raceOptions.map((item) => (
@@ -809,22 +554,18 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
               {selectedRace && (
                 <div className="space-y-3 animate-fade-in-up">
                   {selectedRace.description&&<p className="text-sm text-parchment-dim border-l-2 border-gold-dim pl-3">{selectedRace.description}</p>}
-                  <div className="rounded-lg border border-gold-dim/70 bg-gold/5 px-3 py-2.5">
-                    <span className="block text-[10px] uppercase tracking-[.16em] text-gold/70 mb-1">Benefício racial</span>
-                    <span className="block font-body text-xs leading-relaxed text-gold-bright">{raceBenefitText(selectedRace as any)}</span>
-                  </div>
                   <div className="font-display text-sm font-500 text-gold-bright tracking-wide">
-                    Linhagem <span className="text-blood">*</span>
+                    Vertente <span className="text-blood">*</span>
                   </div>
                   <p className="text-parchment-dim/60 text-xs font-body">
-                    Escolha uma linhagem de {selectedRace.name}. A linhagem definirá duas categorias para seus bônus de Habilidade.
+                    Escolha uma vertente de {selectedRace.name}. Povo e Vertente definem identidade e cultura, sem bônus mecânicos automáticos.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {selectedRace.lineages.map((item) => (
                       <button
                         key={item.name}
                         type="button"
-                        onClick={() => {setLineage(item.name);setLineageSkill1('');setLineageSkill2('')}}
+                        onClick={() => setLineage(item.name)}
                         className={`p-4 rounded-lg border text-left transition-all duration-200 ${
                           lineage === item.name
                             ? 'bg-gold/15 border-gold shadow-gold'
@@ -833,7 +574,7 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                       >
                         <img
                           src={item.image}
-                          alt={`Ilustração da linhagem ${item.name}`}
+                          alt={`Ilustração da vertente ${item.name}`}
                           className="block w-full h-auto rounded-md mb-4 border border-gold-dim/60"
                           loading="lazy"
                         />
@@ -844,14 +585,26 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                           {item.description}
                         </span>
                         <span className="block mt-3 pt-2.5 border-t border-gold-dim/40">
-                          <span className="block text-[9px] uppercase tracking-[.14em] text-gold/60 mb-1">Aptidão da linhagem</span>
-                          <span className="block font-body text-[11px] leading-relaxed text-gold-bright/90">{lineageBenefitText(item as any)}</span>
+                          <span className="block text-[9px] uppercase tracking-[.14em] text-gold/60 mb-1">Vertente</span>
+                          <span className="block font-body text-[11px] leading-relaxed text-parchment-dim">Referência cultural e narrativa.</span>
                         </span>
                       </button>
                     ))}
                   </div>
                 </div>
               )}
+
+              <div className="border-t border-gold-dim/50 pt-5">
+                <label className="inline-flex items-center gap-3 text-sm text-parchment cursor-pointer">
+                  <input type="checkbox" checked={isHybrid} onChange={(event) => { setIsHybrid(event.target.checked); if (!event.target.checked) { setSecondaryRace(''); setSecondaryLineage(''); } }} />
+                  <span><b className="text-gold-bright">Personagem Híbrido</b> · combina dois Povos e uma Vertente de cada.</span>
+                </label>
+                {isHybrid && <div className="mt-4 rounded-xl border border-gold-dim bg-shadow/25 p-4 space-y-4">
+                  <div><h4 className="font-display text-gold-bright">Segundo Povo</h4><p className="mt-1 text-xs text-parchment-dim">Escolha um Povo diferente do primeiro. A combinação é narrativa e não altera Atributos ou Habilidades.</p></div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">{raceOptions.filter(item => item.name !== race).map(item => <button key={item.name} type="button" onClick={() => { setSecondaryRace(item.name); setSecondaryLineage(''); }} className={`min-h-12 rounded-lg border px-3 py-2 text-sm ${secondaryRace === item.name ? 'border-gold bg-gold/15 text-gold-bright' : 'border-gold-dim bg-shadow/40 text-parchment-dim'}`}>{item.name}</button>)}</div>
+                  {selectedSecondaryRace && <div><h4 className="font-display text-sm text-gold mb-3">Vertente de {selectedSecondaryRace.name}</h4><div className="grid sm:grid-cols-3 gap-2">{selectedSecondaryRace.lineages.map(item => <button key={item.name} type="button" onClick={() => setSecondaryLineage(item.name)} className={`rounded-lg border p-3 text-left ${secondaryLineage === item.name ? 'border-gold bg-gold/15' : 'border-gold-dim bg-shadow/40'}`}><b className="font-display text-sm text-gold-bright">{item.name}</b><p className="mt-1 text-[11px] text-parchment-dim">{item.description}</p></button>)}</div></div>}
+                </div>}
+              </div>
             </section>
           </div>
 
@@ -866,13 +619,7 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                 <span className="font-body text-sm text-parchment-dim">Aprendiz · máximo de 2 pontos por atributo</span>
                 <span className="font-display text-gold-bright">Pontos disponíveis: {attributePointsRemaining}</span>
               </div>
-              <div className="bg-shadow/50 border border-gold-dim rounded-lg p-4 mb-6">
-                <h3 className="font-display text-gold-bright mb-2">Traço racial · +1 Atributo</h3>
-                {raceMode==='fixed' ? <p className="text-sm text-parchment">{selectedRace?.name}: <b className="text-gold-bright">+1 {fixedRaceAttribute}</b></p> : <>
-                  <p className="text-xs text-parchment-dim mb-3">Escolha o atributo que receberá o bônus racial. Este ponto não consome seus 4 pontos de criação.</p>
-                  <select className="w-full bg-shadow border border-gold-dim rounded-lg px-3 py-2 text-parchment" value={racialAttribute} onChange={e=>setRacialAttribute(e.target.value)}><option value="">Escolha um atributo...</option>{attributeChoices(raceMode,allAttributeNames).map(a=><option key={a} value={a}>{a}</option>)}</select>
-                </>}
-              </div>
+              <p className="mb-6 text-xs text-parchment-dim">Povo e Vertente não alteram seus valores. Os 4 pontos de criação são a única fonte de aumento de Atributo nesta etapa.</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {ATTRIBUTE_GROUPS.map((group) => (
                   <section key={group.name} className="bg-shadow/40 border border-gold-dim rounded-xl p-4">
@@ -922,11 +669,7 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                 </div>
                 <p className="font-body text-xs text-parchment-dim/70">Custo progressivo: 1º ponto custa 1 · 2º ponto custa +2.</p>
               </div>
-              <div className="bg-shadow/50 border border-gold-dim rounded-lg p-4 mb-6">
-                <h3 className="font-display text-gold-bright mb-2">Aptidões de linhagem · +1 em duas Habilidades</h3>
-                <p className="text-xs text-parchment-dim mb-3">{selectedLineage?.name}: escolha uma habilidade de <b>{lineageGroup1}</b> e uma de <b>{lineageGroup2}</b>. Os bônus não consomem seus pontos de criação.</p>
-                <div className="grid sm:grid-cols-2 gap-3"><select className="bg-shadow border border-gold-dim rounded-lg px-3 py-2 text-parchment" value={lineageSkill1} onChange={e=>setLineageSkill1(e.target.value)}><option value="">1ª habilidade...</option>{skillsForGroup(lineageGroup1).map(x=><option key={x} value={x}>{x}</option>)}</select><select className="bg-shadow border border-gold-dim rounded-lg px-3 py-2 text-parchment" value={lineageSkill2} onChange={e=>setLineageSkill2(e.target.value)}><option value="">2ª habilidade...</option>{skillsForGroup(lineageGroup2).filter(x=>x!==lineageSkill1).map(x=><option key={x} value={x}>{x}</option>)}</select></div>
-              </div>
+              <p className="mb-6 text-xs text-parchment-dim">As Habilidades são definidas apenas pelos pontos investidos. Povo e Vertente permanecem narrativos.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 {SKILL_GROUPS.map((group) => (
                   <section key={group.name} className="bg-shadow/40 border border-gold-dim rounded-xl p-4">
@@ -983,18 +726,19 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                     <p><span className="text-parchment-dim">Idade:</span> <span className="text-parchment">{age}</span></p>
                     <p><span className="text-parchment-dim">Gênero e pronomes:</span> <span className="text-parchment">{genderLabel}</span></p>
                     <p><span className="text-parchment-dim">Nível:</span> <span className="text-parchment">1</span></p>
-                    <p><span className="text-parchment-dim">Estágio:</span> <span className="text-gold-bright">Aprendiz</span></p>
+                    <p><span className="text-parchment-dim">Estágio:</span> <span className="text-gold-bright">{apprentice}</span></p>
                     <p><span className="text-parchment-dim">Classe:</span> <span className="text-parchment">—</span></p>
                   </div>
                 </section>
 
                 <section className="bg-shadow/40 border border-gold-dim rounded-xl p-5">
-                  <h3 className="font-display text-lg text-gold-bright mb-4">Raça e Linhagem</h3>
+                  <h3 className="font-display text-lg text-gold-bright mb-4">Povo e Vertente</h3>
                   {selectedLineage && (
-                    <img src={selectedLineage.image} alt={`Linhagem ${lineage}`} className="w-full max-h-56 object-contain rounded-lg border border-gold-dim mb-4" />
+                    <img src={selectedLineage.image} alt={`Vertente ${lineage}`} className="w-full max-h-56 object-contain rounded-lg border border-gold-dim mb-4" />
                   )}
-                  <p className="font-body text-sm text-parchment"><span className="text-parchment-dim">Raça:</span> {race}</p>
-                  <p className="font-body text-sm text-parchment mt-2"><span className="text-parchment-dim">Linhagem:</span> {lineage}</p>
+                  <p className="font-body text-sm text-parchment"><span className="text-parchment-dim">Povo:</span> {race}</p>
+                  <p className="font-body text-sm text-parchment mt-2"><span className="text-parchment-dim">Vertente:</span> {lineage}</p>
+                  {isHybrid && <><p className="font-body text-sm text-parchment mt-3"><span className="text-parchment-dim">Segundo Povo:</span> {secondaryRace}</p><p className="font-body text-sm text-parchment mt-2"><span className="text-parchment-dim">Segunda Vertente:</span> {secondaryLineage}</p></>}
                 </section>
 
                 <section className="bg-shadow/40 border border-gold-dim rounded-xl p-5">
@@ -1003,7 +747,7 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                     {ATTRIBUTE_GROUPS.flatMap((group) => group.attributes).map((attribute) => (
                       <div key={attribute.name} className="flex justify-between gap-3 font-body text-sm border-b border-gold-dim/20 pb-1">
                         <span className="text-parchment-dim">{attribute.name}</span>
-                        <span className="text-gold-bright">{effectiveAttributes[attribute.name]}{appliedRacialAttribute===attribute.name&&<small className="ml-1 text-parchment-dim">(+1 racial)</small>}</span>
+                        <span className="text-gold-bright">{effectiveAttributes[attribute.name]}</span>
                       </div>
                     ))}
                   </div>

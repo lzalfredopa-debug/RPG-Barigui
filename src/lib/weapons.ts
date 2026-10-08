@@ -9,10 +9,10 @@ export type WeaponDamageResult = {
 };
 
 const effectiveAttribute = (character: Character, key: string | null) =>
-  key ? (character.attributes?.[key] ?? 0) + (character.racial_attribute_bonus?.[key] ?? 0) : 0;
+  key ? (character.attributes?.[key] ?? 0) : 0;
 
 const effectiveSkill = (character: Character, key: string | null) =>
-  key ? (character.skills?.[key] ?? 0) + (character.lineage_skill_bonuses?.[key] ?? 0) : 0;
+  key ? (character.skills?.[key] ?? 0) : 0;
 
 export function weaponProficiencyDeficit(character: Character, weapon: WeaponMaster) {
   const attributeDeficit = Math.max(

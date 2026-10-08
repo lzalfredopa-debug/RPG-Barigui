@@ -200,6 +200,9 @@ export type Character = {
   gender: string | null;
   race: string;
   lineage: string;
+  is_hybrid?: boolean;
+  secondary_race?: string | null;
+  secondary_lineage?: string | null;
   height: string | null;
   weight: string | null;
   appearance: string | null;

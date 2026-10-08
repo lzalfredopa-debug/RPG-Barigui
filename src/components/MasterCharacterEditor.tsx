@@ -15,8 +15,11 @@ import {
   X,
 } from 'lucide-react';
 import type { ArmorPublic, Character, ItemCatalogPublic, ShieldPublic, WeaponPublic } from '@/lib/supabase';
-import { ATTRIBUTE_GROUPS, GENDER_OPTIONS, RACES, SKILL_GROUPS } from '@/components/CharacterCreation';
+import { GENDER_OPTIONS, RACES } from '@/components/CharacterCreation';
+import { ATTRIBUTE_GROUPS, SKILL_GROUPS, apprenticeTitle } from '@/lib/systemV15';
 import { durabilityLabel, formatAmount, formatDuration, freshnessLabel } from '@/lib/items';
+import CollapsibleSection from '@/components/CollapsibleSection';
+import { attributeValue as cv, skillValue as cs, characterMaxHp as maxHp, characterMaxMp as maxMp, characterHungerMax as maxHunger } from '@/lib/characterRules';
 
 type EditorSection = 'summary' | 'attributes' | 'skills' | 'inventory' | 'conditions' | 'identity' | 'journey';
 
@@ -62,16 +65,7 @@ type Props = {
 const input = 'trilha-ui-field w-full bg-shadow/60 border border-gold-dim rounded-lg px-3 py-2 text-parchment text-sm focus:outline-none focus:border-gold';
 const btn = 'trilha-ui-button inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gold-dim text-gold hover:border-gold text-sm disabled:opacity-40';
 const card = 'trilha-master-card rounded-xl border border-gold-dim bg-shadow/35 p-4';
-const stage = (n: number) => n <= 4 ? 'Aprendiz' : n <= 8 ? 'Competente' : n <= 12 ? 'Experiente' : n <= 16 ? 'Especialista' : 'Mestre';
-const cv = (c: Character, key: string) => (c.attributes?.[key] ?? 0) + (c.racial_attribute_bonus?.[key] ?? 0);
-const cs = (c: Character, key: string) => (c.skills?.[key] ?? 0) + (c.lineage_skill_bonuses?.[key] ?? 0);
-const maxHp = (c: Character) => 15 + cv(c, 'Vigor') * 5 + (c.level - 1) * 2;
-const maxMp = (c: Character) => {
-  const mental = Math.max(...['Inteligência', 'Raciocínio', 'Sabedoria', 'Percepção'].map((k) => cv(c, k)));
-  const mystical = Math.max(...['Elementalismo', 'Arcanismo', 'Ritualismo', 'Manipulação Arcana', 'Teologia', 'Espiritualismo'].map((k) => cs(c, k)));
-  return mystical > 0 ? 5 + mental * 2 + mystical * 2 + c.level : 0;
-};
-const maxHunger = (c: Character) => Math.max(1, 9 - cv(c, 'Vigor'));
+const stage = (c: Character) => c.level <= 3 ? apprenticeTitle(c.attributes || {}) : (c.class_name || 'Classe inicial');
 
 const identityFields: Array<{ key: keyof Character; label: string; multiline?: boolean }> = [
   { key: 'name', label: 'Nome' },
@@ -229,7 +223,7 @@ export default function MasterCharacterEditor(props: Props) {
                 {editing && <span className="text-xs text-amber-200">Alterações não salvas</span>}
               </div>
               <h2 className="font-display text-2xl text-gold-bright mt-1">{draft.name}</h2>
-              <p className="text-xs text-parchment-dim">Nível {draft.level} · {stage(draft.level)} · {draft.class_name || 'Sem classe'}</p>
+              <p className="text-xs text-parchment-dim">Nível {draft.level} · {stage(draft)} · {draft.class_name || 'Sem classe'}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {!editing ? (
@@ -288,7 +282,7 @@ export default function MasterCharacterEditor(props: Props) {
               <section className={`${card} grid md:grid-cols-3 xl:grid-cols-6 gap-3`}>
                 <label className="text-xs text-gold">Classe{editing ? <select className={`${input} mt-1`} value={draft.class_name || ''} onChange={(e) => setDraft({ ...draft, class_name: e.target.value || null })}><option value="">— Sem classe —</option>{classOptions.map((x) => <option key={x} value={x}>{x}</option>)}</select> : <div className="text-sm text-parchment mt-1">{draft.class_name || '—'}</div>}</label>
                 <label className="text-xs text-gold">Especialização{editing ? <select className={`${input} mt-1`} value={draft.specialization || ''} onChange={(e) => setDraft({ ...draft, specialization: e.target.value || null })}><option value="">— Sem especialização —</option>{specializationOptions.map((x) => <option key={x} value={x}>{x}</option>)}</select> : <div className="text-sm text-parchment mt-1">{draft.specialization || '—'}</div>}</label>
-                <label className="text-xs text-gold">Nível{editing ? <input type="number" min={1} max={20} className={`${input} mt-1`} value={draft.level} onChange={(e) => setDraft({ ...draft, level: Math.max(1, Math.min(20, Number(e.target.value) || 1)) })} /> : <div className="text-sm text-parchment mt-1">{draft.level} · {stage(draft.level)}</div>}</label>
+                <label className="text-xs text-gold">Nível{editing ? <input type="number" min={1} max={20} className={`${input} mt-1`} value={draft.level} onChange={(e) => setDraft({ ...draft, level: Math.max(1, Math.min(20, Number(e.target.value) || 1)) })} /> : <div className="text-sm text-parchment mt-1">{draft.level} · {stage(draft)}</div>}</label>
                 <label className="text-xs text-gold">Status{editing ? <select className={`${input} mt-1`} value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value as Character['status'] })}><option value="vivo">Vivo</option><option value="morto">Morto</option><option value="desaparecido">Desaparecido</option></select> : <div className="text-sm text-parchment mt-1 capitalize">{draft.status}</div>}</label>
                 <label className="text-xs text-gold">Óbolos{editing ? <input type="number" min={0} className={`${input} mt-1`} value={draft.currency_obolos ?? 0} onChange={(e) => setDraft({ ...draft, currency_obolos: Number(e.target.value) || 0 })} /> : <div className="text-sm text-parchment mt-1">{draft.currency_obolos ?? 0}</div>}</label>
                 <label className="text-xs text-gold">Dracmas / Estaters{editing ? <div className="grid grid-cols-2 gap-1 mt-1"><input type="number" min={0} className={input} value={draft.currency_dracmas ?? 0} onChange={(e) => setDraft({ ...draft, currency_dracmas: Number(e.target.value) || 0 })} /><input type="number" min={0} className={input} value={draft.currency_estaters ?? 0} onChange={(e) => setDraft({ ...draft, currency_estaters: Number(e.target.value) || 0 })} /></div> : <div className="text-sm text-parchment mt-1">{draft.currency_dracmas ?? 0} / {draft.currency_estaters ?? 0}</div>}</label>
@@ -312,16 +306,16 @@ export default function MasterCharacterEditor(props: Props) {
           {editorSection === 'attributes' && (
             <section>
               <h3 className="font-display text-xl text-gold-bright mb-1">Atributos</h3>
-              <p className="text-xs text-parchment-dim mb-4">Bônus raciais continuam separados do valor-base.</p>
-              <div className="grid md:grid-cols-3 gap-4">{ATTRIBUTE_GROUPS.map((g) => <div key={g.name} className={card}><b className="text-gold-bright">{g.name}</b>{g.attributes.map((a) => <div key={a.name} className="flex justify-between items-center mt-3 gap-3"><span>{a.name}</span>{editing ? <input type="number" min={0} max={5} className="w-20 bg-shadow border border-gold-dim rounded px-2 py-1 text-center" value={draft.attributes[a.name] ?? 0} onChange={(e) => updateAttr(a.name, Number(e.target.value))} /> : <b className="text-gold">{cv(draft, a.name)}{(draft.racial_attribute_bonus?.[a.name] ?? 0) > 0 && <small className="ml-1 text-parchment-dim">({draft.attributes[a.name] ?? 0} +1 racial)</small>}</b>}</div>)}</div>)}</div>
+              <p className="text-xs text-parchment-dim mb-4">Povo e Vertente são narrativos; os valores abaixo são os valores mecânicos da ficha.</p>
+              <div className="grid md:grid-cols-3 gap-4">{ATTRIBUTE_GROUPS.map((g) => <div key={g.name} className={card}><b className="text-gold-bright">{g.name}</b>{g.attributes.map((a) => <div key={a.name} className="flex justify-between items-center mt-3 gap-3"><span>{a.name}</span>{editing ? <input type="number" min={0} max={5} className="w-20 bg-shadow border border-gold-dim rounded px-2 py-1 text-center" value={draft.attributes[a.name] ?? 0} onChange={(e) => updateAttr(a.name, Number(e.target.value))} /> : <b className="text-gold">{cv(draft, a.name)}</b>}</div>)}</div>)}</div>
             </section>
           )}
 
           {editorSection === 'skills' && (
             <section>
               <h3 className="font-display text-xl text-gold-bright mb-1">Habilidades</h3>
-              <p className="text-xs text-parchment-dim mb-4">A ficha mostra o valor total, mas a edição altera apenas o valor-base.</p>
-              <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">{SKILL_GROUPS.map((g) => <div key={g.name} className={card}><b className="text-gold-bright">{g.name}</b>{g.skills.map((sk) => <div key={sk.name} className="flex justify-between items-center mt-2 gap-3 text-sm"><span>{sk.name}</span>{editing ? <input type="number" min={0} max={5} className="w-16 bg-shadow border border-gold-dim rounded px-2 py-1 text-center" value={draft.skills[sk.name] ?? 0} onChange={(e) => updateSkill(sk.name, Number(e.target.value))} /> : <b className="text-gold">{cs(draft, sk.name)}{(draft.lineage_skill_bonuses?.[sk.name] ?? 0) > 0 && <small className="ml-1 text-parchment-dim">({draft.skills[sk.name] ?? 0} +1 linhagem)</small>}</b>}</div>)}</div>)}</div>
+              <p className="text-xs text-parchment-dim mb-4">As 42 Habilidades são mecânicas e independentes de Povo ou Vertente.</p>
+              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">{SKILL_GROUPS.map((g) => <div key={g.name} className={card}><b className="text-gold-bright">{g.name}</b>{g.skills.map((sk) => <div key={sk.name} className="flex justify-between items-center mt-2 gap-3 text-sm"><span>{sk.name}</span>{editing ? <input type="number" min={0} max={5} className="w-16 bg-shadow border border-gold-dim rounded px-2 py-1 text-center" value={draft.skills[sk.name] ?? 0} onChange={(e) => updateSkill(sk.name, Number(e.target.value))} /> : <b className="text-gold">{cs(draft, sk.name)}</b>}</div>)}</div>)}</div>
             </section>
           )}
 
@@ -344,8 +338,7 @@ export default function MasterCharacterEditor(props: Props) {
               </div>
 
               {groupedInventory.length === 0 ? <div className={card}><p className="text-parchment-dim">Inventário vazio.</p></div> : groupedInventory.map((group) => (
-                <div key={group.main} className={card}>
-                  <h4 className="font-display text-lg text-gold-bright mb-3">{group.main}</h4>
+                <CollapsibleSection key={group.main} id={`master-inventory:${selected.id}:${group.main}`} title={group.main} subtitle={`${group.children.reduce((sum, sub) => sum + sub.rows.length, 0)} item(ns)`} defaultOpen={false}>
                   <div className="space-y-4">{group.children.map((sub) => (
                     <div key={sub.sub}>
                       <p className="text-xs uppercase tracking-[.16em] text-gold/80 mb-2">{sub.sub}</p>
@@ -357,7 +350,7 @@ export default function MasterCharacterEditor(props: Props) {
                       ))}</div>
                     </div>
                   ))}</div>
-                </div>
+                </CollapsibleSection>
               ))}
             </section>
           )}
@@ -369,8 +362,10 @@ export default function MasterCharacterEditor(props: Props) {
               <div><h3 className="font-display text-xl text-gold-bright">Identidade & história</h3><p className="text-xs text-parchment-dim">Dados menos usados ficam fora do Resumo para não poluir a edição rápida.</p></div>
               <div className={`${card} grid md:grid-cols-3 gap-3`}>
                 <label className="text-xs text-gold">Gênero/Pronomes{editing ? <select className={`${input} mt-1`} value={draft.gender || ''} onChange={(e) => setDraft({ ...draft, gender: e.target.value || null })}><option value="">Não informado</option>{GENDER_OPTIONS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}</select> : <div className="text-sm text-parchment mt-1">{GENDER_OPTIONS.find((g) => g.id === draft.gender)?.label || draft.gender || '—'}</div>}</label>
-                <label className="text-xs text-gold">Raça{editing ? <select className={`${input} mt-1`} value={draft.race} onChange={(e) => { const race = e.target.value; setDraft({ ...draft, race, lineage: RACES.find((r) => r.name === race)?.lineages[0]?.name || '' }); }}>{RACES.map((r) => <option key={r.name} value={r.name}>{r.name}</option>)}</select> : <div className="text-sm text-parchment mt-1">{draft.race || '—'}</div>}</label>
-                <label className="text-xs text-gold">Linhagem{editing ? <select className={`${input} mt-1`} value={draft.lineage} onChange={(e) => setDraft({ ...draft, lineage: e.target.value })}>{(RACES.find((r) => r.name === draft.race)?.lineages || []).map((l) => <option key={l.name} value={l.name}>{l.name}</option>)}</select> : <div className="text-sm text-parchment mt-1">{draft.lineage || '—'}</div>}</label>
+                <label className="text-xs text-gold">Povo{editing ? <select className={`${input} mt-1`} value={draft.race} onChange={(e) => { const race = e.target.value; setDraft({ ...draft, race, lineage: RACES.find((r) => r.name === race)?.lineages[0]?.name || '' }); }}>{RACES.map((r) => <option key={r.name} value={r.name}>{r.name}</option>)}</select> : <div className="text-sm text-parchment mt-1">{draft.race || '—'}</div>}</label>
+                <label className="text-xs text-gold">Vertente{editing ? <select className={`${input} mt-1`} value={draft.lineage} onChange={(e) => setDraft({ ...draft, lineage: e.target.value })}>{(RACES.find((r) => r.name === draft.race)?.lineages || []).map((l) => <option key={l.name} value={l.name}>{l.name}</option>)}</select> : <div className="text-sm text-parchment mt-1">{draft.lineage || '—'}</div>}</label>
+                <label className="text-xs text-gold md:col-span-2"><span className="inline-flex items-center gap-2">{editing && <input type="checkbox" checked={!!draft.is_hybrid} onChange={(e) => setDraft({ ...draft, is_hybrid: e.target.checked, secondary_race: e.target.checked ? (draft.secondary_race || RACES.find(r => r.name !== draft.race)?.name || null) : null, secondary_lineage: e.target.checked ? draft.secondary_lineage : null })} />}Híbrido</span>{!editing && <div className="text-sm text-parchment mt-1">{draft.is_hybrid ? 'Sim' : 'Não'}</div>}</label>
+                {draft.is_hybrid && <><label className="text-xs text-gold">Segundo Povo{editing ? <select className={`${input} mt-1`} value={draft.secondary_race || ''} onChange={(e) => { const secondary_race = e.target.value; setDraft({ ...draft, secondary_race, secondary_lineage: RACES.find(r => r.name === secondary_race)?.lineages[0]?.name || null }); }}>{RACES.filter(r => r.name !== draft.race).map(r => <option key={r.name} value={r.name}>{r.name}</option>)}</select> : <div className="text-sm text-parchment mt-1">{draft.secondary_race || '—'}</div>}</label><label className="text-xs text-gold">Segunda Vertente{editing ? <select className={`${input} mt-1`} value={draft.secondary_lineage || ''} onChange={(e) => setDraft({ ...draft, secondary_lineage: e.target.value })}>{(RACES.find(r => r.name === draft.secondary_race)?.lineages || []).map(l => <option key={l.name} value={l.name}>{l.name}</option>)}</select> : <div className="text-sm text-parchment mt-1">{draft.secondary_lineage || '—'}</div>}</label></>}
                 <label className="text-xs text-gold">Idade{editing ? <input type="number" className={`${input} mt-1`} value={draft.age} onChange={(e) => setDraft({ ...draft, age: Number(e.target.value) || 0 })} /> : <div className="text-sm text-parchment mt-1">{draft.age}</div>}</label>
                 {identityFields.map((field) => <label key={String(field.key)} className={`text-xs text-gold ${field.multiline ? 'md:col-span-2' : ''}`}>{field.label}{editing ? (field.multiline ? <textarea rows={3} className={`${input} mt-1`} value={String(draft[field.key] ?? '')} onChange={(e) => setDraft({ ...draft, [field.key]: e.target.value })} /> : <input className={`${input} mt-1`} value={String(draft[field.key] ?? '')} onChange={(e) => setDraft({ ...draft, [field.key]: e.target.value })} />) : <div className="text-sm text-parchment mt-1 whitespace-pre-wrap">{String(draft[field.key] || '—')}</div>}</label>)}
               </div>

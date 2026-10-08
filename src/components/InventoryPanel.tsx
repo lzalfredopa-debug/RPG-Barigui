@@ -22,7 +22,7 @@ type Props = {
 
 type Meta = { className: string; subclass: string; weight: number; missingWeight: boolean; carrySlotKind?: 'main' | 'auxiliary' | null; carryBonusKg?: number; common?: ItemCatalogPublic; weapon?: WeaponPublic; armor?: ArmorPublic; shield?: ShieldPublic };
 const classOrder = ['Armas', 'Armaduras', 'Escudos', 'Itens comuns'];
-const v = (c: Character, key: string) => (c.attributes?.[key] ?? 0) + (c.racial_attribute_bonus?.[key] ?? 0);
+const v = (c: Character, key: string) => c.attributes?.[key] ?? 0;
 const kg = (n: number) => `${n.toLocaleString('pt-BR', { minimumFractionDigits: n % 1 ? 1 : 0, maximumFractionDigits: 2 })} kg`;
 
 export default function InventoryPanel({ playerId, character, items, onConsume, onSetItemSlot, onRefresh }: Props) {
@@ -30,7 +30,27 @@ export default function InventoryPanel({ playerId, character, items, onConsume, 
   const [weapons, setWeapons] = useState<WeaponPublic[]>([]);
   const [armors, setArmors] = useState<ArmorPublic[]>([]);
   const [shields, setShields] = useState<ShieldPublic[]>([]);
-  const [open, setOpen] = useState<Record<string, boolean>>({ 'Armas': true, 'Armaduras': true, 'Escudos': true, 'Itens comuns': true });
+  const [open, setOpen] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem(`trilha:inventory:${character.id}:groups`);
+      return raw ? JSON.parse(raw) : { 'Armas': true, 'Armaduras': true, 'Escudos': true, 'Itens comuns': true };
+    } catch {
+      return { 'Armas': true, 'Armaduras': true, 'Escudos': true, 'Itens comuns': true };
+    }
+  });
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(`trilha:inventory:${character.id}:groups`);
+      setOpen(raw ? JSON.parse(raw) : { 'Armas': true, 'Armaduras': true, 'Escudos': true, 'Itens comuns': true });
+    } catch {
+      setOpen({ 'Armas': true, 'Armaduras': true, 'Escudos': true, 'Itens comuns': true });
+    }
+  }, [character.id]);
+
+  useEffect(() => {
+    try { localStorage.setItem(`trilha:inventory:${character.id}:groups`, JSON.stringify(open)); } catch { /* preferência local opcional */ }
+  }, [character.id, open]);
 
   const loadCatalog = useCallback(async () => {
     const [c, w, a, s] = await Promise.all([

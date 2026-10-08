@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FolderOpen, Play, Radio, SkipForward, Square, Upload, Volume2, VolumeX, X } from 'lucide-react';
+import { FolderOpen, Play, Radio, RefreshCw, SkipForward, Square, Upload, Volume2, VolumeX, X } from 'lucide-react';
 import { supabase, type Player } from '@/lib/supabase';
 
 const RADIO_BUCKET = 'radio-trilha';
@@ -67,6 +67,8 @@ export default function TrilhaRadio({ player }: { player: Player }) {
   const [skipping, setSkipping] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState('');
+  const [libraryCount, setLibraryCount] = useState(0);
+  const [failedTracks, setFailedTracks] = useState<string[]>([]);
 
   const totalDuration = useMemo(() => tracks.reduce((sum, track) => sum + track.duration, 0), [tracks]);
 
@@ -86,6 +88,8 @@ export default function TrilhaRadio({ player }: { player: Player }) {
     const { data, error: listError } = await supabase.storage.from(RADIO_BUCKET).list(RADIO_FOLDER, { limit: 200, sortBy: { column: 'name', order: 'asc' } });
     if (listError) { setError('A pasta de músicas da Rádio TRILHA ainda não está disponível.'); setLoading(false); return; }
     const files = (data || []).filter((file) => AUDIO_EXTENSIONS.test(file.name));
+    setLibraryCount(files.length);
+    setFailedTracks([]);
     if (files.length === 0) { setTracks([]); setLoading(false); return; }
     const resolved = await Promise.all(files.map(async (file): Promise<RadioTrack | null> => {
       const path = `${RADIO_FOLDER}/${file.name}`;
@@ -94,8 +98,10 @@ export default function TrilhaRadio({ player }: { player: Player }) {
       catch { return null; }
     }));
     const playable = resolved.filter((track): track is RadioTrack => Boolean(track));
+    const failed = files.filter((_, index) => !resolved[index]).map(file => file.name);
+    setFailedTracks(failed);
     setTracks(playable); setLoading(false);
-    if (playable.length === 0 && files.length > 0) setError('Nenhuma faixa de áudio pôde ser carregada.');
+    if (playable.length === 0 && files.length > 0) setError('As faixas foram encontradas, mas nenhuma pôde ser lida pelo navegador.');
   }, []);
 
   useEffect(() => { void loadPlaylist(); }, [loadPlaylist]);
@@ -254,8 +260,10 @@ export default function TrilhaRadio({ player }: { player: Player }) {
 
 
           {isMaster && <div className="trilha-radio-library">
-            <div className="trilha-radio-library-copy"><FolderOpen className="w-4 h-4" /><span><b>Biblioteca da Rádio</b><small>Storage · {RADIO_BUCKET}/{RADIO_FOLDER}</small></span></div>
-            <label className={`trilha-radio-upload ${uploading ? 'is-disabled' : ''}`}><Upload className="w-3.5 h-3.5" />{uploading ? 'Enviando...' : 'Enviar músicas'}<input type="file" accept="audio/*,.mp3,.ogg,.wav,.m4a,.aac" multiple className="hidden" disabled={uploading} onChange={(event) => { void uploadTracks(event.target.files); event.currentTarget.value = ''; }} /></label>
+            <div className="trilha-radio-library-copy"><FolderOpen className="w-4 h-4" /><span><b>Biblioteca da Rádio · {tracks.length}/{libraryCount}</b><small>Storage · {RADIO_BUCKET}/{RADIO_FOLDER}</small></span></div>
+            <div className="trilha-radio-library-actions"><button type="button" className="trilha-radio-upload" onClick={() => void loadPlaylist()} disabled={loading}><RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />Atualizar biblioteca</button><label className={`trilha-radio-upload ${uploading ? 'is-disabled' : ''}`}><Upload className="w-3.5 h-3.5" />{uploading ? 'Enviando...' : 'Enviar músicas'}<input type="file" accept="audio/*,.mp3,.ogg,.wav,.m4a,.aac" multiple className="hidden" disabled={uploading} onChange={(event) => { void uploadTracks(event.target.files); event.currentTarget.value = ''; }} /></label></div>
+            {tracks.length > 0 && <div className="trilha-radio-track-list">{tracks.slice(0,8).map(track=><span key={track.path}>{track.name}</span>)}{tracks.length>8&&<small>+ {tracks.length-8} faixa(s)</small>}</div>}
+            {failedTracks.length > 0 && <p className="trilha-radio-upload-message is-warning">Não foi possível ler: {failedTracks.slice(0,3).join(', ')}{failedTracks.length>3?` e mais ${failedTracks.length-3}`:''}.</p>}
             {uploadMessage && <p className="trilha-radio-upload-message">{uploadMessage}</p>}
           </div>}
 

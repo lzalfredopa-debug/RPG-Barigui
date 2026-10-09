@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, ChevronRight, Check, Info, Loader2, Lock, BookOpen, UsersRound, Route, Package, Brain, X } from 'lucide-react';
 import { supabase, type Player } from '@/lib/supabase';
 import { type RaceDefinition } from '@/lib/ancestry';
-import { NAMING_CULTURES } from '@/lib/nameCultures';
 import CatalogPage from '@/components/CatalogPage';
 import { ATTRIBUTE_GROUPS, SKILL_GROUPS, apprenticeTitle } from '@/lib/systemV15';
 import CollapsibleSection from '@/components/CollapsibleSection';
+import AncestryBrowser from '@/components/AncestryBrowser';
 
 type CharacterCreationProps = {
   player: Player;
@@ -28,54 +28,54 @@ type Race = { id?: string; name: string; description?: string; tagline?: string;
 
 export const RACES: Race[] = [
   { id: 'humanos', name: 'Humanos', lineages: [
-    { name: 'Terranos', image: '/images/linhagens/humanos-terrano.png', description: 'Constituição próxima à humana comum, com grande variedade de aparência. Representam a ancestralidade humana mais difundida.' },
-    { name: 'Altaneiros', image: '/images/linhagens/humanos-altaneiro.png', description: 'Descendentes de povos das grandes altitudes, com facilidade para respirar em ar rarefeito e suportar o frio.' },
-    { name: 'Marítimos', image: '/images/linhagens/humanos-maritimo.png', description: 'Descendentes de povos dos arquipélagos, com adaptações à vida na água, como maior capacidade de prender a respiração.' },
+    { name: 'Terranos', image: '', description: 'Constituição próxima à humana comum, com grande variedade de aparência. Representam a ancestralidade humana mais difundida.' },
+    { name: 'Altaneiros', image: '', description: 'Descendentes de povos das grandes altitudes, com facilidade para respirar em ar rarefeito e suportar o frio.' },
+    { name: 'Marítimos', image: '', description: 'Descendentes de povos dos arquipélagos, com adaptações à vida na água, como maior capacidade de prender a respiração.' },
   ]},
   { id: 'elfos', name: 'Elfos', lineages: [
-    { name: 'Silvestres', image: '/images/linhagens/elfos-silvestre.png', description: 'Herança ligada às florestas; olhos e cabelos podem apresentar tons de folhas, madeira e âmbar.' },
-    { name: 'Astrais', image: '/images/linhagens/elfos-astral.png', description: 'Herança ligada ao céu noturno; olhos luminosos e marcas semelhantes a constelações.' },
-    { name: 'Profundos', image: '/images/linhagens/elfos-profundo.png', description: 'Adaptados ao subterrâneo; olhos sensíveis à luz e aparência em tons de pedra, cinza ou violeta.' },
+    { name: 'Silvestres', image: '', description: 'Herança ligada às florestas; olhos e cabelos podem apresentar tons de folhas, madeira e âmbar.' },
+    { name: 'Astrais', image: '', description: 'Herança ligada ao céu noturno; olhos luminosos e marcas semelhantes a constelações.' },
+    { name: 'Profundos', image: '', description: 'Adaptados ao subterrâneo; olhos sensíveis à luz e aparência em tons de pedra, cinza ou violeta.' },
   ]},
   { id: 'anoes', name: 'Anões', lineages: [
-    { name: 'Graníticos', image: '/images/linhagens/anoes-granitico.png', description: 'Corpos compactos e ossatura densa, associados às antigas linhagens das montanhas.' },
-    { name: 'Ígneos', image: '/images/linhagens/anoes-igneo.png', description: 'Herança de regiões vulcânicas; pele quente e cabelos em tons de cobre, carvão ou brasa.' },
-    { name: 'Cristalinos', image: '/images/linhagens/anoes-cristalino.png', description: 'Pequenas formações minerais surgem na pele ou nos cabelos, com sensibilidade às vibrações da pedra.' },
+    { name: 'Graníticos', image: '', description: 'Corpos compactos e ossatura densa, associados às antigas linhagens das montanhas.' },
+    { name: 'Ígneos', image: '', description: 'Herança de regiões vulcânicas; pele quente e cabelos em tons de cobre, carvão ou brasa.' },
+    { name: 'Cristalinos', image: '', description: 'Pequenas formações minerais surgem na pele ou nos cabelos, com sensibilidade às vibrações da pedra.' },
   ]},
   { id: 'orcs', name: 'Orcs', lineages: [
-    { name: 'Colossais', image: '/images/linhagens/orcs-colossal.png', description: 'Maior estatura e musculatura, com presas e estrutura óssea acentuadas.' },
-    { name: 'Glaciais', image: '/images/linhagens/orcs-glacial.png', description: 'Pelagem fina ou cabelos densos, pele em tons frios e adaptação às baixas temperaturas.' },
-    { name: 'Rubros', image: '/images/linhagens/orcs-rubro.png', description: 'Pele em tons de ocre, cobre ou vermelho, com adaptação ao calor de regiões áridas.' },
+    { name: 'Colossais', image: '', description: 'Maior estatura e musculatura, com presas e estrutura óssea acentuadas.' },
+    { name: 'Glaciais', image: '', description: 'Pelagem fina ou cabelos densos, pele em tons frios e adaptação às baixas temperaturas.' },
+    { name: 'Rubros', image: '', description: 'Pele em tons de ocre, cobre ou vermelho, com adaptação ao calor de regiões áridas.' },
   ]},
   { id: 'pequeninos', name: 'Pequeninos', lineages: [
-    { name: 'Campestres', image: '/images/linhagens/pequeninos-campestre.png', description: 'Pés largos, geralmente cobertos de pelos, e constituição robusta para seu tamanho.' },
-    { name: 'Brumosos', image: '/images/linhagens/pequeninos-brumoso.png', description: 'Herança feérica sutil, com passos silenciosos e contornos que parecem se confundir com a névoa.' },
-    { name: 'Ribeirinhos', image: '/images/linhagens/pequeninos-ribeirinho.png', description: 'Dedos parcialmente palmados e facilidade para nadar e se movimentar em terrenos alagados.' },
+    { name: 'Campestres', image: '', description: 'Pés largos, geralmente cobertos de pelos, e constituição robusta para seu tamanho.' },
+    { name: 'Brumosos', image: '', description: 'Herança feérica sutil, com passos silenciosos e contornos que parecem se confundir com a névoa.' },
+    { name: 'Ribeirinhos', image: '', description: 'Dedos parcialmente palmados e facilidade para nadar e se movimentar em terrenos alagados.' },
   ]},
   { id: 'goblins', name: 'Goblins', lineages: [
-    { name: 'Cavernícolas', image: '/images/linhagens/goblins-cavernicola.png', description: 'Olhos e orelhas grandes, adaptados à percepção em ambientes subterrâneos.' },
-    { name: 'Arborícolas', image: '/images/linhagens/goblins-arboricola.png', description: 'Membros alongados e dedos fortes, próprios para agarrar galhos e escalar.' },
-    { name: 'Ferruginosos', image: '/images/linhagens/goblins-ferruginoso.png', description: 'Pele de aspecto salpicado, em tons de ferrugem, e capacidade de perceber metais pelo cheiro.' },
+    { name: 'Cavernícolas', image: '', description: 'Olhos e orelhas grandes, adaptados à percepção em ambientes subterrâneos.' },
+    { name: 'Arborícolas', image: '', description: 'Membros alongados e dedos fortes, próprios para agarrar galhos e escalar.' },
+    { name: 'Ferruginosos', image: '', description: 'Pele de aspecto salpicado, em tons de ferrugem, e capacidade de perceber metais pelo cheiro.' },
   ]},
   { id: 'tiferinos', name: 'Tiferinos', lineages: [
-    { name: 'Infernais', image: '/images/linhagens/tiferinos-infernal.png', description: 'Chifres marcantes, cauda e sinais de uma herança ligada ao fogo e a antigos pactos.' },
-    { name: 'Abissais', image: '/images/linhagens/tiferinos-abissal.png', description: 'Traços assimétricos, chifres irregulares e manifestações de uma herança ligada ao caos e à transformação.' },
-    { name: 'Umbráticos', image: '/images/linhagens/tiferinos-umbratico.png', description: 'Cores escuras ou desbotadas, olhos contrastantes e sombras que parecem acompanhar seus movimentos com atraso.' },
+    { name: 'Infernais', image: '', description: 'Chifres marcantes, cauda e sinais de uma herança ligada ao fogo e a antigos pactos.' },
+    { name: 'Abissais', image: '', description: 'Traços assimétricos, chifres irregulares e manifestações de uma herança ligada ao caos e à transformação.' },
+    { name: 'Umbráticos', image: '', description: 'Cores escuras ou desbotadas, olhos contrastantes e sombras que parecem acompanhar seus movimentos com atraso.' },
   ]},
   { id: 'povo-fungico', name: 'Fúngicos', lineages: [
-    { name: 'Micelares', image: '/images/linhagens/povo-fungico-micelar.png', description: 'Corpos fibrosos, semelhantes a raízes entrelaçadas, capazes de perceber sinais através de redes de fungos.' },
-    { name: 'Chapeleiros', image: '/images/linhagens/povo-fungico-chapeleiro.png', description: 'Chapéus de cogumelo de diferentes formatos e cores; produzem pequenos conjuntos de esporos.' },
-    { name: 'Luminescentes', image: '/images/linhagens/povo-fungico-luminescente.png', description: 'Partes do corpo emitem luz, usada para iluminar suavemente e transmitir sinais.' },
+    { name: 'Micelares', image: '', description: 'Corpos fibrosos, semelhantes a raízes entrelaçadas, capazes de perceber sinais através de redes de fungos.' },
+    { name: 'Chapeleiros', image: '', description: 'Chapéus de cogumelo de diferentes formatos e cores; produzem pequenos conjuntos de esporos.' },
+    { name: 'Luminescentes', image: '', description: 'Partes do corpo emitem luz, usada para iluminar suavemente e transmitir sinais.' },
   ]},
   { id: 'draconatos', name: 'Draconatos', lineages: [
-    { name: 'Metálicos', image: '/images/linhagens/draconatos-metalico.png', description: 'Escamas com brilho e aspecto de metal.' },
-    { name: 'Cromáticos', image: '/images/linhagens/draconatos-cromatico.png', description: 'Escamas de cores intensas e bem definidas.' },
-    { name: 'Gemáticos', image: '/images/linhagens/draconatos-gematico.png', description: 'Escamas cristalinas ou facetadas, semelhantes a pedras preciosas.' },
+    { name: 'Metálicos', image: '', description: 'Escamas com brilho e aspecto de metal.' },
+    { name: 'Cromáticos', image: '', description: 'Escamas de cores intensas e bem definidas.' },
+    { name: 'Gemáticos', image: '', description: 'Escamas cristalinas ou facetadas, semelhantes a pedras preciosas.' },
   ]},
   { id: 'povo-fera', name: 'Feras', lineages: [
-    { name: 'Felinos', image: '/images/linhagens/povo-fera-felino.png', description: 'Traços de gatos, linces, onças ou leões, com garras retráteis e equilíbrio apurado.' },
-    { name: 'Canídeos', image: '/images/linhagens/povo-fera-canideo.png', description: 'Traços de lobos, cães ou raposas, com olfato desenvolvido e orelhas expressivas.' },
-    { name: 'Avianos', image: '/images/linhagens/povo-fera-aviano.png', description: 'Penas, bicos e características de diferentes aves. O formato das asas e sua utilidade ainda serão definidos.' },
+    { name: 'Felinos', image: '', description: 'Traços de gatos, linces, onças ou leões, com garras retráteis e equilíbrio apurado.' },
+    { name: 'Canídeos', image: '', description: 'Traços de lobos, cães ou raposas, com olfato desenvolvido e orelhas expressivas.' },
+    { name: 'Avianos', image: '', description: 'Penas, bicos e características de diferentes aves. O formato das asas e sua utilidade ainda serão definidos.' },
   ]},
 ];
 
@@ -119,13 +119,7 @@ function CreationReferenceOverlay({ view, onClose, player, races }: { view: Excl
           <div className={card}><h3 className="font-display text-lg text-gold-bright">Combinação livre</h3><p className="mt-2 text-sm text-parchment-dim">O Mestre escolhe o Atributo + Habilidade conforme a maneira como você descreve a ação. A mesma tarefa pode usar combinações diferentes em situações diferentes.</p></div>
         </div>}
 
-        {view === 'povos' && <div className="max-w-5xl mx-auto space-y-4">{races.map(race => {
-          const key = String(race.id || '').toLowerCase();
-          const naming = NAMING_CULTURES[key];
-          return <article key={race.id || race.name} className={card}>
-            <div className="flex flex-col md:flex-row gap-4"><div className="md:w-40 shrink-0">{race.image ? <img src={race.image} alt={race.name} className="w-full rounded-lg border border-gold-dim"/> : <div className="aspect-square rounded-lg border border-gold-dim bg-shadow/30 flex items-center justify-center"><UsersRound className="w-10 h-10 text-gold/50"/></div>}</div><div className="min-w-0 flex-1"><h3 className="font-display text-xl text-gold-bright">{race.name}</h3><p className="mt-1 text-xs text-gold">{race.tagline || 'Povo narrativo e cultural'}</p><p className="mt-2 text-sm text-parchment-dim">{race.description || 'Descrição ainda não registrada.'}</p><p className="mt-2 text-xs text-gold/80">Povo e Vertente definem identidade e cultura; não concedem bônus mecânicos automáticos.</p>{naming && <div className="mt-4 rounded-lg border border-gold-dim/60 bg-shadow/25 p-3"><h4 className="font-display text-gold">{naming.title}</h4><p className="mt-1 text-xs text-parchment-dim">{naming.description}</p><p className="mt-2 text-xs text-gold/80"><b>Exemplos:</b> {naming.examples.join(', ')}</p><p className="mt-2 text-xs italic text-parchment-dim">{naming.applied}</p></div>}<div className="mt-4 grid sm:grid-cols-3 gap-2">{race.lineages.map(lineage => <div key={lineage.name} className="rounded-lg border border-gold-dim/50 bg-shadow/25 p-3"><h4 className="font-display text-sm text-gold-bright">{lineage.name}</h4><p className="mt-1 text-[11px] text-gold/80">{lineage.tagline || 'Vertente narrativa e cultural'}</p><p className="mt-1 text-xs text-parchment-dim">{lineage.description}</p></div>)}</div></div></div>
-          </article>;
-        })}</div>}
+        {view === 'povos' && <AncestryBrowser races={races.map(race => ({ ...race, image_url: race.image }))}/>}
 
         {view === 'classes' && <div className="max-w-4xl mx-auto space-y-4">
           <div className={card}><div className="flex gap-3"><Route className="w-5 h-5 text-gold shrink-0"/><div><h3 className="font-display text-xl text-gold-bright">Aprendiz e caminhos iniciais</h3><p className="mt-2 text-sm text-parchment-dim">Nos níveis 1–3, o maior Atributo define o título Aprendiz de X. Empates formam um Aprendiz Versátil. No nível 2 o personagem recebe +2 pontos de Habilidade; no nível 3 recebe +1 ponto de Atributo e +1 ponto de Habilidade. A primeira ramificação aparece quando um Atributo chega a 3 pontos. A classe inicial pode ser escolhida a partir do nível 4 com Atributo 3 + Habilidade 2.</p></div></div></div>
@@ -554,7 +548,6 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
 
               {selectedRace && (
                 <div className="space-y-3 animate-fade-in-up">
-                  {selectedRace.description&&<p className="text-sm text-parchment-dim border-l-2 border-gold-dim pl-3">{selectedRace.description}</p>}
                   <div className="font-display text-sm font-500 text-gold-bright tracking-wide">
                     Vertente <span className="text-blood">*</span>
                   </div>
@@ -573,12 +566,12 @@ export default function CharacterCreation({ player, onBack, onCreated, consumeCh
                             : 'bg-shadow/60 border-gold-dim hover:border-gold/60'
                         }`}
                       >
-                        <img
+                        {item.image && <img
                           src={item.image}
                           alt={`Ilustração da vertente ${item.name}`}
-                          className="block w-full h-auto rounded-md mb-4 border border-gold-dim/60"
+                          className="block w-full aspect-[3/2] object-cover rounded-md mb-4 border border-gold-dim/60"
                           loading="lazy"
-                        />
+                        />}
                         <span className={`block font-display text-sm mb-2 ${lineage === item.name ? 'text-gold-bright' : 'text-gold'}`}>
                           {item.name}
                         </span>

@@ -6,8 +6,8 @@ import { ATTRIBUTE_GROUPS, SKILL_GROUPS, apprenticeTitle, visibleClassPaths, cla
 import { renderCharacterText } from '@/lib/characterLanguage';
 import { attributeValue as v, skillValue as s, characterMaxHp as maxHp, characterMaxMp as maxMp, characterHungerMax as hungerMax } from '@/lib/characterRules';
 
-import { NAMING_CULTURES } from '@/lib/nameCultures';
 import { type RaceDefinition } from '@/lib/ancestry';
+import AncestryBrowser from '@/components/AncestryBrowser';
 
 import ProgressionV15 from '@/components/ProgressionV15';
 import CollapsibleSection from '@/components/CollapsibleSection';
@@ -147,48 +147,7 @@ function RulesPanel({ playerName }: {
 }
 
 function AncestryReference({ races }: { races: RaceDefinition[] }) {
-  return <div className="max-w-5xl mx-auto space-y-5 pb-10">
-    <div className="border-b border-gold-dim pb-4">
-      <p className="text-xs uppercase tracking-[0.25em] text-gold/70">Consulta do jogador</p>
-      <h2 className="font-display text-2xl sm:text-3xl text-gold-bright mt-1">Povos e Vertentes</h2>
-      <p className="mt-2 text-sm text-parchment-dim">História, Vertentes e costumes de nomeação dos Povos do TRILHA. Povo e Vertente são escolhas narrativas e culturais.</p>
-    </div>
-    {races.length === 0 ? <div className="trilha-player-empty">Carregando Povos e Vertentes...</div> : <div className="space-y-5">{races.map(race => {
-      const naming = NAMING_CULTURES[race.id];
-      return <article key={race.id} className="rounded-2xl border border-gold-dim bg-gradient-card overflow-hidden shadow-gold">
-        <div className="grid md:grid-cols-[220px_1fr] gap-0">
-          <div className="bg-shadow/45 min-h-44 flex items-center justify-center border-b md:border-b-0 md:border-r border-gold-dim">
-            {race.image_url ? <img src={race.image_url} alt={race.name} className="w-full h-full max-h-72 object-cover"/> : <UsersRound className="w-14 h-14 text-gold/50"/>}
-          </div>
-          <div className="p-5 sm:p-6 space-y-5">
-            <div>
-              <p className="text-[10px] uppercase tracking-[.2em] text-gold/70">Povo</p>
-              <h3 className="font-display text-2xl text-gold-bright">{race.name}</h3>
-              <p className="mt-1 text-xs text-gold">{race.tagline || 'Povo narrativo e cultural'}</p>
-              <p className="mt-2 text-sm leading-relaxed text-parchment-dim whitespace-pre-line">{race.description || 'Descrição ainda não registrada.'}</p>
-              <div className="mt-3 inline-flex rounded-full border border-gold-dim bg-shadow/35 px-3 py-1 text-xs text-gold">Identidade cultural · sem bônus mecânico</div>
-            </div>
-            {naming && <section className="rounded-xl border border-gold-dim/70 bg-shadow/30 p-4">
-              <p className="text-[10px] uppercase tracking-[.18em] text-gold/70">Cultura</p>
-              <h4 className="font-display text-lg text-gold-bright mt-1">{naming.title}</h4>
-              <p className="mt-2 text-sm leading-relaxed text-parchment-dim">{naming.description}</p>
-              <div className="mt-3 flex flex-wrap gap-2">{naming.examples.map(name => <span key={name} className="rounded-full border border-gold-dim/70 bg-stone/35 px-2.5 py-1 text-xs text-parchment">{name}</span>)}</div>
-              <p className="mt-3 border-l-2 border-gold/60 pl-3 text-sm italic text-parchment-dim">{naming.applied}</p>
-            </section>}
-            <section>
-              <div className="flex items-center gap-2 mb-3"><Route className="w-4 h-4 text-gold"/><h4 className="font-display text-lg text-gold">Vertentes</h4></div>
-              <div className="grid sm:grid-cols-3 gap-3">{race.lineages.map(lineage => <div key={lineage.id} className="rounded-xl border border-gold-dim/70 bg-shadow/35 p-3">
-                {lineage.image_url && <img src={lineage.image_url} alt={lineage.name} className="w-full aspect-[4/3] object-cover rounded-lg border border-gold-dim mb-3"/>}
-                <h5 className="font-display text-gold-bright">{lineage.name}</h5>
-                <p className="mt-1 text-[11px] text-gold/80">{lineage.tagline || 'Vertente narrativa e cultural'}</p>
-                <p className="mt-1 text-xs leading-relaxed text-parchment-dim">{lineage.description || 'Descrição ainda não registrada.'}</p>
-              </div>)}</div>
-            </section>
-          </div>
-        </div>
-      </article>;
-    })}</div>}
-  </div>;
+  return <AncestryBrowser races={races}/>;
 }
 
 function PublicClassesReference() {
@@ -322,7 +281,7 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
     }
     else
         setEquipmentSummary(((data || [])[0] || null) as CombatEquipmentSummary | null); }, []);
-    const loadCombatTargets = useCallback(async (id: string) => { const { data, error } = await supabase.rpc('get_combat_targets', { p_character_id: id }); if (error) {
+    const loadCombatTargets = useCallback(async (id: string) => { const { data, error } = await supabase.rpc('get_combat_targets_v15', { p_character_id: id }); if (error) {
         console.error(error);
         setCombatTargets([]);
         return;
@@ -356,10 +315,14 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
             })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'combat_actions', filter: `attacker_character_id=eq.${id}` }, () => {
                 reloadSelectedCharacter(id);
+                loadCombatTargets(id);
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'combat_enemies' }, () => {
+                loadCombatTargets(id);
             })
             .subscribe();
         return () => { supabase.removeChannel(channel); };
-    }, [selectedCharacter?.id, loadPendingDefenses, reloadSelectedCharacter]);
+    }, [selectedCharacter?.id, loadPendingDefenses, reloadSelectedCharacter, loadCombatTargets]);
     const patchCharacter = async (patch: Partial<Character>) => { if (!selectedCharacter)
         return; setSaving(true); let query = supabase.from('characters').update(patch).eq('id', selectedCharacter.id); if (!masterMode)
         query = query.eq('player_id', player.id); const { data, error } = await query.select().single(); if (error)
@@ -436,7 +399,8 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
         if (!selectedTargetId) { setAttackRollError('Selecione um alvo antes de atacar.'); return; }
         setAttackRollError('');
         setRollingAttack(true);
-        const { error } = await supabase.rpc('roll_character_attack', { p_player_id: player.id, p_character_id: selectedCharacter.id, p_target_character_id: selectedTargetId });
+        const target = combatTargets.find(t => t.id === selectedTargetId);
+        const { error } = await supabase.rpc('roll_character_attack_target', { p_player_id: player.id, p_character_id: selectedCharacter.id, p_target_type: target?.target_type || 'character', p_target_id: selectedTargetId });
         if (error) setAttackRollError(error.message || 'Não foi possível realizar o ataque.');
         else await reloadSelectedCharacter(selectedCharacter.id);
         setRollingAttack(false);
@@ -598,7 +562,7 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
 
     {selectedCharacter && <div className="trilha-sheet-overlay fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5"><div className="trilha-sheet w-full max-w-6xl h-[95vh] overflow-hidden flex flex-col">
       <div className="trilha-sheet-header relative flex justify-between gap-4">
-        <div className="flex gap-4 sm:gap-5 items-center relative z-10">{selectedCharacter.thumbnail_url ? <img src={selectedCharacter.thumbnail_url} className="trilha-portrait w-16 sm:w-20"/> : <div className="trilha-portrait w-16 h-20 sm:w-20 sm:h-24 flex items-center justify-center"><User className="text-[#d7a33d]"/></div>}<div><div className="trilha-kicker">{masterMode ? 'Modo Mestre · Ficha do jogador' : 'Ficha de personagem · TRILHA'}</div><h2 className="trilha-character-name font-display">{selectedCharacter.name}</h2><div className="trilha-character-meta"><span>Nível {selectedCharacter.level}</span><i /> <span>{stageForLevel(selectedCharacter.level, selectedCharacter)}</span><i /> <span>{selectedCharacter.class_name || 'Sem classe'}</span><i /> <span>{statusLabel(selectedCharacter.status)}</span></div><p className="trilha-character-origin">{selectedCharacter.is_hybrid && selectedCharacter.secondary_race ? `Híbrido · ${selectedCharacter.race}/${selectedCharacter.secondary_race}` : `${selectedCharacter.race} · ${selectedCharacter.lineage}`}</p>{selectedUnlockCount > 0 && <div className="mt-2 inline-flex flex-wrap items-center gap-1 rounded-full border border-[#b98032]/45 bg-black/15 px-2.5 py-1" title={`${selectedUnlockCount} possibilidade(s) de evolução percebida(s). Os nomes permanecem ocultos.`}><span className="mr-1 text-[9px] uppercase tracking-[.16em] text-[#d7a33d]/80">Caminhos percebidos</span>{Array.from({ length: selectedUnlockCount }, (_, i) => <span key={i} className="text-[#edc96c] text-sm leading-none" aria-hidden="true">✦</span>)}</div>}<label className="trilha-thumbnail-action inline-flex items-center gap-1 mt-2 cursor-pointer"><ImagePlus className="w-3.5 h-3.5"/>{uploading ? 'Enviando...' : 'Alterar miniatura'}<input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={e => uploadThumbnail(e.target.files?.[0])}/></label></div></div><div className="relative z-10 flex items-center gap-2">{masterMode && onMasterEdit && <button onClick={() => selectedCharacter && onMasterEdit(selectedCharacter)} className="hidden sm:inline-flex items-center gap-2 rounded-lg border border-[#b98032]/60 px-3 py-2 text-xs text-[#edc96c] hover:border-[#edc96c]"><Pencil className="w-4 h-4"/>Editar como Mestre</button>}<button className="trilha-sheet-close" onClick={() => masterMode ? onMasterClose?.() : setSelectedCharacter(null)} aria-label="Fechar ficha"><X className="w-5 h-5"/></button></div></div>
+        <div className="flex gap-4 sm:gap-5 items-center relative z-10">{selectedCharacter.thumbnail_url ? <img src={selectedCharacter.thumbnail_url} className="trilha-portrait w-16 sm:w-20"/> : <div className="trilha-portrait w-16 h-20 sm:w-20 sm:h-24 flex items-center justify-center"><User className="text-[#D4B15A]"/></div>}<div><div className="trilha-kicker">{masterMode ? 'Modo Mestre · Ficha do jogador' : 'Ficha de personagem · TRILHA'}</div><h2 className="trilha-character-name font-display">{selectedCharacter.name}</h2><div className="trilha-character-meta"><span>Nível {selectedCharacter.level}</span><i /> <span>{stageForLevel(selectedCharacter.level, selectedCharacter)}</span><i /> <span>{selectedCharacter.class_name || 'Sem classe'}</span><i /> <span>{statusLabel(selectedCharacter.status)}</span></div><p className="trilha-character-origin">{selectedCharacter.is_hybrid && selectedCharacter.secondary_race ? `Híbrido · ${selectedCharacter.race}/${selectedCharacter.secondary_race}` : `${selectedCharacter.race} · ${selectedCharacter.lineage}`}</p>{selectedUnlockCount > 0 && <div className="mt-2 inline-flex flex-wrap items-center gap-1 rounded-full border border-[#D4B15A]/45 bg-black/15 px-2.5 py-1" title={`${selectedUnlockCount} possibilidade(s) de evolução percebida(s). Os nomes permanecem ocultos.`}><span className="mr-1 text-[9px] uppercase tracking-[.16em] text-[#D4B15A]/80">Caminhos percebidos</span>{Array.from({ length: selectedUnlockCount }, (_, i) => <span key={i} className="text-[#E3C56F] text-sm leading-none" aria-hidden="true">✦</span>)}</div>}<label className="trilha-thumbnail-action inline-flex items-center gap-1 mt-2 cursor-pointer"><ImagePlus className="w-3.5 h-3.5"/>{uploading ? 'Enviando...' : 'Alterar miniatura'}<input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={e => uploadThumbnail(e.target.files?.[0])}/></label></div></div><div className="relative z-10 flex items-center gap-2">{masterMode && onMasterEdit && <button onClick={() => selectedCharacter && onMasterEdit(selectedCharacter)} className="hidden sm:inline-flex items-center gap-2 rounded-lg border border-[#D4B15A]/60 px-3 py-2 text-xs text-[#E3C56F] hover:border-[#E3C56F]"><Pencil className="w-4 h-4"/>Editar como Mestre</button>}<button className="trilha-sheet-close" onClick={() => masterMode ? onMasterClose?.() : setSelectedCharacter(null)} aria-label="Fechar ficha"><X className="w-5 h-5"/></button></div></div>
       <div className="trilha-tabs flex overflow-x-auto">{tabs.map(([id, label]) => <button key={id} onClick={() => setTab(id)} className={`trilha-tab whitespace-nowrap font-display ${tab === id ? 'is-active' : ''}`}>{label}</button>)}</div>
       {masterMode && onMasterEdit && <button onClick={() => selectedCharacter && onMasterEdit(selectedCharacter)} className="sm:hidden m-3 mb-0 inline-flex items-center gap-2 rounded-lg border border-gold-dim px-3 py-2 text-xs text-gold"><Pencil className="w-4 h-4"/>Editar como Mestre</button>}
       <div className={`trilha-sheet-content overflow-y-auto flex-1 ${tab !== 'ficha' ? 'trilha-secondary-tab' : ''}`}>
@@ -648,7 +612,7 @@ export default function PlayerPage({ player, onLogout, onCreateCharacter, master
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">{calcCards.slice(2).map(([label, value, tip]) => <div key={String(label)} className="bg-shadow/50 border border-gold-dim rounded-lg p-4"><div className="text-xs text-parchment-dim">{label}<Tip>{tip}</Tip></div><div className="font-display text-xl text-gold-bright mt-1">{value}</div></div>)}</div>
 
           <section><h3 className="font-display text-gold mb-3 flex gap-2"><Sword className="w-5 h-5"/>Equipamento em uso</h3><div className="grid md:grid-cols-3 gap-3">
-            <div className="bg-shadow/40 border border-gold-dim rounded-xl p-4"><div className="text-xs text-gold">Arma</div><b className="font-display text-gold-bright">{equipmentSummary?.weapon_name || 'Nenhuma'}</b>{equipmentSummary?.weapon_name && <><p className="text-xs text-parchment-dim mt-1">Dano efetivo: {equipmentSummary.weapon_effective_damage}</p>{equipmentSummary.weapon_is_proficient === false && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">Uso não proficiente: o dano base já está reduzido pelo déficit.</p>}<label className="block mt-3 text-[10px] uppercase tracking-wide text-gold/80">Alvo<select value={selectedTargetId} onChange={e => setSelectedTargetId(e.target.value)} className="mt-1 w-full bg-shadow/70 border border-gold-dim rounded-lg px-2 py-2 text-xs text-parchment normal-case tracking-normal"><option value="">Selecione...</option>{combatTargets.map(target => <option key={target.id} value={target.id}>{target.name}</option>)}</select></label><button type="button" onClick={rollAttack} disabled={rollingAttack || equippedWeaponBroken || selectedCharacter.combat_action_available === false || !selectedTargetId} className="mt-3 w-full min-h-10 rounded-lg border border-gold bg-gradient-to-r from-blood/90 to-gold/80 px-3 py-2 font-display text-sm text-parchment shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"><Sword className="w-4 h-4"/>{equippedWeaponBroken ? 'Arma quebrada' : selectedCharacter.combat_action_available === false ? 'Ação já utilizada' : rollingAttack ? 'Rolando...' : 'Atacar'}</button>{attackRollError && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">{attackRollError}</p>}</>}</div>
+            <div className="bg-shadow/40 border border-gold-dim rounded-xl p-4"><div className="text-xs text-gold">Arma</div><b className="font-display text-gold-bright">{equipmentSummary?.weapon_name || 'Nenhuma'}</b>{equipmentSummary?.weapon_name && <><p className="text-xs text-parchment-dim mt-1">Dano efetivo: {equipmentSummary.weapon_effective_damage}</p>{equipmentSummary.weapon_is_proficient === false && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">Uso não proficiente: o dano base já está reduzido pelo déficit.</p>}<label className="block mt-3 text-[10px] uppercase tracking-wide text-gold/80">Alvo<select value={selectedTargetId} onChange={e => setSelectedTargetId(e.target.value)} className="mt-1 w-full bg-shadow/70 border border-gold-dim rounded-lg px-2 py-2 text-xs text-parchment normal-case tracking-normal"><option value="">Selecione...</option>{combatTargets.map(target => <option key={`${target.target_type || 'character'}-${target.id}`} value={target.id}>{target.name}{target.target_type === 'enemy' && target.state ? ` · ${target.state}` : ''}</option>)}</select></label><button type="button" onClick={rollAttack} disabled={rollingAttack || equippedWeaponBroken || selectedCharacter.combat_action_available === false || !selectedTargetId} className="mt-3 w-full min-h-10 rounded-lg border border-gold bg-gradient-to-r from-blood/90 to-gold/80 px-3 py-2 font-display text-sm text-parchment shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"><Sword className="w-4 h-4"/>{equippedWeaponBroken ? 'Arma quebrada' : selectedCharacter.combat_action_available === false ? 'Ação já utilizada' : rollingAttack ? 'Rolando...' : 'Atacar'}</button>{attackRollError && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">{attackRollError}</p>}</>}</div>
             <div className="bg-shadow/40 border border-gold-dim rounded-xl p-4"><div className="text-xs text-gold">Armadura</div><b className="font-display text-gold-bright">{equipmentSummary?.armor_name || 'Nenhuma'}</b>{equipmentSummary?.armor_name && <><p className="text-xs text-parchment-dim mt-1">Absorção efetiva: {armorAbsorption}{equipmentSummary.armor_evasion_penalty ? ` · Evasão −${equipmentSummary.armor_evasion_penalty}` : ''}{equipmentSummary.armor_movement_penalty ? ` · Movimento −${equipmentSummary.armor_movement_penalty} m` : ''}</p>{equipmentSummary.armor_is_proficient === false && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">Uso não proficiente: a absorção já está reduzida pelo déficit.</p>}</>}</div>
             <div className="bg-shadow/40 border border-gold-dim rounded-xl p-4"><div className="text-xs text-gold">Escudo</div><b className="font-display text-gold-bright">{equipmentSummary?.shield_name || 'Nenhum'}</b>{equipmentSummary?.shield_name && <><p className="text-xs text-parchment-dim mt-1">Bônus efetivo de Bloqueio: +{equipmentSummary.shield_effective_bonus}{equipmentSummary.shield_evasion_penalty ? ` · Evasão −${equipmentSummary.shield_evasion_penalty}` : ''}{equipmentSummary.shield_movement_penalty ? ` · Movimento −${equipmentSummary.shield_movement_penalty} m` : ''}</p>{equipmentSummary.shield_is_proficient === false && <p className="mt-2 text-xs text-parchment border border-blood/40 bg-blood/10 rounded p-2">Uso não proficiente: o bônus de Bloqueio já está reduzido pelo déficit.</p>}</>}</div>
           </div></section>

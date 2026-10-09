@@ -9,25 +9,28 @@ export default {
       },
       colors: {
         gold: {
-          DEFAULT: '#c9a84c',
-          bright: '#e0c25c',
+          DEFAULT: '#D4B15A',
+          bright: '#E3C56F',
         },
         parchment: {
-          DEFAULT: '#f5e6c8',
-          dark: '#e8d5a8',
-          dim: '#c8b890',
+          DEFAULT: '#E7D8BC',
+          dark: '#EFE4CF',
+          dim: '#E7D8BC',
         },
         blood: {
-          DEFAULT: '#8b1a1a',
-          dark: '#6b1414',
+          DEFAULT: '#8B4A3A',
+          dark: '#6F392E',
         },
-        shadow: '#1a1208',
+        ink: '#2C241E',
+        shadow: '#231B16',
         stone: {
-          DEFAULT: '#3d3528',
-          light: '#5f5340',
+          DEFAULT: '#4A4032',
+          light: '#5F5340',
         },
-        forest: '#2d4a2d',
-        khaki: '#9d8e70',
+        // Legacy aliases kept so old components do not break.
+        // They now resolve strictly to the official palette.
+        forest: '#4A4032',
+        khaki: '#5F5340',
       },
     },
   },

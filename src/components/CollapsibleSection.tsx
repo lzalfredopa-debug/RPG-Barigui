@@ -27,18 +27,18 @@ export default function CollapsibleSection({ id, title, subtitle, defaultOpen = 
   }, [open, storageKey]);
 
   return (
-    <section className={`trilha-collapsible border border-gold-dim rounded-xl overflow-hidden bg-gradient-card ${className}`}>
-      <div className="flex items-center gap-3 px-4 py-3 bg-shadow/25">
+    <section className={`trilha-collapsible border border-gold-dim rounded-xl overflow-hidden bg-[#5F5340] text-[#EFE4CF] ${className}`}>
+      <div className="trilha-collapsible-header flex items-center gap-3 px-4 py-3 bg-[#5F5340]">
         <button type="button" onClick={() => setOpen(value => !value)} className="min-w-0 flex-1 flex items-center gap-3 text-left" aria-expanded={open}>
           <ChevronDown className={`w-4 h-4 shrink-0 text-gold transition-transform ${open ? '' : '-rotate-90'}`} />
           <div className="min-w-0">
             <h3 className="font-display text-gold-bright">{title}</h3>
-            {subtitle && <p className="text-xs text-parchment-dim mt-0.5">{subtitle}</p>}
+            {subtitle && <p className="text-xs text-[#EFE4CF] mt-0.5">{subtitle}</p>}
           </div>
         </button>
         {actions && <div className="shrink-0">{actions}</div>}
       </div>
-      {open && <div className="border-t border-gold-dim/60 p-4">{children}</div>}
+      {open && <div className="trilha-collapsible-body border-t border-gold-dim/60 bg-[#5F5340] p-4 text-[#EFE4CF]">{children}</div>}
     </section>
   );
 }

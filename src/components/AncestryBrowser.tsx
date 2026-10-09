@@ -104,7 +104,7 @@ export default function AncestryBrowser({ races }: { races: BrowserRace[] }) {
           <button
             type="button"
             onClick={() => setSelectedId(null)}
-            className="font-display text-lg sm:text-2xl text-gold-bright tracking-wide text-center hover:text-gold transition"
+            className="font-ancestry-title text-2xl sm:text-3xl text-gold-bright tracking-wide text-center hover:text-gold transition"
             title="Voltar à lista de Povos"
           >
             {current.name}
@@ -133,8 +133,8 @@ export default function AncestryBrowser({ races }: { races: BrowserRace[] }) {
             )}
           </div>
 
-          <div className="bg-parchment p-5 sm:p-7">
-            <div className="whitespace-pre-line text-sm sm:text-[15px] leading-7 text-ink">
+          <div className="bg-parchment border-t border-gold p-5 sm:px-8 sm:py-7">
+            <div className="font-ancestry-body whitespace-pre-line text-[16px] leading-[1.65] text-ink">
               {current.description?.trim() || 'Descrição ainda não registrada.'}
             </div>
           </div>
